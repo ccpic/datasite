@@ -1,0 +1,250 @@
+<div class="ui container">
+    <div class="ui form">
+        <form action="" method="post">
+            <!-- 在Django所有的 POST 表单元素时，需要加上下方的csrf_token tag，主要是安全方面的机制 -->
+            {% csrf_token %}
+            <h3 class="ui header" id="analysis">分析维度</h3>
+            <div class="field">
+                <div class="fields">
+                    <div class="sixteen wide field">
+                        <select name="DIMENSION_select" id="DIMENSION_select" class="ui fluid search dropdown">
+                            <option value="PRODUCT" selected>商品名|PRODUCT</option>
+                            {% for key, value in mselect_dict.items %}
+                                <option value="{{ value.select }}">{{ key }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="fields">
+                    <div class="eight wide field">
+                        <select name="UNIT_select" id="UNIT_select" class="ui fluid search dropdown">
+                            <option value="Value" selected>金额</option>
+                            <option value="Volume">盒数</option>
+                            <option value="Volume (Counting Unit)">最小制剂单位数</option>
+                        </select>
+                    </div>
+                    <div class="eight wide field">
+                        <select name="PERIOD_select" id="PERIOD_select" class="ui fluid search dropdown">
+                            <option value="MAT" selected>滚动年</option>
+                            <option value="QTR">季度</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <h3 class="ui header" id="data_filter">数据筛选</h3>
+{#            <div class="field">#}
+{#                {% for key, value in field_dict.items %}#}
+{#                <div class="field">#}
+{#                    <select name="{{ value.select }}" id="{{ value.select|slice:":-2" }}" multiple=""#}
+{#                            class="ui fluid search dropdown">#}
+{#                        <option value="">{{ key }}</option>#}
+{#                        {% for item in value.options %}#}
+{#                            <option value="{{ item }}">{{ item }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                </div>#}
+{#                {% endfor %}#}
+{#            </div>#}
+            <div class="field">
+                {% for key, value in mselect_dict.items %}
+                <div class="field">
+                    <select name="{{ value.select|add:"_select[]" }}" id="{{ value.select|add:"_select" }}" multiple=""
+                            class="ui fluid search dropdown">
+                        <option value="">{{ key }}</option>
+{#                        {% for item in value.options %}#}
+{#                            <option value="{{ item }}">{{ item }}</option>#}
+{#                        {% endfor %}#}
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+            <br>
+            <div class="ui buttons">
+                <!--<input class="ui button" type="reset" id="reset"/>-->
+                <!--<div class="or"></div>-->
+                <input class="ui blue button" type='button' id='AJAX_get' value="查询"/>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    function submitForm(){
+        //获取form表单对象
+        var form = document.getElementById("myform");
+        form.submit(); //form表单提交
+    }
+</script>
+
+<!-- 因为用到Semantic UI的Search Dropdown控件，必须有下面语句初始化 -->
+<script>
+    $('.ui.fluid.search.dropdown')
+        .dropdown({ fullTextSearch: true });
+</script>
+<script>
+    // 在JS中再次使用字段字典
+    var dict = {{ mselect_dict|safe }};
+    // 在Django模板中遇到带有{}的字符串必须使用replace这种方式
+    var url = "{% url 'chpa:search' 'COLUMNPLACEHOLDER' 'QUERYPLACEHOLDER' %}".replace(
+        'QUERYPLACEHOLDER', '{query}'
+    );
+    // jQuery语法遍历所有多选框
+    $('.ui.fluid.search.dropdown.selection.multiple').each(function () {
+        // Semantic UI语法获得多选框默认文本
+        var text = $(this).dropdown('get default text');
+        // 根据字典倒推该多选框是哪个字段
+        var column = dict[text]['select'];
+        $(this).dropdown(
+            {
+                apiSettings: {
+                    // 用下方URL从后端返回查询后的json
+                    url: url.replace('COLUMNPLACEHOLDER', column)
+                },
+                // 输入至少2个字符后才query
+                minCharacters : 2
+            })
+        ;
+    })
+</script>
+<script type="text/javascript">
+    $("#AJAX_get").click(function () {
+        var dimmer = $("#dimmer");
+        dimmer.attr('class', 'ui active dimmer'); // 点击筛选按钮后dimmer变成active
+        dimmer.children('div').remove(); // 删除初始化文字
+        dimmer.append('<div class="ui text loader">数据加载中……</div>'); // 增加loading效果和文字
+
+        // 获取单选下拉框的值
+        var form_data = {
+            "DIMENSION_select": $("#DIMENSION_select").val(),
+            "PERIOD_select": $("#PERIOD_select").val(),
+            "UNIT_select": $("#UNIT_select").val(),
+        };
+
+        // 获取多选下拉框的值
+        var dict = {{ mselect_dict|safe }};
+        for (key in dict) {
+            var form_name = dict[key]['select'] + "_select";
+            jquery_selector_id = "[id='" + form_name + "']";//因为我们的部分多选框id有空格，要用这种写法
+            form_data[form_name] = $(jquery_selector_id).val();
+        }
+
+        // Pyecharts图表初始化
+        var chart = echarts.init(document.getElementById('bar_total_trend'), 'white', {renderer: 'canvas'});
+        chart.showLoading({
+          text : '正在加载数据'
+        });  //增加加载提示
+
+        $.ajax({
+            // 请求的url
+            url: '{% url 'chpa:query' %}',
+            // 请求的type
+            type: 'GET',
+            // 发送的数据
+            data: form_data,
+            // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
+            success: function (ret) {     //成功执行
+                // 去除加载遮罩（去掉active）
+                dimmer.attr('class', 'ui dimmer');
+                // 更新单位标签
+                $("#label_size_unit").html("最新"+form_data['PERIOD_select']+ " " +form_data['UNIT_select']);
+                // 把查询结果输出到网页上预留的id为result_table的div中
+                $("#value_size").html(ret["market_size"].toLocaleString());
+                $("#value_gr").html(toPercent(ret["market_gr"]));
+                if (ret["market_gr"] < 0){
+                    $("#div_gr").removeClass().addClass("red statistic"); // 负则为红
+                } else if (ret["market_gr"] > 0) {
+                    $("#div_gr").removeClass().addClass("green statistic"); // 正则为绿
+                }
+                $("#value_cagr").html(toPercent(ret["market_cagr"]));
+                if (ret["market_cagr"] < 0){
+                    $("#div_cagr").removeClass().addClass("red statistic"); // 负则为红
+                } else if (ret["market_cagr"] > 0) {
+                    $("#div_cagr").removeClass().addClass("green statistic"); // 正则为绿
+                }
+                $("#result_table").html(ret['ptable']); // 展示ptable表格
+                initTable($("#ptable")); // ptable应用DataTables
+                // 展示Pyecharts整体市场柱状组合图
+                chart.clear();
+                chart.setOption(ret['bar_total_trend']);
+                chart.hideLoading();
+                // 展示Matplotlib气泡图
+                $("#bubble_performance").attr('src', ret['bubble_performance']);
+            },
+            error: function () {            //失败
+                console.log('失败');
+                dimmer.children('div').text('有错误发生，无法完成查询'); // AJAX回调失败则报错
+            }
+        });
+    })
+</script>
+
+<script>
+    function toPercent(str){
+        if (isNaN(str) === false){
+            var strP=Number(str*100).toFixed(1);
+            strP+="%";
+        } else {
+            strP = str;
+        }
+        return strP;
+    }
+</script>
+<script>
+    function initTable(table) {
+        table.DataTable(
+            {
+                order: [[1, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
+                pageLength: 25, // 前端分页，初始每页显示25条记录
+                autoWidth: false, // 不自动调整表格宽度
+                oLanguage: { // UI Label本地化
+                    "sLengthMenu": "显示 _MENU_ 项结果",
+                    "sProcessing": "处理中...",
+                    "sZeroRecords": "没有匹配结果",
+                    "sInfo": "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
+                    "sInfoEmpty": "没有数据",
+                    "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
+                    "sInfoPostFix": "",
+                    "sSearch": "搜索:",
+                    "sUrl": "",
+                    "sEmptyTable": "表中数据为空",
+                    "sLoadingRecords": "载入中...",
+                    "sInfoThousands": ",",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "上页",
+                        "sNext": "下页",
+                        "sLast": "末页"
+                    },
+                },
+                columnDefs: [
+                    {"width": "10%", "targets": 3}, // 保持第4列份额列宽度固定，使条形图更美观
+                    {
+                        targets: 3,
+                        render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
+                    },
+                    {
+                        "targets": 6, // 指定第7列EI
+                        "createdCell": function (td, cellData, rowData, row, col) {
+                            if (cellData < 100) {
+                                $(td).css('color', 'red')
+                            } else if (cellData > 100) {
+                                $(td).css('color', 'green')
+                            } else if (cellData.indexOf(",") !== -1) {
+                                $(td).css('color', 'green')
+                            }
+                        }
+                    },
+                    {
+                        "targets": [2, 4, 5], // 指定第3,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
+                        "createdCell": function (td, cellData, rowData, row, col) {
+                            if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
+                                $(td).css('color', 'red')
+                            }
+                        }
+                    },
+                ]
+            }
+        );
+    }
+</script>
