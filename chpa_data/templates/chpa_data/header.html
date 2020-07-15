@@ -1,0 +1,41 @@
+{% load static %}
+{% url 'chpa:index' as chpa_url %}
+{% url 'price_calc:index' as price_calc_url %}
+
+
+<div class="ui large top fixed inverted menu">
+    <div class="ui container">
+        <div class="header item">
+            <img class="logo" src="{% static 'assets/images/logo.png' %}">
+            IQVIA CHPA数据分析平台
+        </div>
+        <a href="{{ chpa_url }}" class="{% if request.get_full_path == chpa_url %}active blue{% endif %} item">
+            CHPA全国
+            <div class="ui horizontal black label">2019Q4季度版</div>
+        </a>
+        <a href="{{ price_calc_url }}" class="{% if request.get_full_path == price_calc_url %}active blue{% endif %} item">
+            差比价计算器
+        </a>
+        {%  if request.user.is_staff  %}
+            <a href="{% url 'admin:index' %}" class="item">后台管理</a>
+        {% endif %}
+    </div>
+    <a class="right menu">
+        {%  if not request.user.username  %}
+            <a class="ui item" href="{% url 'logout' %}">
+                未登录
+            </a>
+        {% else %}
+            <div class="ui item">
+                您好，{{ request.user.username }}
+            </div>
+            <a class="ui item" href="{% url 'logout' %}">
+                切换用户
+            </a>
+        {% endif %}
+  </div>
+</div>
+
+
+
+

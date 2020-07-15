@@ -1,0 +1,69 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+
+{% block body %}
+<div id="pusher" class="pusher" style="padding-top:100px">
+    <div class="ui middle aligned center aligned grid">
+        <div class="column">
+            <h2 class="ui image header">
+                <div class="content">
+                    用户登录
+                </div>
+            </h2>
+
+            <form method="post" action="{% url 'login' %}" class="ui large form">
+                {% csrf_token %}
+                {% if next %}
+                    {% if user.is_authenticated %}
+                        <div class="ui info message">您的账户没有权限浏览当前页面。 请尝试登录有权限的账号</div>
+                    {% else %}
+                        <div class="ui info message">未登录用户没有权限浏览当前页面，请登录</div>
+                    {% endif %}
+                {% endif %}
+                <div class="ui stacked secondary  segment">
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="user icon"></i>
+                            {{ form.username }}
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="lock icon"></i>
+                            {{ form.password }}
+                        </div>
+                    </div>
+                    <input class="ui fluid large blue submit button" type="submit" value="登录">
+                    <input type="hidden" name="next" value="{{ next }}">
+                </div>
+                {% if form.errors %}
+                <div class="ui info message">用户名或密码错误，请再次尝试。</div>
+                {% endif %}
+
+            </form>
+
+            <div class="ui message">
+                如登录困难，请联系管理员
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    body {
+        background-color: #DADADA;
+    }
+
+    body > .grid {
+        height: 100%;
+    }
+
+    .column {
+        max-width: 450px;
+    }
+
+    .ui.footer.segment {
+        margin: 5em 0em 0em;
+    }
+
+</style>
+{% endblock %}

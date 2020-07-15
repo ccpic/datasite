@@ -1,5 +1,7 @@
 <!-- extends表明此页面继承自 base.html 文件 -->
-{% extends "base.html" %}
+{% extends "chpa_data/base.html" %}
+
+{% block title %}IQVIA CHPA数据分析平台{% endblock title%}
 
 <!-- 隐藏分隔条 -->
 <div class="ui hidden divider"></div>
@@ -11,7 +13,7 @@
     <div class="ui celled grid">
         <!-- 左边3/16为filter页面 -->
         <div class="three wide column">
-            {% include 'filter.html' %}
+            {% include 'chpa_data/filter.html' %}
         </div>
 
         <!-- 右边13/16为display页面 -->

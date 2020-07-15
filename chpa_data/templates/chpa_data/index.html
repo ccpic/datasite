@@ -1,0 +1,85 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load staticfiles %}
+
+<!-- 写入 base.html 中定义的 title -->
+{% block title %}
+IQVIA CHPA分城市数据分析平台
+{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider">
+
+</div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block index %}
+<div id="pusher" class="pusher" style="padding-top:120px">
+    <div class="ui container">
+        <div class="ui placeholder segment">
+            <div class="ui two column stackable center aligned grid">
+                <div class="ui vertical divider">IQVIA CHPA</div>
+                <div class="middle aligned row">
+                    <div class="column">
+                        <img class="ui centered medium image" src="{% static 'images/China.png' %}">
+                        <h1 class="ui header">
+                            全产品全国数据
+                        </h1>
+                        <a class="ui primary button" href={% url "total_viz" %} >
+                        Go
+                        </a>
+                    </div>
+                    <div class="column">
+                        <img class="ui centered medium image" src="{% static 'images/China_cities.png' %}">
+                        <h1 class="ui header">
+                            部分定义市场分城市数据
+                        </h1>
+                        <a class="ui primary button" href={% url "by_city_viz_34+2" %}>
+                            34+2城市表现一览
+                        </a>
+                        <br>
+                        <a class="ui primary button" href={% url "by_city_viz_customized" %}>
+                            自选城市(组合)查询
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--<h3 class="ui header">-->
+        <!--<div class="content">-->
+        <!--IQVIA全国-->
+        <!--<div class="sub header">KPIs</div>-->
+        <!--</div>-->
+        <!--</h3>-->
+        <!--<div class="ui link centered cards">-->
+        <!--<a class="ui card" href={{ viz.href }}>-->
+        <!--<div class="image">-->
+        <!--<img src="{% static 'images/viz_type/large/trend.png' %}">-->
+        <!--</div>-->
+        <!--<div class="content">-->
+        <!--<div class="header">全品类全国表现查询</div>-->
+        <!--</div>-->
+        <!--<div class="extra content">-->
+        <!--<div class="ui divided selection list">-->
+        <!--<div class="item">-->
+        <!--<div class="ui red horizontal label">核心指标</div>-->
+        <!--111-->
+        <!--</div>-->
+        <!--<div class="item">-->
+        <!--<div class="ui teal horizontal label">展示风格</div>-->
+        <!--222-->
+        <!--</div>-->
+        <!--</div>-->
+        <!--</div>-->
+        <!--</a>-->
+        <!--<div class="ui divider"></div>-->
+
+        <!--<div class="ui link centered cards">-->
+
+        <!--</div>-->
+        <!--</div>-->
+    </div>
+    {% endblock index %}
+
+

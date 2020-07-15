@@ -25,7 +25,7 @@ SECRET_KEY = 'qteh2xx_xz#z#keg0%*++%yo%)n2nn27!ogxk5#2z%4*k57^s)'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'chpa_data',
+    'price_calc',
+    'vbp'
 ]
 
 MIDDLEWARE = [
@@ -70,23 +72,32 @@ TEMPLATES = [
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        # 'LOCATION': '/var/tmp/django_cache',
+        'LOCATION': 'D:/foo/bar',  # 缓存文件存放文件夹，需要有读写权限
     }
 }
 
 WSGI_APPLICATION = 'datasite.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': 'CHPA_city',
+        'ENGINE': 'sql_server.pyodbc',
+        'HOST': '(local)',
+        'USER': '',
+        'PASSWORD': '',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -128,5 +139,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"), #这里的"static"字符串参数为静态文件夹相对于工程根目录的相对位置
 )
+# STATIC_ROOT = os.path.join(BASE_DIR + "/static")
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000000
+
+LOGIN_REDIRECT_URL = '/chpa'
+LOGOUT_REDIRECT_URL = '/accounts/login'

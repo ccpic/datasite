@@ -1,0 +1,218 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load static %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider">
+
+</div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block body %}
+
+<div class="ui hidden divider">
+
+</div>
+
+<div class="ui container">
+    <div id="pusher" class="pusher" style="padding-top:50px">
+        <div class="ui pointing secondary menu">
+            <a class="item active" data-tab="calc">差比价计算器</a>
+            <a class="item" data-tab="doc">差比价官方规则</a>
+        </div>
+        <div class="ui tab segment active" data-tab="calc">
+            <form class="ui form" action="{% url 'price_calc:ajax_calc' %}" method="get" onsubmit="return false;">
+                <div class="ui two column grid">
+                    <div class="column">
+                        <h2 class="ui header">
+                            <i class="flag icon"></i>
+                            <div class="content">
+                                对标包装
+                            </div>
+                        </h2>
+                        <div class="ui horizontal segment">
+                            <div class="field" id="sfield_bm">
+                                <label>剂量</label>
+                                <input placeholder="请填写一个数字" name="strength_bm" id="strength_bm" type="text">
+                            </div>
+                            <div class="field">
+                                <label>装量/盒</label>
+                                <input placeholder="请填写一个整数" name="number_bm" id="number_bm" type="text">
+                            </div>
+                            <div class="field">
+                                <label>总价（元）/盒</label>
+                                <input placeholder="请填写一个数字" name="price_bm" id="price_bm" type="text">
+                            </div>
+                            <div class="field">
+                                <label>单价（元）/最小制剂单位</label>
+                                <p class="ui red tag label"><span id='uprice_bm'>?</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <h2 class="ui header">
+                            <i class="help icon"></i>
+                            <div class="content">
+                                待定包装
+                            </div>
+                        </h2>
+                        <div class="ui horizontal segment">
+                            <div class="field" id="sfield_ta">
+                                <label>剂量</label>
+                                <input placeholder="请填写一个数字" name="strength_ta" id="strength_ta" type="text">
+                            </div>
+                            <div class="field">
+                                <label>装量/盒</label>
+                                <input placeholder="请填写一个整数" name="number_ta" id="number_ta" type="text">
+                            </div>
+                            <div class="field">
+                                <label>总价（元）/盒</label>
+                                <p class="ui red tag label"><span id='price_ta'>?</span></p>
+                            </div>
+                            <div class="field">
+                                <label>单价（元）/最小制剂单位</label>
+                                <p class="ui red tag label"><span id='uprice_ta'>?</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div class="ui hidden divider">
+
+                </div>
+                <!--<div class="inline field">-->
+                <!--<div class="ui toggle checkbox">-->
+                <!--<input type="checkbox" onclick="checkboxOnclick(this)">-->
+                <!--<label>剂量一致</label>-->
+                <!--</div>-->
+                <!--</div>-->
+                <div class="ui info message">
+                    <i class="close icon"></i>
+                    <div class="header">
+                        请注意
+                    </div>
+                    <ul class="list">
+                        <li>此差比价计算器为基础版</li>
+                        <li>只考虑剂量差别和装量差别</li>
+                        <li>目前不支持剂型不同等复杂情况的计算</li>
+                    </ul>
+                </div>
+                <div type="button" class="ui blue submit button" id="calc">差比价计算</div>
+                <!--<button class="ui blue submit button" id="sum">计算</button>-->
+                <div class="ui error message"></div>
+            </form>
+        </div>
+        <div class="ui tab segment" data-tab="doc">
+
+            <iframe src="{% static 'pdf/最新差比价规则.pdf' %}" width="100%" height="768"></iframe>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    $('.message .close').click(function(){
+         $(this).closest('.message').transition('fade');
+    });
+</script>
+<script>
+    $('.pointing.secondary.menu .item').tab();
+
+</script>
+<script>
+    $(document).ready(function () {
+        $("#calc").click(function () {
+            var number_bm = $("#number_bm").val();
+            var price_bm = $("#price_bm").val();
+            var number_ta = $("#number_ta").val();
+            var strength_bm = $("#strength_bm").val();
+            var strength_ta = $("#strength_ta").val();
+            $.get("{% url 'price_calc:ajax_calc' %}", { 'number_bm': number_bm, 'price_bm': price_bm, 'number_ta':number_ta, 'strength_bm': strength_bm, 'strength_ta':strength_ta }, function (ret) {
+                $('#uprice_bm').html(ret['uprice_bm']),
+                $('#price_ta').html(ret['price_ta']),
+                $('#uprice_ta').html(ret['uprice_ta'])
+            })
+        });
+    });
+</script>
+<script>
+$('.ui.form')
+  .form({
+      strength_bm: {
+      identifier  : 'strength_bm',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '对标包装剂量不能为空'
+        },
+        {
+          type   : 'number',
+          prompt : '对标包装剂量必须为数字'
+        },
+      ]
+    },
+    strength_ta: {
+      identifier  : 'strength_ta',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '待定包装剂量不能为空'
+        },
+        {
+          type   : 'number',
+          prompt : '待定包装剂量必须为数字'
+        },
+      ]
+    },
+    number_bm: {
+      identifier  : 'number_bm',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '对标包装装量不能为空'
+        },
+        {
+          type   : 'integer',
+          prompt : '对标包装装量必须为整数'
+        },
+      ]
+    },
+    number_ta: {
+      identifier  : 'number_ta',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '待定包装装量不能为空'
+        },
+        {
+          type   : 'integer',
+          prompt : '待定包装装量必须为整数'
+        },
+      ]
+    },
+    price_bm: {
+      identifier  : 'price_bm',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '对标包装总价不能为空'
+        },
+        {
+          type   : 'number',
+          prompt : '对标包装总价必须为数字'
+        },
+      ]
+    },
+  })
+;
+
+</script>
+{% endblock body %}
+
+
+
+
+

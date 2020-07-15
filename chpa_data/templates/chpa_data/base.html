@@ -8,7 +8,7 @@
 <head>
     <!-- 网站采用的字符编码 -->
     <meta charset="utf-8">
-    <title>数据分析</title>
+    <title>{% block title %}{% endblock title%}</title>
     <!-- DataTables Semantic UI主题的CSS -->
     <link rel="stylesheet" href="{% static 'datatables/dataTables.semanticui.min.css' %}">
     <link rel="stylesheet" href="{% static 'Semantic-UI-CSS-master/semantic.min.css' %}">
@@ -22,6 +22,7 @@
     <script type="text/javascript" src="{% static 'Semantic-UI-CSS-master/semantic.js' %}"></script>
     <script src="{% static 'echarts/echarts.min.js' %}"></script>
     <script src="{% static 'echarts/china.js' %}"></script>
+    <link REL="SHORTCUT ICON" HREF="{% static "favicon.ico" %}"/>
 </head>
 
 
@@ -31,11 +32,11 @@
 {#    <div class="ui text loader">页面加载中...因数据量巨大，请稍后...<br>页面置于后台能提升加载速度哦~</div>#}
 {#</div>#}
 <!-- 引入导航栏 -->
-{% include 'header.html' %}
+{% include 'chpa_data/header.html' %}
 <!-- 预留具体页面的位置 -->
 {% block body %}{% endblock body %}
 <!-- 引入注脚 -->
-{% include 'footer.html' %}
+{% include 'chpa_data/footer.html' %}
 
 </body>
 

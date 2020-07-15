@@ -1,0 +1,439 @@
+<{% extends "chpa_data/analysis.html" %}
+{% block analysis %}
+
+<div class="ui active dimmer" id="dimmer">
+    <div class="ui text loader">请使用左侧筛选框选择分析维度和定义市场</div>
+</div>
+<div class="ui pointing secondary menu">
+    <a class="item active" data-tab="total">总体表现</a>
+    <a class="item" data-tab="competition">竞争现状</a>
+    <a class="item" data-tab="trend">竞争趋势</a>
+    <a class="item" data-tab="trend_summary">趋势表现汇总</a>
+    <a class="item" data-tab="price">价格分析</a>
+</div>
+<div class="ui tab segment active" data-tab="total">
+    <h3 class="ui header">
+        <div class="content">
+            定义市场当前表现
+            <div class="sub header">KPIs</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui small three statistics">
+        <div class="statistic">
+            <div class="value" id="value_size">
+
+            </div>
+            <div class="label" id="label_size_unit">
+                滚动年金额
+            </div>
+        </div>
+        <div class="statistic" id="div_gr">
+            <div class="value" id="value_gr">
+            </div>
+            <div class="label">
+                同比增长
+            </div>
+        </div>
+        <div class="statistic" id="div_cagr">
+            <div class="value" id="value_cagr">
+
+            </div>
+            <div class="label">
+                4年CAGR
+            </div>
+        </div>
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            定义市场总量趋势
+            <div class="sub header">柱状折线复合图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="bar_total_trend" style="width:1000px; height:600px;"></div>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="competition">
+    <h3 class="ui header">
+        <div class="content">
+            最新横断面KPI一览
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('table') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container" id='result_table' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+
+</div>
+<div class="ui tab segment" data-tab="trend">
+    <h3 class="ui header">
+        <div class="content">
+            定义市场竞争趋势 - 绝对值
+            <div class="ui red basic label">
+                Top10
+            </div>
+            <div class="sub header">堆积面积图
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="stackarea_abs_trend" style="width:1000px; height:600px;"></div>
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            定义市场竞争趋势 - 份额
+            <div class="ui red basic label">
+                Top10
+            </div>
+            <div class="sub header">百分百堆积面积图
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="stackarea_share_trend" style="width:1000px; height:600px;"></div>
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            定义市场竞争趋势 - 同比增长率
+            <div class="ui red basic label">
+                Top10
+            </div>
+            <div class="sub header">折线图
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="line_gr_trend" style="width:1000px; height:600px;"></div>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="trend_summary">
+    <h3 class="ui header">
+        <div class="content">
+            趋势汇总
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('table_trend') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container" id='result_table_trend' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
+<div class="ui tab segment" data-tab="price">
+    <!--<h3 class="ui header">-->
+        <!--<div class="content">-->
+            <!--价格趋势汇总-->
+            <!--<div class="ui red basic label">-->
+                <!--单价/最小制剂单位-->
+            <!--</div>-->
+            <!--<div class="sub header">数据表格</div>-->
+        <!--</div>-->
+    <!--</h3>-->
+    <!--<div class="ui divider"></div>-->
+    <!--<div class="ui top attached button" tabindex="0"-->
+         <!--onclick="selectElementContents( document.getElementById('table_price_tablet') );"-->
+         <!--data-content="复制成功" data-position="bottom center">-->
+        <!--<i class="copy icon"></i>-->
+        <!--复制到剪贴板-->
+    <!--</div>-->
+    <!--<div class="ui hidden divider"></div>-->
+
+    <!--<div class="ui container" id='result_table_price_tablet'-->
+         <!--style="width: 100%; overflow-x: scroll; overflow-y: hidden;">-->
+    <!--</div>-->
+    <h3 class="ui header">
+        <div class="content">
+            价格趋势汇总
+            <div class="ui red basic label">
+                单价/盒
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('table_price_box') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container" id='result_table_price_box'
+         style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
+
+<script type="text/javascript">
+    // 请求服务器，返回JSON
+    $(document).ready(function(){
+        $("#AJAX_get").click(function(){
+            $("#dimmer").removeClass();
+            $.ajaxSetup({
+                    data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
+                });
+            // 获取下拉框的值
+            var market = $("#db_table-select").val();
+            var city = $("#city-select").val();
+            var dimension = $("#dimension-select").val();
+            var period = $("#period-select").val();
+            var unit = $("#unit-select").val();
+            var tc_i = $("#tc_i-select").val();
+            var tc_ii = $("#tc_ii-select").val();
+            var tc_iii = $("#tc_iii-select").val();
+            var tc_iv = $("#tc_iv-select").val();
+            var molecule = $("#molecule-select").val();
+            var product = $("#product-select").val();
+            var package = $("#package-select").val();
+            var corp = $("#corp-select").val();
+            var mt = $("#mt-select").val();
+            var form = $("#form-select").val();
+
+            //页面上的部分元素根据下拉框取值改变
+            $("#label_size_unit").html("最新"+period+unit);
+
+            // 打包成get请求发送的数据
+            var data = {"dimension-select": dimension,
+                        "period-select": period,
+                        "unit-select": unit,
+                        "tc_i-select": tc_i,
+                        "tc_ii-select": tc_ii,
+                        "tc_iii-select": tc_iii,
+                        "tc_iv-select": tc_iv,
+                        "molecule-select": molecule,
+                        "product-select": product,
+                        "package-select": package,
+                        "corp-select": corp,
+                        "mt-select": mt,
+                        "form-select": form,
+                        "city-select": city,
+                        "market-select": market,
+            };
+            $(
+                function () {
+                    getData('bar_total_trend', '{% url 'ajax_chart_by_city' 'bar_total_trend' %}');
+                    getData('stackarea_abs_trend', '{% url 'ajax_chart_by_city' 'stackarea_abs_trend' %}');
+                    getData('stackarea_share_trend', '{% url 'ajax_chart_by_city' 'stackarea_share_trend' %}');
+                    getData('line_gr_trend', '{% url 'ajax_chart_by_city' 'line_gr_trend' %}');
+                }
+            );
+
+            function getData(chart_id, ajax_url) {
+                var chart = echarts.init(document.getElementById(chart_id), 'white', {renderer: 'canvas'});
+                chart.showLoading({
+                  text : '正在加载数据'
+                });  //增加提示
+                $.ajax({
+                    type: "GET",
+                    url: ajax_url,
+                    data: data,
+                    dataType: 'json',
+                    success: function (ret) {
+                        chart.clear();
+                        chart.setOption(ret.data);
+                        chart.hideLoading();
+                    }
+                });
+            };
+            $.ajax({
+                // 请求的url
+                url: '{% url 'ajax_summary_customized' %}',
+                // 请求的type
+                type:'POST',
+                // 发送的数据
+                data: data,
+                dataType: 'json',
+                // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
+                success:function(ret){     //成功执行
+                    // 把查询结果输出到网页上
+                    $("#value_size").html(ret["market_size"].toLocaleString());
+                    $("#value_gr").html(toPercent(ret["market_gr"]));
+                    if (ret["market_gr"] < 0){
+                        $("#div_gr").removeClass();
+                        $("#div_gr").addClass("red statistic");
+                    } else if (ret["market_gr"] > 0) {
+                        $("#div_gr").removeClass();
+                        $("#div_gr").addClass("green statistic");
+                    };
+                    $("#value_cagr").html(toPercent(ret["market_cagr"]));
+                    if (ret["market_cagr"] < 0){
+                        $("#div_cagr").removeClass();
+                        $("#div_cagr").addClass("red statistic");
+                    } else if (ret["market_cagr"] > 0) {
+                        $("#div_cagr").removeClass();
+                        $("#div_cagr").addClass("green statistic");
+                    };
+                }
+            });
+            $.ajax({
+                // 请求的url
+                url: '{% url 'ajax_ptable_customized' %}',
+                // 请求的type
+                type:'POST',
+                // 发送的数据
+                data: data,
+                // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
+                success:function(ret){     //成功执行
+                    // 把查询结果输出到网页上
+                    $("#result_table").html(ret);
+                    $('#table').DataTable(
+                        {
+                        order: [[ 1, "desc" ]],
+                        pageLength: 25,
+                        autoWidth: false,
+                        columnDefs: [
+                            { "width": "10%", "targets": 3 },
+                            {
+                              targets: 3,
+                              render: $.fn.dataTable.render.percentBar( 'square','#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge' )
+                             },
+                            {
+                            "targets": 6,
+                            "createdCell": function (td, cellData, rowData, row, col) {
+                              if ( cellData < 100 ) {
+                                $(td).css('color', 'red')
+                                }
+                                else if ( cellData > 100 ) {
+                                $(td).css('color', 'green')
+                                }
+                                else if (cellData.indexOf(",") != -1) {
+                                $(td).css('color', 'green')
+                                }
+                              }
+                            },
+                            {
+                            "targets": [2, 4, 5],
+                            "createdCell": function (td, cellData, rowData, row, col) {
+                              if ( cellData.startsWith('-') ) {
+                                $(td).css('color', 'red')
+                                }
+                              }
+                            },
+                          ]
+                        });
+                },
+				error:function(){            //失败
+					console.log('失败')
+				}
+            });
+            $.ajax({
+                // 请求的url
+                url: '{% url 'ajax_ptable_trend_customized' %}',
+                // 请求的type
+                type:'POST',
+                // 发送的数据
+                data: data,
+                // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
+                success:function(ret){     //成功执行
+                    // 把查询结果输出到网页上
+                    $("#result_table_trend").html(ret);
+                    $('#table_trend').DataTable(
+                        {
+                        order: [[ 5, "desc" ]],
+                        pageLength: 25,
+                        autoWidth: false,
+                        columnDefs: [
+                            {
+                              targets: [6,7,8,9,10],
+                              render: $.fn.dataTable.render.percentBar( 'square','#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge' )
+                             },
+                            {
+                            "targets": [11,12,13,14,15,16,17,18,19],
+                            "createdCell": function (td, cellData, rowData, row, col) {
+                              if ( cellData.startsWith('-') ) {
+                                $(td).css('color', 'red')
+                                }
+                              }
+                            },
+                          ]
+                        });
+                },
+				error:function(){            //失败
+					console.log('失败')
+				}
+            });
+            $.ajax({
+                // 请求的url
+                url: '{% url 'ajax_price_customized' '盒数' %}',
+                // 请求的type
+                type:'POST',
+                // 发送的数据
+                data: data,
+                // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
+                success:function(ret){     //成功执行
+                    // 把查询结果输出到网页上
+                    $("#result_table_price_box").html(ret);
+                    $('#table_price_box').DataTable(
+                        {
+                        order: [[ 1, "desc" ]],
+                        pageLength: 25,
+                        autoWidth: false,
+                        columnDefs: [
+                            {
+                            "targets": [6,7,8,9,10,11],
+                            "createdCell": function (td, cellData, rowData, row, col) {
+                              if ( cellData.startsWith('-') ) {
+                                $(td).css('color', 'red')
+                                }
+                              }
+                            },
+                          ]
+                        });
+                },
+				error:function(){            //失败
+					console.log('失败')
+				}
+            });
+        })
+    })
+
+</script>
+<script>
+function toPercent(str){
+    if (isNaN(str) == false){
+        var strP=Number(str*100).toFixed(1);
+        strP+="%";
+    } else {
+        strP = str;
+    }
+    return strP;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+{% endblock analysis %}
+
