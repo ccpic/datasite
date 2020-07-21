@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    'rest_framework',
     'chpa_data',
     'price_calc',
     'vbp'
@@ -66,6 +68,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'tags': 'chpa_data.templatetags.tags',
+            }
         },
     },
 ]
@@ -145,3 +150,8 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000000
 
 LOGIN_REDIRECT_URL = '/chpa'
 LOGOUT_REDIRECT_URL = '/accounts/login'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}

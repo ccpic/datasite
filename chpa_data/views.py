@@ -2,7 +2,7 @@ from django.shortcuts import render, HttpResponseRedirect
 from sqlalchemy import create_engine
 import pandas as pd
 import json
-from django.utils import six
+import six
 from django.http import HttpResponse
 from .charts import *
 from django.views.decorators.cache import cache_page

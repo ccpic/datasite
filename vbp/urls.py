@@ -1,0 +1,17 @@
+from django.urls import include, path
+from . import views
+# from rest_framework import routers
+
+# router = routers.DefaultRouter()
+# router.register(r'records', views.RecordViewSet)
+# router.register(r'tenders', views.TenderViewSet)
+
+app_name = 'vbp'
+urlpatterns = [
+    path('', views.index, name='index'),
+    path(r'bids/<int:bid_id>',  views.bid_detail, name='bid_detail'),
+    path(r'tenders/<int:tender_id>', views.tender_detail, name='tender_detail'),
+    path(r'records/<int:record_id>', views.record_detail, name='record_detail')
+    # path('', include(router.urls)),
+    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+]

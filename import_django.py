@@ -4,28 +4,42 @@ import time
 from sqlalchemy import  create_engine
 import pandas as pd
 import django
+import datetime
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "datasite.settings")
 django.setup()
 
 from chpa_data.models import *
+from vbp.models import *
 
 engine = create_engine('mssql+pymssql://(local)/CHPA_1806')
 table = 'data'
 
 
-# def importCity():
-#     sql = "SELECT Distinct City FROM "+table
-#     df = pd.read_sql(sql=sql, con=engine)
-#
-#     from data_viz.models import City
-#
-#     l = []
-#     for city in df.values:
-#         l.append(City(cname=city[0], ename=''))
-#
-#     City.objects.bulk_create(l)
+def import_tender():
+    df = pd.read_excel('vbp.xlsx', sheet_name='第二轮集采 by 省')
+    print(df)
+
+    l = []
+    for tender in df['品种'].unique():
+        print(tender)
+        tender_begin = datetime.datetime.strptime('10-03-2020', "%d-%m-%Y")
+        l.append(Tender(target=tender, vol='第二轮33品种', tender_begin=tender_begin, bidder_num=3))
+
+    Tender.objects.bulk_create(l)
+
+
+def import_volume():
+    df = pd.read_excel('vbp.xlsx', sheet_name='第二轮集采 by 省')
+    print(df)
+
+    l = []
+    for volume in df.values:
+        print(volume)
+        l.append(Volume(tender=Tender.objects.get(target=volume[1]), region=volume[0], spec=volume[2], amount_reported=volume[3]))
+
+    Volume.objects.bulk_create(l)
 #
 #
 # def importCorp():
@@ -304,17 +318,7 @@ def importModel(dict):
 
 
 if __name__ == "__main__":
-    start = time.clock()
-    # importCity()
-    # importCorp()
-    # importManufType()
-    # importFormulation()
-    # importTCI()
-    # importTCII()
-    # importTCIII()
-    # importTCIV()
-    # importMOLECULE()
-    # importProduct()
-    # importPack()
-    importModel(d_model)
-    print('Done!', time.clock()-start)
+    # importModel(d_model)
+    import_tender()
+    import_volume()
+    print('Done!', time.process_time())

@@ -17,6 +17,7 @@
             差比价计算器
         </a>
         {%  if request.user.is_staff  %}
+            <a href="{% url 'vbp:index' %}" class="item">带量采购数据</a>
             <a href="{% url 'admin:index' %}" class="item">后台管理</a>
         {% endif %}
     </div>

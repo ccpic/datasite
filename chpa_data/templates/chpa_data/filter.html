@@ -7,7 +7,7 @@
             <div class="field">
                 <div class="fields">
                     <div class="sixteen wide field">
-                        <select name="DIMENSION_select" id="DIMENSION_select" class="ui fluid search dropdown">
+                        <select name="DIMENSION_select" id="DIMENSION_select" class="ui fluid small search dropdown">
                             {% for key, value in mselect_dict.items %}
                                 {% if value.select == 'PRODUCT' %}
                                     <option value="{{ value.select }}" selected>{{ key }}</option>
@@ -22,14 +22,14 @@
                 </div>
                 <div class="fields">
                     <div class="eight wide field">
-                        <select name="UNIT_select" id="UNIT_select" class="ui fluid search dropdown">
+                        <select name="UNIT_select" id="UNIT_select" class="ui fluid small search dropdown">
                             <option value="Value" selected>金额</option>
                             <option value="Volume">盒数</option>
                             <option value="Volume (Counting Unit)">最小制剂单位数</option>
                         </select>
                     </div>
                     <div class="eight wide field">
-                        <select name="PERIOD_select" id="PERIOD_select" class="ui fluid search dropdown">
+                        <select name="PERIOD_select" id="PERIOD_select" class="ui fluid small search dropdown">
                             <option value="MAT" selected>滚动年</option>
                             <option value="QTR">季度</option>
                         </select>
@@ -48,7 +48,7 @@
                 {% for key, value in mselect_dict.items %}
                 <div class="field">
                     <select name="{{ value.select|add:"_select[]" }}" id="{{ value.select|add:"_select" }}" multiple=""
-                            class="ui fluid search dropdown">
+                            class="ui fluid small search dropdown">
                         <option value="">{{ key }}</option>
                     </select>
                 </div>
@@ -100,7 +100,9 @@
     // jQuery语法遍历所有多选框
     $('.ui.fluid.search.dropdown.selection.multiple').each(function () {
         // Semantic UI语法获得多选框默认文本
-        var text = $(this).dropdown('get default text');
+        {#var text = $(this).dropdown('get default text');#}
+        // 上方语句如遇到bug可不使用Semantic UI API，直接用Jquery语句
+        var text = $(this).children('select').children('option:first').text();
         // 根据字典倒推该多选框是哪个字段
         var column = dict[text]['select'];
         $(this).dropdown(
