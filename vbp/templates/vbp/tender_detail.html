@@ -16,51 +16,61 @@
     <div class="ui container">
         <div id="pusher" class="pusher" style="padding-top:50px">
             {% if tender %}
-                <div class="ui grid">
-                    <div class="ui hidden divider"></div>
-                    <div class="sixteen wide column">
-                        <div class="ui huge breadcrumb">
-                            <a href="{% url "vbp:index" %}" class="section">首页</a>
-                            <i class="right angle icon divider"></i>
-                            <div href="{% url "vbp:tender_detail" tender.pk %}" class="section" class="active section">{{ tender }}</div>
+                <div class="ui huge breadcrumb">
+                    <a href="{% url "vbp:index" %}" class="section">首页</a>
+                    <i class="right angle icon divider"></i>
+                    <div href="{% url "vbp:tender_detail" tender.pk %}" class="section"
+                         class="active section">{{ tender }}</div>
+                </div>
+                <div class="ui celled grid">
+                    <div class="row">
+                        <div class="sixteen wide column">
+                            <div class="ui hidden divider"></div>
                         </div>
-                        <div class="ui divider"></div>
-                        <div class="ui hidden divider"></div>
-
                     </div>
-                    <div class="eight wide column">
-                        <table class="ui celled compact table" id="table">
-                            <thead>
+                    <div class="row">
+                        <div class="eight wide column">
+                            <table class="ui celled compact green table" id="table">
+                                <thead>
                                 <tr>
                                     <th>区域<i class="sort icon"></i></th>
                                     {% for bid in tender.winners %}
-                                        <th><a href="{% url 'vbp:bid_detail' bid.pk %}">{{ bid.bidder }}</a><i class="sort icon"></i></th>
+                                        <th><a href="{% url 'vbp:bid_detail' bid.pk %}">{{ bid.bidder }}</a><i
+                                                class="sort icon"></i></th>
                                     {% endfor %}
                                 </tr>
-                            </thead>
-                            <tbody>
-                            {% for region in tender.regions %}
-                                <tr>
-                                    <td>{{ region }}</td>
-                                    {% for bid in tender.winners %}
-                                        <td>{% volume_win bid=bid region=region %}</td>
-                                    {% endfor %}
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                            <tfoot style="background-color: #f9fafb">
+                                </thead>
+                                <tbody>
+                                {% for region in tender.regions %}
+                                    <tr>
+                                        <td>{{ region }}</td>
+                                        {% for bid in tender.winners %}
+                                            <td>{% volume_win bid=bid region=region %}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot style="background-color: #f9fafb">
                                 <tr>
                                     <th>区域</th>
                                     {% for bid in tender.winners %}
                                         <th>{% volume_win bid=bid %}</th>
                                     {% endfor %}
                                 </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div class="eight wide column">
-                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                        <div id="main" style="height:500px"></div>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="eight wide column">
+                            <div class="ui segments">
+                                <div class="ui red segment">
+                                    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                                    <div id="pie" style="height:400px"></div>
+                                </div>
+                                <div class="ui blue segment">
+                                    <div id="map" style="height:400px"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             {% endif %}
@@ -105,6 +115,8 @@
     </script>
     <script type="text/javascript">
         COLORLIST = ['navy', 'crimson', 'darkgreen', 'darkorange', 'saddlebrown', 'deepskyblue', 'pink', 'olivedrab',];
+
+        // 省份轮选地图
         var d = {};
         var splitList = [];
         i = 0;
@@ -112,7 +124,7 @@
             d['{{ bid }}'] = i;
 
             var split_options = {
-              start: i,
+                start: i,
                 end: i,
                 label: '{{ bid.bidder.name }}',
                 color: COLORLIST[i]
@@ -121,10 +133,10 @@
             i += 1;
         {% endfor %}
 
-        var data = [];
+        var mapData = [];
         {% for region in tender.regions %}
             var region = '{{ region }}';
-            if(region==='新疆（含兵团）'){
+            if (region === '新疆（含兵团）') {
                 region = '新疆'
             }
             var region_data = {
@@ -133,11 +145,10 @@
                 value: d['{% winner tender region %}'],
                 volume: '{% region_std_volume tender region %}'
             };
-            data.push(region_data);
+            mapData.push(region_data);
         {% endfor %}
-        console.log(data)
 
-        var myChart = echarts.init(document.getElementById('main'));
+        var map = echarts.init(document.getElementById('map'));
         option = {
             tooltip: {
                 trigger: 'item',
@@ -176,12 +187,71 @@
                     },
                 },
                 //此为加载的数据
-                data: data
+                data: mapData
             }]
         };
+        map.setOption(option);
 
-        myChart.setOption(option);
+        // 份额饼图
+        var pieData = []; legendData = [];
+        {% for bid in tender.winners %}
+            bidValue = '{{ bid.std_volume_win }}';
+            bidValue = Number(bidValue).toFixed(1);
+            bidData = {
+                'value': bidValue,
+                'name': '{{ bid.bidder.name }}'
+            };
+            legendData.push('{{ bid.bidder.name }}');
+            pieData.push(bidData);
+        {% endfor %}
+        console.log(pieData);
 
+        var pie = echarts.init(document.getElementById('pie'));
+
+        option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b}: {c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 10,
+                data:legendData
+            },
+            series: [
+                {
+                    name: '份额获取',
+                    type: 'pie',
+                    radius: ['35%', '50%'],
+                    center: ['50%', '60%'],
+                    avoidLabelOverlap: true,
+                    label: {
+                        formatter: '{c} ({d}%)',
+                        position: 'outer',
+                        alignTo: 'labelLine',
+                        margin: 20,
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    data: pieData,
+                    itemStyle: {
+                        emphasis: {
+                            show: true,
+                            fontSize: '30',
+                            fontWeight: 'bold'
+                        },
+                        normal: {
+                            color: function (params) {
+                                //自定义颜色
+                                return COLORLIST[params.dataIndex]
+                            }
+                        }
+                    }
+                }
+            ]
+        };
+        pie.setOption(option);
     </script>
 
 {% endblock body %}

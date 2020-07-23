@@ -16,80 +16,84 @@
     <div class="ui container">
         <div id="pusher" class="pusher" style="padding-top:50px">
             {% if bid %}
-                <div class="ui grid">
-                    <div class="ui hidden divider"></div>
-                    <div class="sixteen wide column">
-                        <div class="ui huge breadcrumb">
-                            <a href="{% url "vbp:index" %}" class="section">首页</a>
-                            <i class="right angle icon divider"></i>
-                            <a href="{% url "vbp:tender_detail" bid.tender.pk %}" class="section">{{ bid.tender }}</a>
-                            <i class="right angle icon divider"></i>
-                            <div class="active section"><abbr title="{{ bid.bidder }}">{{ bid.bidder|truncatechars:7 }}</abbr></div>
-                        </div>
-                        <div class="ui divider"></div>
+                <div class="ui huge breadcrumb">
+                    <a href="{% url "vbp:index" %}" class="section">首页</a>
+                    <i class="right angle icon divider"></i>
+                    <a href="{% url "vbp:tender_detail" bid.tender.pk %}"
+                       class="section">{{ bid.tender }}</a>
+                    <i class="right angle icon divider"></i>
+                    <div class="active section"><abbr
+                            title="{{ bid.bidder }}">{{ bid.bidder|truncatechars:7 }}</abbr></div>
+                </div>
+                <div class="ui celled grid">
+                    <div class="row">
                         <div class="ui hidden divider"></div>
-                        <div class="ui three small statistics">
-                            <div class="statistic">
-                                <div class="value">
-                                    <abbr title="{{ bid.tender.target }}">{{ bid.tender.target|truncatechars:5 }}</abbr>
+                        <div class="sixteen wide column">
+                            <div class="ui hidden divider"></div>
+                            <div class="ui three tiny statistics">
+                                <div class="statistic">
+                                    <div class="value">
+                                        <abbr title="{{ bid.tender.target }}">{{ bid.tender.target|truncatechars:5 }}</abbr>
+                                    </div>
+                                    <div class="label">
+                                        标的
+                                    </div>
                                 </div>
-                                <div class="label">
-                                    标的
+                                <div class="statistic">
+                                    <div class="value">
+                                        <abbr title="{{ bid.bidder }}">{{ bid.bidder|truncatechars:7 }}</abbr>
+                                    </div>
+                                    <div class="label">
+                                        竞标厂商
+                                    </div>
+                                </div>
+                                <div class="{% if bid.volume_set.all %}green {% else %}red {% endif %}statistic">
+                                    <div class="value">
+                                        {% if bid.volume_set.all %}中标{% else %}落标{% endif %}
+                                    </div>
+                                    <div class="label">
+                                        是否中标
+                                    </div>
                                 </div>
                             </div>
-                            <div class="statistic">
-                                <div class="value">
-                                    <abbr title="{{ bid.bidder }}">{{ bid.bidder|truncatechars:7 }}</abbr>
+                            <div class="ui hidden divider"></div>
+                            <div class="ui three tiny statistics">
+                                <div class="statistic">
+                                    <div class="value">
+                                        &yen{{ bid.bid_price|fix_decimal:2 }}
+                                    </div>
+                                    <div class="label">
+                                        竞标价
+                                    </div>
                                 </div>
-                                <div class="label">
-                                    竞标厂商
+                                <div class="red statistic">
+                                    <div class="value">
+                                        {% if bid.original_price %}
+                                            {{ bid.price_cut|percentage:0 }}
+                                        {% else %}
+                                            未知
+                                        {% endif %}
+                                    </div>
+                                    <div class="label">
+                                        降价幅度
+                                    </div>
+                                </div>
+                                <div class="statistic">
+                                    <div class="value">
+                                        {{ bid.value_win|fix_decimal:0 }}万
+                                    </div>
+                                    <div class="label">
+                                        预计年销售额获取
+                                    </div>
                                 </div>
                             </div>
-                            <div class="{% if bid.volume_set.all %}green {% else %}red {% endif %}statistic">
-                                <div class="value">
-                                    {% if bid.volume_set.all %}中标{% else %}落标{% endif %}
-                                </div>
-                                <div class="label">
-                                    是否中标
-                                </div>
-                            </div>
+                            <div class="ui hidden divider"></div>
                         </div>
-                        <div class="ui hidden divider"></div>
-                        <div class="ui three small statistics">
-                            <div class="statistic">
-                                <div class="value">
-                                    &yen{{ bid.bid_price|fix_decimal:2 }}
-                                </div>
-                                <div class="label">
-                                    竞标价
-                                </div>
-                            </div>
-                            <div class="red statistic">
-                                <div class="value">
-                                    {%  if bid.original_price  %}
-                                        {{ bid.price_cut|percentage:0 }}
-                                    {% else %}
-                                        未知
-                                    {% endif %}
-                                </div>
-                                <div class="label">
-                                    降价幅度
-                                </div>
-                            </div>
-                            <div class="statistic">
-                                <div class="value">
-                                    {{ bid.value_win|fix_decimal:0 }}万
-                                </div>
-                                <div class="label">
-                                    预计年销售额获取
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ui hidden divider"></div>
                     </div>
-                    <div class="eight wide column">
-                        <table class="ui celled table" id="table">
-                            <thead>
+                    <div class="row">
+                        <div class="eight wide column">
+                            <table class="ui celled table" id="table">
+                                <thead>
                                 <tr>
                                     <th>中标区域</th>
                                     {% for spec in bid.tender.get_specs %}
@@ -100,22 +104,22 @@
                                     {% endif %}
                                     <th>整体占比</th>
                                 </tr>
-                            </thead>
-                            <tbody>
-                            {% for region in bid.regions_win %}
-                                <tr>
-                                    <td style="width: 20%">{{ region }}</td>
-                                    {% for spec in bid.tender.get_specs %}
-                                        <td>{% volume_win bid spec region %}</td>
-                                    {% endfor %}
-                                    {% if bid.tender.specs_num > 1 %}
-                                        <td style="width: 20%">{% volume_win bid=bid region=region %}</td>
-                                    {% endif %}
-                                    <td style="width: 20%">{% volume_win_percentage bid region %}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                            <tfoot>
+                                </thead>
+                                <tbody>
+                                {% for region in bid.regions_win %}
+                                    <tr>
+                                        <td style="width: 20%">{{ region }}</td>
+                                        {% for spec in bid.tender.get_specs %}
+                                            <td>{% volume_win bid spec region %}</td>
+                                        {% endfor %}
+                                        {% if bid.tender.specs_num > 1 %}
+                                            <td style="width: 20%">{% volume_win bid=bid region=region %}</td>
+                                        {% endif %}
+                                        <td style="width: 20%">{% volume_win_percentage bid region %}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot>
                                 <tr>
                                     <th>总计</th>
                                     {% for spec in bid.tender.get_specs %}
@@ -126,12 +130,13 @@
                                     {% endif %}
                                     <th style="width: 20%">{% volume_win_percentage bid=bid %}</th>
                                 </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div class="eight wide column">
-                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                        <div id="main" style="height:500px"></div>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="eight wide column">
+                            <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                            <div id="map" style="height:400px"></div>
+                        </div>
                     </div>
                 </div>
             {% endif %}
@@ -178,7 +183,7 @@
         var data = [];
         {% for region in bid.regions_win %}
             var region = '{{ region }}';
-            if(region==='新疆（含兵团）'){
+            if (region === '新疆（含兵团）') {
                 region = '新疆'
             }
             var region_data = {
@@ -190,7 +195,7 @@
         {% endfor %}
         console.log(data);
 
-        var myChart = echarts.init(document.getElementById('main'));
+        var myChart = echarts.init(document.getElementById('map'));
         option = {
             tooltip: {
                 trigger: 'item',
