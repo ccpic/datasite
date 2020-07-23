@@ -1,0 +1,192 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}带量采购数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+            {% if tender %}
+                <div class="ui grid">
+                    <div class="ui hidden divider"></div>
+                    <div class="sixteen wide column">
+                        <div class="ui huge breadcrumb">
+                            <a href="{% url "vbp:index" %}" class="section">首页</a>
+                            <i class="right angle icon divider"></i>
+                            <div href="{% url "vbp:tender_detail" tender.pk %}" class="section" class="active section">{{ tender }}</div>
+                        </div>
+                        <div class="ui divider"></div>
+                        <div class="ui hidden divider"></div>
+
+                    </div>
+                    <div class="eight wide column">
+                        <table class="ui celled compact table" id="table">
+                            <thead>
+                                <tr>
+                                    <th>区域<i class="sort icon"></i></th>
+                                    {% for bid in tender.winners %}
+                                        <th><a href="{% url 'vbp:bid_detail' bid.pk %}">{{ bid.bidder }}</a><i class="sort icon"></i></th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for region in tender.regions %}
+                                <tr>
+                                    <td>{{ region }}</td>
+                                    {% for bid in tender.winners %}
+                                        <td>{% volume_win bid=bid region=region %}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                            <tfoot style="background-color: #f9fafb">
+                                <tr>
+                                    <th>区域</th>
+                                    {% for bid in tender.winners %}
+                                        <th>{% volume_win bid=bid %}</th>
+                                    {% endfor %}
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="eight wide column">
+                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                        <div id="main" style="height:500px"></div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <script>
+        $(document).on('click', '.sort.icon', function () {
+            var table = $(this).parents('table').eq(0);
+            var rows = table.find('tr').not('thead tr, tfoot tr').toArray().sort(comparer($(this).parents('th').index()));
+            this.asc = !this.asc;
+            if (!this.asc) {
+                rows = rows.reverse();
+            }
+            table.children('tbody').empty().html(rows);
+        });
+
+        function comparer(index) {
+            return function (a, b) {
+                var valA = getCellValue(a, index),
+                    valB = getCellValue(b, index);
+                return $.isNumeric(valA) && $.isNumeric(valB) ?
+                    valA - valB : valA.localeCompare(valB);
+            };
+        }
+
+        function getCellValue(row, index) {
+            return $(row).children('td').eq(index).text();
+        }
+    </script>
+    <script>
+        function arrToObject(arr) {
+            var strJs = '({';
+            for (var i = 0; i < arr.length; i += 1) {
+                var as = arr[i].split("=");
+                strJs = strJs + as[0] + ':' + '"' + as[1] + '"' + ',';
+            }
+            strJs = strJs.substr(0, strJs.length - 1) + '})';
+            return eval(strJs);
+        }
+    </script>
+    <script type="text/javascript">
+        COLORLIST = ['navy', 'crimson', 'darkgreen', 'darkorange', 'saddlebrown', 'deepskyblue', 'pink', 'olivedrab',];
+        var d = {};
+        var splitList = [];
+        i = 0;
+        {% for bid in tender.winners %}
+            d['{{ bid }}'] = i;
+
+            var split_options = {
+              start: i,
+                end: i,
+                label: '{{ bid.bidder.name }}',
+                color: COLORLIST[i]
+            };
+            splitList.push(split_options);
+            i += 1;
+        {% endfor %}
+
+        var data = [];
+        {% for region in tender.regions %}
+            var region = '{{ region }}';
+            if(region==='新疆（含兵团）'){
+                region = '新疆'
+            }
+            var region_data = {
+                name: region,
+                selected: true,
+                value: d['{% winner tender region %}'],
+                volume: '{% region_std_volume tender region %}'
+            };
+            data.push(region_data);
+        {% endfor %}
+        console.log(data)
+
+        var myChart = echarts.init(document.getElementById('main'));
+        option = {
+            tooltip: {
+                trigger: 'item',
+                // formatter: '{b}{c}',
+                formatter: function (params) {
+                    // console.log(params);
+                    if (params.data.volume == undefined || params.data.volume == '-') {
+                        params.data.volume = 0;
+                    }
+                    return params.data.name + '<br>' + params.data.volume;
+                },
+            },
+            dataRange: {
+                x: 'left',
+                y: 'bottom',
+                splitList: splitList,
+            },
+            series: [{
+                name: '中国',
+                type: 'map',
+                mapType: 'china',
+                selectedMode: false,//single 表示单选;multiple表示多选 默认flase不选
+                itemStyle: {
+                    normal: {
+                        label: {
+                            show: false,//默认是否显示省份名称
+                        },
+                        borderWidth: 1,
+                        borderColor: '#e1e1e1',
+                    },
+                    emphasis: {
+                        areaColor: null,
+                        label: {
+                            show: false,//选中状态是否显示省份名称
+                        },
+                    },
+                },
+                //此为加载的数据
+                data: data
+            }]
+        };
+
+        myChart.setOption(option);
+
+    </script>
+
+{% endblock body %}
+
+
+
+
+

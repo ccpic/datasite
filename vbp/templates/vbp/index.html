@@ -18,49 +18,54 @@
 {#        <h2 class="ui blue dividing header">管理数据</h2>#}
 {#        <div class="ui blue button" id="button_add">添加新记录</div>#}
         <h2 class="ui blue dividing header">现有数据</h2>
-        {% if records %}
+        {% if tenders %}
             <table class="ui celled table" id="client-selected">
                 <thead>
                 <tr>
                     <th style="display:none">id</th>
                     <th>带量品种</th>
                     <th>带量批次</th>
-                    <th>合同量（折算主规格）</th>
+                    <th>合同量<br>（折算主规格）</th>
                     <th>标期开始</th>
-                    <th>标期结束</th>
+                    <th>标期</th>
                     <th>竞标结果</th>
-                    <th>记录类型</th>
                     <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for record in records %}
+                {% for tender in tenders %}
                 <tr>
-                    <td style="display:none">{{ record.pk }}</td>
-                    <td>
-                        <h3 class="ui center aligned header">{{ record.tender.target }}</h3>
-                        {% for spec in record.tender.get_specs %}
+                    <td style="display:none">{{ tender.pk }}</td>
+                    <td style="width: 15%">
+                        <h3 class="ui center aligned header">{{ tender.target }}</h3>
+                        {% for spec in tender.get_specs %}
                             {{ spec }}
                         {%  endfor %}
                     </td>
                     <td>
-                        {{ record.tender.vol }}
+                        {{ tender.vol }}
                     </td>
                     <td>
-                        {{ record.tender.total_std_volume_reported|fix_decimal:0 }}万
-                        {% if record.tender.specs_num > 1 %}
-                            <u>折算为{{ record.tender.main_spec }}</u>
+                        {{ tender.total_std_volume_reported|fix_decimal:0 }}万
+                        {% if tender.specs_num > 1 %}
+                            <br><u>折算为{{ tender.main_spec }}</u>
                         {% endif %}
                     </td>
-                    <td style="width: 100px">{{ record.tender.tender_begin|date:'Y年m月' }}</td>
-                    <td style="width: 100px">{{ record.tender.tender_end|date:'Y年m月' }}</td>
+                    <td style="width: 100px">{{ tender.tender_begin|date:'Y年m月' }}</td>
+                    <td style="width: 100px">{{ tender.tender_period }}年</td>
                     <td>
-                        {% if record.bid_set.all %}
+                        {% if tender.bid_set.all %}
                             <div class="ui divided selection list">
-                                {% for bid in record.bid_set.all %}
+                                {% for bid in tender.bid_set.all %}
                                     <a href="{% url 'vbp:bid_detail' bid.pk  %}" class="item">
-                                        <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">{{ bid.bid_price|fix_decimal:2 }}</div>
-                                        <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">{{ bid.price_cut|percentage}}</div>
+                                        <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
+                                            {{ bid.bid_price|fix_decimal:2 }}
+                                        </div>
+                                        {% if bid.original_price %}
+                                        <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
+                                            {{ bid.price_cut|percentage}}
+                                        </div>
+                                        {% endif %}
                                         <div class="middle aligned content">
                                             {{ bid.bidder.name }}
                                         </div>
@@ -72,22 +77,13 @@
                         {% endif %}
                     </td>
                     <td style="width: 100px">
-                        {% if record.real_or_sim %}
-                            <a class="ui tag red label">真实记录</a>
-                        {% else %}
-                            <a class="ui tag blue label">模拟测算</a>
-                        {% endif %}
+                        <a href="{% url 'vbp:tender_detail' tender.pk %}">详情</a>
                     </td>
-                    <td></td>
                 </tr>
                 {% endfor %}
                 </tbody>
             </table>
         {% endif %}
-    </div>
-    <div class="ui large modal" id="modal_add">
-        <i class="close icon"></i>
-        {% include "vbp/add_record.html" %}
     </div>
 </div>
 <div class="ui hidden divider"></div>

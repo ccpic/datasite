@@ -19,12 +19,3 @@ class BidSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bid
         fields = "__all__"
-
-
-class RecordSerializer(serializers.ModelSerializer):
-    tender = TenderSerializer()
-    bids = BidSerializer(source="bid_set", many=True)
-
-    class Meta:
-        model = Record
-        fields = ['tender', 'bids', 'real_or_sim', 'pub_date']
