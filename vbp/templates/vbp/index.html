@@ -17,7 +17,6 @@
     <div id="pusher" class="pusher" style="padding-top:50px">
 {#        <h2 class="ui blue dividing header">管理数据</h2>#}
 {#        <div class="ui blue button" id="button_add">添加新记录</div>#}
-        <h2 class="ui blue dividing header">现有数据</h2>
         {% if tenders %}
             <table class="ui celled table" id="client-selected">
                 <thead>
@@ -46,7 +45,7 @@
                         {{ tender.vol }}
                     </td>
                     <td>
-                        {{ tender.total_std_volume_reported|fix_decimal:0 }}万
+                        {{ tender.total_std_volume_contract|fix_decimal:0 }}万
                         {% if tender.specs_num > 1 %}
                             <br><u>折算为{{ tender.main_spec }}</u>
                         {% endif %}
@@ -68,6 +67,7 @@
                                         {% endif %}
                                         <div class="middle aligned content">
                                             {{ bid.bidder.name }}
+                                            {% if bid.origin %}<i class="star icon"></i>{% endif %}
                                         </div>
                                     </a>
                                 {% endfor %}

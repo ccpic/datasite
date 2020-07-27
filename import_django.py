@@ -43,7 +43,7 @@ def import_volume():
     l = []
     for volume in df.values:
         print(volume)
-        l.append(Volume(tender=Tender.objects.get(target=volume[1]), region=volume[0], spec=volume[2], amount_reported=volume[3]))
+        l.append(Volume(tender=Tender.objects.get(target=volume[1]), region=volume[0], spec=volume[2], amount_contract=volume[3]))
 
     Volume.objects.bulk_create(l)
 

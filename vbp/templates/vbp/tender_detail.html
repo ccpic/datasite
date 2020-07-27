@@ -25,11 +25,86 @@
                 <div class="ui celled grid">
                     <div class="row">
                         <div class="sixteen wide column">
-                            <div class="ui hidden divider"></div>
+                            <a class="ui blue ribbon label">基本信息</a>
+                            <table class="ui celled blue table" id="client-selected">
+                                <thead>
+                                <tr>
+                                    <th style="display:none">id</th>
+                                    <th>带量品种</th>
+                                    <th>带量批次</th>
+                                    <th>合同量<br>（折算主规格）</th>
+                                    <th>标期开始</th>
+                                    <th>标期</th>
+                                    <th>竞标结果</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="display:none">{{ tender.pk }}</td>
+                                    <td style="width: 15%">
+                                        <h3 class="ui center aligned header">{{ tender.target }}</h3>
+                                        {% for spec in tender.get_specs %}
+                                            {{ spec }}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {{ tender.vol }}
+                                    </td>
+                                    <td>
+                                        {{ tender.total_std_volume_contract|fix_decimal:0 }}万
+                                        {% if tender.specs_num > 1 %}
+                                            <br><u>折算为{{ tender.main_spec }}</u>
+                                        {% endif %}
+                                    </td>
+                                    <td style="width: 100px">{{ tender.tender_begin|date:'Y年m月' }}</td>
+                                    <td style="width: 100px">{{ tender.tender_period }}年</td>
+                                    <td style="width: 50%">
+                                        {% if tender.bid_set.all %}
+                                            <div class="ui divided selection list">
+                                                {% for bid in tender.bid_set.all %}
+                                                    <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
+                                                        <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
+                                                            {{ bid.bid_price|fix_decimal:2 }}
+                                                        </div>
+                                                        {% if bid.original_price %}
+                                                            <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
+                                                                {{ bid.price_cut|percentage }}
+                                                            </div>
+                                                        {% endif %}
+                                                        <div class="middle aligned content">
+                                                            {{ bid.bidder.name }}
+                                                            {% if bid.origin %}<i class="star icon"></i>{% endif %}
+                                                        </div>
+                                                    </a>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            没有填写竞标者
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="eight wide column">
+                        <div class="sixteen wide column">
+                            <a class="ui red ribbon label">省份轮选</a>
+                            <div class="ui horizontal segments">
+                                <div class="ui red segment" style="width: 50%">
+                                    <div id="map" style="height:400px"></div>
+                                </div>
+                                <div class="ui pink segment" style="width: 50%">
+                                    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                                    <div id="pieVolume" style="height:400px"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sixteen wide column">
+                            <div class="ui toggle checkbox">
+                                <input type="checkbox" name="public">
+                                <label>显示区域详细数据</label>
+                            </div>
                             <table class="ui celled compact green table" id="table">
                                 <thead>
                                 <tr>
@@ -60,14 +135,17 @@
                                 </tfoot>
                             </table>
                         </div>
-                        <div class="eight wide column">
-                            <div class="ui segments">
-                                <div class="ui red segment">
-                                    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                                    <div id="pie" style="height:400px"></div>
+                    </div>
+                    <div class="row">
+                        <div class="sixteen wide column">
+                            <a class="ui teal ribbon label">预估销售</a>
+                            <div class="ui horizontal segments">
+                                <div class="ui teal segment" style="width: 50%">
+                                    <div id="scatter" style="height:400px"></div>
                                 </div>
-                                <div class="ui blue segment">
-                                    <div id="map" style="height:400px"></div>
+                                <div class="ui green segment" style="width: 50%">
+                                    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                                    <div id="pieValue" style="height:400px"></div>
                                 </div>
                             </div>
                         </div>
@@ -192,8 +270,9 @@
         };
         map.setOption(option);
 
-        // 份额饼图
-        var pieData = []; legendData = [];
+        // 销售量份额饼图
+        var pieVolumeData = [];
+        legendData = [];
         {% for bid in tender.winners %}
             bidValue = '{{ bid.std_volume_win }}';
             bidValue = Number(bidValue).toFixed(1);
@@ -202,13 +281,18 @@
                 'name': '{{ bid.bidder.name }}'
             };
             legendData.push('{{ bid.bidder.name }}');
-            pieData.push(bidData);
+            pieVolumeData.push(bidData);
         {% endfor %}
-        console.log(pieData);
+        console.log(pieVolumeData);
 
-        var pie = echarts.init(document.getElementById('pie'));
+        var pieVolume = echarts.init(document.getElementById('pieVolume'));
 
         option = {
+            title: {
+                text: '预估合同量份额',
+                left: 'center',
+                y: '57.5%',
+            },
             tooltip: {
                 trigger: 'item',
                 formatter: '{a} <br/>{b}: {c} ({d}%)'
@@ -216,7 +300,7 @@
             legend: {
                 orient: 'vertical',
                 left: 10,
-                data:legendData
+                data: legendData
             },
             series: [
                 {
@@ -234,7 +318,7 @@
                     labelLine: {
                         show: true
                     },
-                    data: pieData,
+                    data: pieVolumeData,
                     itemStyle: {
                         emphasis: {
                             show: true,
@@ -251,7 +335,142 @@
                 }
             ]
         };
-        pie.setOption(option);
+        pieVolume.setOption(option);
+
+        // 份额versus价格散点图
+        var scatter = echarts.init(document.getElementById('scatter'));
+        var scatterData = []; nameData = [];
+        {% for bid in tender.winners %}
+            bidValue = '{{ bid.std_volume_win }}';
+            bidValue = Number(bidValue).toFixed(1);
+            bidPrice = '{{ bid.bid_price }}';
+            bidPrice = Number(bidPrice).toFixed(2);
+            bidData = [bidValue, bidPrice];
+            scatterData.push(bidData);
+            nameData.push('{{ bid.bidder.name }}');
+        {% endfor %}
+
+        option = {
+            title: {
+                text: '竞标价 versus 获取量',
+                left: 'center',
+                top: 10
+            },
+            xAxis: {
+                scale: true,
+                name: '获取合同量',
+                nameLocation: 'middle',
+                nameGap: 30,
+            },
+            yAxis: {
+                scale: true,
+                name: '竞标价',
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    return nameData[params.dataIndex] + '<br> 获取合同量：' + params.data[0] + '万<br> 竞标价：' + params.data[1] + '元';
+                },
+            },
+            series: [{
+                type: 'scatter',
+                itemStyle: {
+                    normal: {
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function (params) {
+                                //自定义颜色
+                                return params.dataIndex + 1
+                            }
+                        },
+                        color: function (params) {
+                            //自定义颜色
+                            return COLORLIST[params.dataIndex]
+                        },
+                    },
+                },
+                symbolSize:30,
+                data: scatterData
+            }]
+        };
+
+        scatter.setOption(option);
+
+        // 销售额份额饼图
+        var pieValueData = [];
+        legendData = [];
+        {% for bid in tender.winners %}
+            bidValue = '{{ bid.value_win }}';
+            bidValue = Number(bidValue).toFixed(1);
+            bidData = {
+                'value': bidValue,
+                'name': '{{ bid.bidder.name }}'
+            };
+            legendData.push('{{ bid.bidder.name }}');
+            pieValueData.push(bidData);
+        {% endfor %}
+        console.log(pieValueData);
+
+        var pieValue = echarts.init(document.getElementById('pieValue'));
+
+        option = {
+            title: {
+                text: '预估销售额份额',
+                left: 'center',
+                y: '57.5%',
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b}: {c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 10,
+                data: legendData
+            },
+            series: [
+                {
+                    name: '份额获取',
+                    type: 'pie',
+                    radius: ['35%', '50%'],
+                    center: ['50%', '60%'],
+                    avoidLabelOverlap: true,
+                    label: {
+                        formatter: '{c} ({d}%)',
+                        position: 'outer',
+                        alignTo: 'labelLine',
+                        margin: 20,
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    data: pieValueData,
+                    itemStyle: {
+                        emphasis: {
+                            show: true,
+                            fontSize: '30',
+                            fontWeight: 'bold'
+                        },
+                        normal: {
+                            color: function (params) {
+                                //自定义颜色
+                                return COLORLIST[params.dataIndex]
+                            }
+                        }
+                    }
+                }
+            ]
+        };
+        pieValue.setOption(option);
+    </script>
+    <script>
+        $(document).ready(function () {
+            $("#table").hide();
+            $('.ui.toggle').click(function () {
+                $("#table").toggle()
+            });
+        });
     </script>
 
 {% endblock body %}
