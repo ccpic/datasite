@@ -1,0 +1,66 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}带量采购数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+            <div id="hist" style="height:400px"></div>
+        </div>
+    </div>
+
+    <div class="ui hidden divider"></div>
+
+    <script>
+        var hist = echarts.init(document.getElementById('hist'));
+        var data = [];bids = [];
+        {% for tender in tenders %}
+            {% for bid in tender.bids.all %}
+                {% if bid.is_winner %}
+                    data.push('{{ bid.price_cut_to_lowest }}');
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        data.sort().reverse();
+        console.log(data);
+
+        option = {
+            xAxis: {
+                type: 'category',
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: data,
+                type: 'bar',
+                markLine: {
+                lineStyle: {
+                    type: 'solid'
+                },
+                data: [
+                    {type: 'average', name: '平均值'},
+                ]
+            }
+            }]
+        };
+        // 使用刚指定的配置项和数据显示图表
+        hist.setOption(option)
+
+    </script>
+{% endblock body %}
+
+
+
+
+

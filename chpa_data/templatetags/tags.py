@@ -47,7 +47,7 @@ def volume_win_percentage(bid, region=None):
         volume_win = bid.std_volume_win()
     else:
         volume_win = bid.std_volume_win(region=region)
-    volume_total = bid.tender.total_std_volume_contract
+    volume_total = bid.tender.total_std_volume_contract()
     percentage = volume_win/volume_total
     return '{0:.1%}'.format(percentage)
 

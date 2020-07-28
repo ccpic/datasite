@@ -22,8 +22,7 @@
                     <a href="{% url "vbp:tender_detail" bid.tender.pk %}"
                        class="section">{{ bid.tender }}</a>
                     <i class="right angle icon divider"></i>
-                    <div class="active section"><abbr
-                            title="{{ bid.bidder }}">{{ bid.bidder|truncatechars:7 }}</abbr></div>
+                    <div class="active section">{{ bid.bidder }}</div>
                 </div>
                 <div class="ui celled grid">
                     <div class="row">
@@ -33,7 +32,7 @@
                             <div class="ui three tiny statistics">
                                 <div class="statistic">
                                     <div class="value">
-                                        <abbr title="{{ bid.tender.target }}">{{ bid.tender.target|truncatechars:5 }}</abbr>
+                                        <abbr title="{{ bid.tender.target }}">{{ bid.tender.target|truncatechars:7 }}</abbr>
                                     </div>
                                     <div class="label">
                                         标的
@@ -41,15 +40,15 @@
                                 </div>
                                 <div class="statistic">
                                     <div class="value">
-                                        <abbr title="{{ bid.bidder }}">{{ bid.bidder|truncatechars:7 }}</abbr>
+                                        {{ bid.bidder }}
                                     </div>
                                     <div class="label">
                                         竞标厂商
                                     </div>
                                 </div>
-                                <div class="{% if bid.volume_set.all %}green {% else %}red {% endif %}statistic">
+                                <div class="{% if bid.region_volume.all %}green {% else %}red {% endif %}statistic">
                                     <div class="value">
-                                        {% if bid.volume_set.all %}中标{% else %}落标{% endif %}
+                                        {% if bid.region_volume.all %}中标{% else %}落标{% endif %}
                                     </div>
                                     <div class="label">
                                         是否中标

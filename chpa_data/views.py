@@ -76,7 +76,7 @@ D_TRANS = {
 
 # @login_required
 # def index(request):
-#     return render(request, 'index.html')
+#     return render(request, 'records.html')
 
 
 # @login_required

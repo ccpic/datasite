@@ -35,6 +35,7 @@
                                     <th>合同量<br>（折算主规格）</th>
                                     <th>标期开始</th>
                                     <th>标期</th>
+                                    <th>最高限价</th>
                                     <th>竞标结果</th>
                                 </tr>
                                 </thead>
@@ -58,13 +59,14 @@
                                     </td>
                                     <td style="width: 100px">{{ tender.tender_begin|date:'Y年m月' }}</td>
                                     <td style="width: 100px">{{ tender.tender_period }}年</td>
-                                    <td style="width: 50%">
-                                        {% if tender.bid_set.all %}
+                                    <td style="width: 100px">&yen{{ tender.ceiling_price }}</td>
+                                    <td style="width: 30%">
+                                        {% if tender.bids.all %}
                                             <div class="ui divided selection list">
-                                                {% for bid in tender.bid_set.all %}
+                                                {% for bid in tender.bids.all %}
                                                     <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
                                                         <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
-                                                            {{ bid.bid_price|fix_decimal:2 }}
+                                                            &yen{{ bid.bid_price|fix_decimal:2 }}
                                                         </div>
                                                         {% if bid.original_price %}
                                                             <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
@@ -72,7 +74,7 @@
                                                             </div>
                                                         {% endif %}
                                                         <div class="middle aligned content">
-                                                            {{ bid.bidder.name }}
+                                                            {{ bid.bidder.abbr_name }}
                                                             {% if bid.origin %}<i class="star icon"></i>{% endif %}
                                                         </div>
                                                     </a>
@@ -204,7 +206,7 @@
             var split_options = {
                 start: i,
                 end: i,
-                label: '{{ bid.bidder.name }}',
+                label: '{{ bid.bidder.abbr_name }}',
                 color: COLORLIST[i]
             };
             splitList.push(split_options);
@@ -278,9 +280,9 @@
             bidValue = Number(bidValue).toFixed(1);
             bidData = {
                 'value': bidValue,
-                'name': '{{ bid.bidder.name }}'
+                'name': '{{ bid.bidder.abbr_name }}'
             };
-            legendData.push('{{ bid.bidder.name }}');
+            legendData.push('{{ bid.bidder.abbr_name }}');
             pieVolumeData.push(bidData);
         {% endfor %}
         console.log(pieVolumeData);
@@ -347,7 +349,7 @@
             bidPrice = Number(bidPrice).toFixed(2);
             bidData = [bidValue, bidPrice];
             scatterData.push(bidData);
-            nameData.push('{{ bid.bidder.name }}');
+            nameData.push('{{ bid.bidder.abbr_name }}');
         {% endfor %}
 
         option = {
@@ -405,9 +407,9 @@
             bidValue = Number(bidValue).toFixed(1);
             bidData = {
                 'value': bidValue,
-                'name': '{{ bid.bidder.name }}'
+                'name': '{{ bid.bidder.abbr_name }}'
             };
-            legendData.push('{{ bid.bidder.name }}');
+            legendData.push('{{ bid.bidder.abbr_name }}');
             pieValueData.push(bidData);
         {% endfor %}
         console.log(pieValueData);

@@ -1,0 +1,123 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}带量采购数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+            <div class="ui inverted segment">
+                <form method="get" action="{% url 'vbp:search' %}" class="ui inverted fluid form">
+                    {% csrf_token %}
+                    <div class="field">
+                        <div class="ui action input">
+                            <input type="search" name="kw" placeholder="请输入关键字" required>
+                            <button type="submit" class="ui blue submit button">搜索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% if tenders %}
+                <div class="ui dividing header">
+                {% if kw %}
+                    <a href="{% url 'vbp:index' %}">所有标的</a> - 搜索关键字 "{{ kw }}" 结果
+                {% else %}
+                    所有标的
+                {% endif %}
+                </div>
+                <table class="ui celled table" id="client-selected">
+                    <thead>
+                    <tr>
+                        <th style="display:none">id</th>
+                        <th>带量品种</th>
+                        <th>带量批次</th>
+                        <th>合同量<br>（折算主规格）</th>
+                        <th>标期开始</th>
+                        <th>标期</th>
+                        <th>最高限价</th>
+                        <th>竞标结果</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tender in tenders %}
+                        <tr>
+                            <td style="display:none">{{ tender.pk }}</td>
+                            <td style="width: 15%">
+                                <h3 class="ui center aligned header">{{ tender.target }}</h3>
+                                {% for spec in tender.get_specs %}
+                                    {{ spec }}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {{ tender.vol }}
+                            </td>
+                            <td>
+                                {{ tender.total_std_volume_contract|fix_decimal:0 }}万
+                                {% if tender.specs_num > 1 %}
+                                    <br><u>折算为{{ tender.main_spec }}</u>
+                                {% endif %}
+                            </td>
+                            <td style="width: 100px">{{ tender.tender_begin|date:'Y年m月' }}</td>
+                            <td style="width: 100px">{{ tender.tender_period }}年</td>
+                            <td style="width: 100px">&yen{{ tender.ceiling_price }}</td>
+                            <td style="width: 30%">
+                                {% if tender.bids.all %}
+                                    <div class="ui divided selection list">
+                                        {% for bid in tender.bids.all %}
+                                            <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
+                                                <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
+                                                    &yen{{ bid.bid_price|fix_decimal:2 }}
+                                                </div>
+                                                {% if bid.original_price %}
+                                                    <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
+                                                        {{ bid.price_cut|percentage }}
+                                                    </div>
+                                                {% endif %}
+                                                <div class="middle aligned content">
+                                                    {{ bid.bidder.abbr_name }}
+                                                    {% if bid.origin %}<i class="star icon"></i>{% endif %}
+                                                </div>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    没有填写竞标者
+                                {% endif %}
+                            </td>
+                            <td style="width: 100px">
+                                <a href="{% url 'vbp:tender_detail' tender.pk %}">详情</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="ui error message">
+                    没有搜索到符合条件的记录
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <script>
+        $('#button_add').click(function () {
+            $('#modal_add').modal('show')
+        })
+    </script>
+{% endblock body %}
+
+
+
+
+
