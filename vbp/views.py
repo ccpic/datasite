@@ -1,8 +1,15 @@
 from .models import Tender, Volume, Bid, Company
 from .serializers import TenderSerializer
 from rest_framework import viewsets
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse
 from django.db.models import Q
+import pandas as pd
+
+try:
+    from io import BytesIO as IO  # for modern python
+except ImportError:
+    from io import StringIO as IO  # for legacy python
+import datetime
 
 # class RecordViewSet(viewsets.ModelViewSet):
 #     """
@@ -24,7 +31,7 @@ def index(request):
     tenders = Tender.objects.all()
 
     context = {"tenders": tenders}
-    return render(request, "vbp/records.html", context)
+    return render(request, "vbp/tenders.html", context)
 
 
 def analysis(request):
@@ -66,4 +73,39 @@ def search(request):
 
     context = {"tenders": search_result, "kw": kw}
 
-    return render(request, "vbp/records.html", context)
+    return render(request, "vbp/tenders.html", context)
+
+
+def export(request):
+    tenders = pd.DataFrame(list(Tender.objects.all().values()))
+    bids = pd.DataFrame(list(Bid.objects.all().values()))
+    volumes = pd.DataFrame(list(Volume.objects.all().values()))
+    companies =  pd.DataFrame(list(Company.objects.all().values()))
+    tenders.rename(columns={"id": "tender_id"}, inplace=True)  # 修改列名，为之后merge匹配列做准备，下同
+    df = pd.merge(volumes, tenders, how="left", on="tender_id")  # 以volume为base匹配tender
+    bids.rename(columns={"id": "winner_id"}, inplace=True)
+    df = pd.merge(df, bids, how="left", on="winner_id")  # 以volume+tender为base匹配bid
+    companies.rename(columns={"id": "bidder_id"}, inplace=True)
+    df = pd.merge(df, bids, how="left", on="winner_id")  # 以volume+tender+bid为base匹配company
+
+    excel_file = IO()
+
+    xlwriter = pd.ExcelWriter(excel_file, engine="xlsxwriter")
+
+    df.to_excel(xlwriter, "data", index=True)
+
+    xlwriter.save()
+    xlwriter.close()
+
+    excel_file.seek(0)
+
+    # 设置浏览器mime类型
+    response = HttpResponse(
+        excel_file.read(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    # 设置文件名
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # 当前精确时间不会重复，适合用来命名默认导出文件
+    response["Content-Disposition"] = "attachment; filename=" + now + ".xlsx"
+    return response

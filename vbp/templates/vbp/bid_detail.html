@@ -22,7 +22,7 @@
                     <a href="{% url "vbp:tender_detail" bid.tender.pk %}"
                        class="section">{{ bid.tender }}</a>
                     <i class="right angle icon divider"></i>
-                    <div class="active section">{{ bid.bidder }}</div>
+                    <div class="active section"><abbr title=" {{ bid.bidder.full_name }}">{{ bid.bidder.abbr_name }}</abbr></div>
                 </div>
                 <div class="ui celled grid">
                     <div class="row">
@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="statistic">
                                     <div class="value">
-                                        {{ bid.bidder }}
+                                        <abbr title=" {{ bid.bidder.full_name }}">{{ bid.bidder.abbr_name }}</abbr>
                                     </div>
                                     <div class="label">
                                         竞标厂商
