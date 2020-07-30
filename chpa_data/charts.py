@@ -10,16 +10,35 @@ from io import BytesIO
 import base64
 import scipy.stats as stats
 
-myfont = fm.FontProperties(fname='C:/Windows/Fonts/msyh.ttc')
+myfont = fm.FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
 
 
-def mpl_bubble(x, y, z, labels, title, x_title, y_title,
-               x_fmt='{:.0%}', y_fmt='{:+.0%}',
-               y_avg_line=False, y_avg_value=None, y_avg_label='',
-               x_avg_line=False, x_avg_value=None, x_avg_label='',
-               x_max=None, x_min=None, y_max=None, y_min=None,
-               show_label=True, label_limit=15,
-               z_scale=1, color_scheme='随机颜色方案', color_list=None):
+def mpl_bubble(
+    x,
+    y,
+    z,
+    labels,
+    title,
+    x_title,
+    y_title,
+    x_fmt="{:.0%}",
+    y_fmt="{:+.0%}",
+    y_avg_line=False,
+    y_avg_value=None,
+    y_avg_label="",
+    x_avg_line=False,
+    x_avg_value=None,
+    x_avg_label="",
+    x_max=None,
+    x_min=None,
+    y_max=None,
+    y_min=None,
+    show_label=True,
+    label_limit=15,
+    z_scale=1,
+    color_scheme="随机颜色方案",
+    color_list=None,
+):
 
     z = [x * z_scale for x in z]  # 气泡大小系数
 
@@ -37,12 +56,12 @@ def mpl_bubble(x, y, z, labels, title, x_title, y_title,
         ax.set_ylim(ymax=y_max)
 
     # 确定颜色方案
-    if color_scheme == '随机颜色方案' or color_scheme is None:
+    if color_scheme == "随机颜色方案" or color_scheme is None:
         cmap = mpl.colors.ListedColormap(np.random.rand(256, 3))
         colors = iter(cmap(np.linspace(0, 1, len(x))))
     else:
         if len(x) <= len(color_list):
-            colors = color_list[:len(x)]
+            colors = color_list[: len(x)]
         else:
             colors = []
             for i in range(len(x)):
@@ -55,22 +74,50 @@ def mpl_bubble(x, y, z, labels, title, x_title, y_title,
 
     # 添加系列标签，用adjust_text包保证标签互不重叠
     if show_label is True:
-        texts = [plt.text(x[i], y[i], labels[i],
-                          ha='center', va='center', multialignment='center', fontproperties=myfont, fontsize=10) for
-                 i
-                 in range(len(labels[:label_limit]))]
-        adjust_text(texts, force_text=0.5, arrowprops=dict(arrowstyle='->', color='black'))
+        texts = [
+            plt.text(
+                x[i],
+                y[i],
+                labels[i],
+                ha="center",
+                va="center",
+                multialignment="center",
+                fontproperties=myfont,
+                fontsize=10,
+            )
+            for i in range(len(labels[:label_limit]))
+        ]
+        adjust_text(
+            texts, force_text=0.5, arrowprops=dict(arrowstyle="->", color="black")
+        )
 
     # 添加分隔线（均值，中位数，0等）
     if y_avg_line is True:
-        ax.axhline(y_avg_value, linestyle='--', linewidth=1, color='grey')
-        plt.text(ax.get_xlim()[1], y_avg_value, y_avg_label, ha='left', va='center', color='r',
-                 multialignment='center',
-                 fontproperties=myfont, fontsize=10)
+        ax.axhline(y_avg_value, linestyle="--", linewidth=1, color="grey")
+        plt.text(
+            ax.get_xlim()[1],
+            y_avg_value,
+            y_avg_label,
+            ha="left",
+            va="center",
+            color="r",
+            multialignment="center",
+            fontproperties=myfont,
+            fontsize=10,
+        )
     if x_avg_line is True:
-        ax.axvline(x_avg_value, linestyle='--', linewidth=1, color='grey')
-        plt.text(x_avg_value, ax.get_ylim()[1], x_avg_label, ha='left', va='top',
-                 color='r', multialignment='center', fontproperties=myfont, fontsize=10)
+        ax.axvline(x_avg_value, linestyle="--", linewidth=1, color="grey")
+        plt.text(
+            x_avg_value,
+            ax.get_ylim()[1],
+            x_avg_label,
+            ha="left",
+            va="top",
+            color="r",
+            multialignment="center",
+            fontproperties=myfont,
+            fontsize=10,
+        )
 
     # 设置轴标签格式
     ax.xaxis.set_major_formatter(FuncFormatter(lambda y, _: x_fmt.format(y)))
@@ -88,7 +135,7 @@ def mpl_bubble(x, y, z, labels, title, x_title, y_title,
     """
     n = y.size  # 观察例数
     if n > 2:  # 数据点必须大于cov矩阵的scale
-        p, cov = np.polyfit(x, y, 1, cov=True) # 简单线性回归返回parameter和covariance
+        p, cov = np.polyfit(x, y, 1, cov=True)  # 简单线性回归返回parameter和covariance
         poly1d_fn = np.poly1d(p)  # 拟合方程
         y_model = poly1d_fn(x)  # 拟合的y值
         m = p.size  # 参数个数
@@ -108,20 +155,30 @@ def mpl_bubble(x, y, z, labels, title, x_title, y_title,
         y2 = poly1d_fn(x2)
 
         # CI计算和绘图
-        ci = t * s_err * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+        ci = (
+            t
+            * s_err
+            * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+        )
         ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", edgecolor="", alpha=0.5)
 
         # Pi计算和绘图
-        pi = t * s_err * np.sqrt(1 + 1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+        pi = (
+            t
+            * s_err
+            * np.sqrt(
+                1 + 1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2)
+            )
+        )
         ax.fill_between(x2, y2 + pi, y2 - pi, color="None", linestyle="--")
         ax.plot(x2, y2 - pi, "--", color="0.5", label="95% Prediction Limits")
         ax.plot(x2, y2 + pi, "--", color="0.5")
 
     # 保存到字符串
     sio = BytesIO()
-    plt.savefig(sio, format='png', bbox_inches='tight', transparent=True, dpi=600)
+    plt.savefig(sio, format="png", bbox_inches="tight", transparent=True, dpi=600)
     data = base64.encodebytes(sio.getvalue()).decode()  # 解码为base64编码的png图片数据
-    src = 'data:image/png;base64,' + str(data)  # 增加Data URI scheme
+    src = "data:image/png;base64," + str(data)  # 增加Data URI scheme
 
     # 关闭绘图进程
     plt.clf()
@@ -131,87 +188,87 @@ def mpl_bubble(x, y, z, labels, title, x_title, y_title,
     return src
 
 
-def echarts_line(df, datatype='ABS'):
-    axislabel_format = '{value}'
-    if datatype in ['SHARE', 'GR']:
+def echarts_line(df, datatype="ABS"):
+    axislabel_format = "{value}"
+    if datatype in ["SHARE", "GR"]:
         df = df.multiply(100).round(2)
-        axislabel_format = '{value}%'
+        axislabel_format = "{value}%"
     if df.empty is False:
         line = (
-            Line() #init_opts=opts.InitOpts(width="1200px", height="700px")
+            Line()  # init_opts=opts.InitOpts(width="1200px", height="700px")
             .add_xaxis(df.index.strftime("%Y-%m").tolist())
             .set_global_opts(
-                             # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
-                             legend_opts=opts.LegendOpts(pos_top='5%', pos_left='10%', pos_right='60%'),
-                             toolbox_opts=opts.ToolboxOpts(is_show=True),
-                             tooltip_opts=opts.TooltipOpts(trigger='axis',
-                                                           axis_pointer_type='cross',
-                                                           ),
-                             xaxis_opts=opts.AxisOpts(type_='category',
-                                                      boundary_gap=False,
-                                                      splitline_opts=opts.SplitLineOpts(is_show=True,
-                                                                                        linestyle_opts=opts.LineStyleOpts(
-                                                                                            type_='dotted',
-                                                                                            opacity=0.5,
-                                                                                            )
-                                                                                        )
-                                                      ),
-                             yaxis_opts=opts.AxisOpts(type_="value",
-                                                      axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
-                                                      # axistick_opts=opts.AxisTickOpts(is_show=True),
-                                                      splitline_opts=opts.SplitLineOpts(is_show=True,
-                                                                                        linestyle_opts=opts.LineStyleOpts(
-                                                                                             type_='dotted',
-                                                                                             opacity=0.5,
-                                                                                             )
-                                                                                        )
-                                                      ),
-                             )
+                # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
+                legend_opts=opts.LegendOpts(
+                    pos_top="5%", pos_left="10%", pos_right="60%"
+                ),
+                toolbox_opts=opts.ToolboxOpts(is_show=True),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis", axis_pointer_type="cross",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    boundary_gap=False,
+                    splitline_opts=opts.SplitLineOpts(
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    ),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    type_="value",
+                    axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
+                    # axistick_opts=opts.AxisTickOpts(is_show=True),
+                    splitline_opts=opts.SplitLineOpts(
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    ),
+                ),
+            )
         )
         for i, item in enumerate(df.columns):
-            line.add_yaxis(item,
-                           df[item],
-                           # symbol='circle',
-                           symbol_size=8,
-                           label_opts=opts.LabelOpts(is_show=False),
-                           linestyle_opts=opts.LineStyleOpts(width=3),
-                           itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color='', border_color0='white'),
-                           )
+            line.add_yaxis(
+                item,
+                df[item],
+                # symbol='circle',
+                symbol_size=8,
+                label_opts=opts.LabelOpts(is_show=False),
+                linestyle_opts=opts.LineStyleOpts(width=3),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    border_width=1, border_color="", border_color0="white"
+                ),
+            )
     else:
-        line = (
-            Line()
-        )
+        line = Line()
 
     return line
 
 
-def echarts_stackbar(df,  # 传入数据df，应该是一个行索引为date的时间序列面板数据
-             df_gr=None,  # 传入同比增长率df，可以没有
-             datatype='ABS'  # 主Y轴形式是绝对值，增长率还是份额，用来确定一些标签格式，默认为绝对值
-             ) -> Bar:
+def echarts_stackbar(
+    df,  # 传入数据df，应该是一个行索引为date的时间序列面板数据
+    df_gr=None,  # 传入同比增长率df，可以没有
+    datatype="ABS",  # 主Y轴形式是绝对值，增长率还是份额，用来确定一些标签格式，默认为绝对值
+) -> Bar:
 
-    axislabel_format = '{value}'  # 主Y轴默认格式
-    max = df[df>0].sum(axis=1).max()  # 主Y轴默认最大值
-    min = df[df<=0].sum(axis=1).min()  # 主Y轴默认最小值
-    if datatype in ['SHARE', 'GR']:  # 如果主数据不是绝对值形式而是份额或增长率如何处理
+    axislabel_format = "{value}"  # 主Y轴默认格式
+    max = df[df > 0].sum(axis=1).max()  # 主Y轴默认最大值
+    min = df[df <= 0].sum(axis=1).min()  # 主Y轴默认最小值
+    if datatype in ["SHARE", "GR"]:  # 如果主数据不是绝对值形式而是份额或增长率如何处理
         df = df.multiply(100).round(2)
-        axislabel_format = '{value}%'
+        axislabel_format = "{value}%"
         max = 100
         min = 0
     if df_gr is not None:
-        df_gr = df_gr.multiply(100).round(2) # 如果有同比增长率，原始数*100呈现
+        df_gr = df_gr.multiply(100).round(2)  # 如果有同比增长率，原始数*100呈现
 
     if df.empty is False:
-        stackbar = (
-            Bar()
-            .add_xaxis(df.index.tolist())
-        )
-        for i, item in enumerate(df.columns): # 预留的枚举，这个方法以后可以根据输入对象不同从单一柱状图变成堆积柱状图
-            stackbar.add_yaxis(item,
-                          df[item].values.tolist(),
-                          stack='总量',
-                          label_opts=opts.LabelOpts(is_show=False),
-                          )
+        stackbar = Bar().add_xaxis(df.index.tolist())
+        for i, item in enumerate(df.columns):  # 预留的枚举，这个方法以后可以根据输入对象不同从单一柱状图变成堆积柱状图
+            stackbar.add_yaxis(
+                item,
+                df[item].values.tolist(),
+                stack="总量",
+                label_opts=opts.LabelOpts(is_show=False),
+            )
             # .add_yaxis(series_name=df.index[-5].strftime("%Y-%m"),
             #            yaxis_data=df_ya.values.tolist(),
             #            stack='总量',
@@ -231,169 +288,168 @@ def echarts_stackbar(df,  # 传入数据df，应该是一个行索引为date的�
                 )
             )
         stackbar.set_global_opts(
-            legend_opts=opts.LegendOpts(pos_top='5%', pos_left='10%', pos_right='60%'),
+            legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
             toolbox_opts=opts.ToolboxOpts(is_show=True),
-            tooltip_opts=opts.TooltipOpts(trigger='axis',
-                                          axis_pointer_type='cross',
-                                          ),
-            xaxis_opts=opts.AxisOpts(type_='category',
-                                     boundary_gap=True,
-                                     axislabel_opts=opts.LabelOpts(rotate=90), # x轴标签方向rotate有时能解决拥挤显示不全的问题
-                                     splitline_opts=opts.SplitLineOpts(is_show=False,
-                                                                       linestyle_opts=opts.LineStyleOpts(
-                                                                           type_='dotted',
-                                                                           opacity=0.5,
-                                                                       )
-                                                                       )
-                                     ),
-            yaxis_opts=opts.AxisOpts(max_=max,
-                                     min_=min,
-                                     type_="value",
-                                     axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
-                                     # axistick_opts=opts.AxisTickOpts(is_show=True),
-                                     splitline_opts=opts.SplitLineOpts(is_show=True,
-                                                                       linestyle_opts=opts.LineStyleOpts(
-                                                                           type_='dotted',
-                                                                           opacity=0.5,
-                                                                       )
-                                                                       )
-                                     ),
+            tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
+            xaxis_opts=opts.AxisOpts(
+                type_="category",
+                boundary_gap=True,
+                axislabel_opts=opts.LabelOpts(rotate=90),  # x轴标签方向rotate有时能解决拥挤显示不全的问题
+                splitline_opts=opts.SplitLineOpts(
+                    is_show=False,
+                    linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                ),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                max_=max,
+                min_=min,
+                type_="value",
+                axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
+                # axistick_opts=opts.AxisTickOpts(is_show=True),
+                splitline_opts=opts.SplitLineOpts(
+                    is_show=True,
+                    linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                ),
+            ),
         )
         if df_gr is not None:
             line = (
                 Line()
-                    .add_xaxis(xaxis_data=df_gr.index.tolist())
-                    .add_yaxis(
+                .add_xaxis(xaxis_data=df_gr.index.tolist())
+                .add_yaxis(
                     series_name="同比增长率",
                     yaxis_index=1,
                     y_axis=df_gr.values.tolist(),
                     label_opts=opts.LabelOpts(is_show=False),
                     linestyle_opts=opts.LineStyleOpts(width=3),
                     symbol_size=8,
-                    itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color='', border_color0='white'),
+                    itemstyle_opts=opts.ItemStyleOpts(
+                        border_width=1, border_color="", border_color0="white"
+                    ),
                 )
             )
     else:
-        stackbar = (Bar())
+        stackbar = Bar()
 
     if df_gr is not None:
-        return stackbar.overlap(line) # 如果有次坐标轴最后要用overlap方法组合
+        return stackbar.overlap(line)  # 如果有次坐标轴最后要用overlap方法组合
     else:
         return stackbar
 
 
-def echarts_stackarea(df, datatype='ABS'):
-    axislabel_format = '{value}'
-    if datatype in ['SHARE', 'GR']:
+def echarts_stackarea(df, datatype="ABS"):
+    axislabel_format = "{value}"
+    if datatype in ["SHARE", "GR"]:
         df = df.multiply(100).round(2)
-        axislabel_format = '{value}%'
+        axislabel_format = "{value}%"
 
     if df.empty is False:
         stackarea = (
             Line()
             .add_xaxis(df.index.strftime("%Y-%m").tolist())
             .set_global_opts(
-                             # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
-                             legend_opts=opts.LegendOpts(pos_top='5%', pos_left='10%', pos_right='60%'),
-                             toolbox_opts=opts.ToolboxOpts(is_show=True),
-                             tooltip_opts=opts.TooltipOpts(trigger='axis',
-                                                           axis_pointer_type='cross',
-                                                           ),
-                             xaxis_opts=opts.AxisOpts(type_='category',
-                                                      boundary_gap=False,
-                                                      splitline_opts=opts.SplitLineOpts(is_show=True,
-                                                                                        linestyle_opts=opts.LineStyleOpts(
-                                                                                            type_='dotted',
-                                                                                            opacity=0.5,
-                                                                                            )
-                                                                                        )
-                                                      ),
-                             yaxis_opts=opts.AxisOpts(type_="value",
-                                                      max_=df.sum(axis=1).max(),
-                                                      axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
-                                                      # axistick_opts=opts.AxisTickOpts(is_show=True),
-                                                      splitline_opts=opts.SplitLineOpts(is_show=True,
-                                                                                        linestyle_opts=opts.LineStyleOpts(
-                                                                                             type_='dotted',
-                                                                                             opacity=0.5,
-                                                                                             )
-                                                                                        )
-                                                      ),
-                             )
+                # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
+                legend_opts=opts.LegendOpts(
+                    pos_top="5%", pos_left="10%", pos_right="60%"
+                ),
+                toolbox_opts=opts.ToolboxOpts(is_show=True),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis", axis_pointer_type="cross",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    boundary_gap=False,
+                    splitline_opts=opts.SplitLineOpts(
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    ),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    type_="value",
+                    max_=df.sum(axis=1).max(),
+                    axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
+                    # axistick_opts=opts.AxisTickOpts(is_show=True),
+                    splitline_opts=opts.SplitLineOpts(
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    ),
+                ),
+            )
         )
         for i, item in enumerate(df.columns):
-            stackarea.add_yaxis(series_name=item,
-                           stack='总量',
-                           y_axis=df[item],
-                           areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
-                           # symbol_size=8,
-                           label_opts=opts.LabelOpts(is_show=False),
-                           linestyle_opts=opts.LineStyleOpts(width=3),
-                           itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color='', border_color0='white'),
-                           )
+            stackarea.add_yaxis(
+                series_name=item,
+                stack="总量",
+                y_axis=df[item],
+                areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
+                # symbol_size=8,
+                label_opts=opts.LabelOpts(is_show=False),
+                linestyle_opts=opts.LineStyleOpts(width=3),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    border_width=1, border_color="", border_color0="white"
+                ),
+            )
 
     else:
-        stackarea = (
-            Line()
-        )
+        stackarea = Line()
 
     return stackarea
 
 
-def echarts_stackarea100(df, datatype='ABS'):
-    axislabel_format = '{value}'
-    if datatype in ['SHARE', 'GR']:
+def echarts_stackarea100(df, datatype="ABS"):
+    axislabel_format = "{value}"
+    if datatype in ["SHARE", "GR"]:
         df = df.multiply(100).round(2)
-        axislabel_format = '{value}%'
+        axislabel_format = "{value}%"
 
     if df.empty is False:
         stackarea = (
             Line()
-                .add_xaxis(df.index.strftime("%Y-%m").tolist())
-                .set_global_opts(
-                    # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
-                    legend_opts=opts.LegendOpts(pos_top='5%', pos_left='10%', pos_right='60%'),
-                    toolbox_opts=opts.ToolboxOpts(is_show=True),
-                    tooltip_opts=opts.TooltipOpts(trigger='axis',
-                                                  axis_pointer_type='cross',
-                                                  ),
-                    xaxis_opts=opts.AxisOpts(type_='category',
-                                             boundary_gap=False,
-                                             splitline_opts=opts.SplitLineOpts(is_show=True,
-                                                                               linestyle_opts=opts.LineStyleOpts(
-                                                                                   type_='dotted',
-                                                                                   opacity=0.5,
-                                                                               )
-                                                                               )
-                                             ),
-                    yaxis_opts=opts.AxisOpts(type_="value",
-                                             max_= 100,
-                                             axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
-                                             # axistick_opts=opts.AxisTickOpts(is_show=True),
-                                             splitline_opts=opts.SplitLineOpts(is_show=True,
-                                                                               linestyle_opts=opts.LineStyleOpts(
-                                                                                   type_='dotted',
-                                                                                   opacity=0.5,
-                                                                               )
-                                                                               )
-                                             ),
+            .add_xaxis(df.index.strftime("%Y-%m").tolist())
+            .set_global_opts(
+                # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
+                legend_opts=opts.LegendOpts(
+                    pos_top="5%", pos_left="10%", pos_right="60%"
+                ),
+                toolbox_opts=opts.ToolboxOpts(is_show=True),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis", axis_pointer_type="cross",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    boundary_gap=False,
+                    splitline_opts=opts.SplitLineOpts(
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    ),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    type_="value",
+                    max_=100,
+                    axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
+                    # axistick_opts=opts.AxisTickOpts(is_show=True),
+                    splitline_opts=opts.SplitLineOpts(
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    ),
+                ),
             )
         )
         for i, item in enumerate(df.columns):
-            stackarea.add_yaxis(series_name=item,
-                                stack='总量',
-                                y_axis=df[item],
-                                areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
-                                # symbol_size=8,
-                                label_opts=opts.LabelOpts(is_show=False),
-                                linestyle_opts=opts.LineStyleOpts(width=3),
-                                itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color='',
-                                                                  border_color0='white'),
-                                )
+            stackarea.add_yaxis(
+                series_name=item,
+                stack="总量",
+                y_axis=df[item],
+                areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
+                # symbol_size=8,
+                label_opts=opts.LabelOpts(is_show=False),
+                linestyle_opts=opts.LineStyleOpts(width=3),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    border_width=1, border_color="", border_color0="white"
+                ),
+            )
 
     else:
-        stackarea = (
-            Line()
-        )
+        stackarea = Line()
 
     return stackarea

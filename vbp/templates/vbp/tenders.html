@@ -39,7 +39,8 @@
                         导出数据至Excel
                         <i class="dropdown icon"></i>
                         <div class="menu">
-                            <a class="item" href="{% url 'vbp:export' %}">导出中标结果整合数据</a>
+                            <a class="item" href="{% url 'vbp:export' 'tender' tenders|objs_id_to_string %}">导出基本信息</a>
+                            <a class="item" href="{% url 'vbp:export' 'volume' tenders|objs_id_to_string %}">导出区域中标合同量数据</a>
                         </div>
                     </div>
                 </div>

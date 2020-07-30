@@ -76,23 +76,128 @@ def search(request):
     return render(request, "vbp/tenders.html", context)
 
 
-def export(request):
-    tenders = pd.DataFrame(list(Tender.objects.all().values()))
-    bids = pd.DataFrame(list(Bid.objects.all().values()))
-    volumes = pd.DataFrame(list(Volume.objects.all().values()))
-    companies =  pd.DataFrame(list(Company.objects.all().values()))
-    tenders.rename(columns={"id": "tender_id"}, inplace=True)  # 修改列名，为之后merge匹配列做准备，下同
-    df = pd.merge(volumes, tenders, how="left", on="tender_id")  # 以volume为base匹配tender
-    bids.rename(columns={"id": "winner_id"}, inplace=True)
-    df = pd.merge(df, bids, how="left", on="winner_id")  # 以volume+tender为base匹配bid
-    companies.rename(columns={"id": "bidder_id"}, inplace=True)
-    df = pd.merge(df, bids, how="left", on="winner_id")  # 以volume+tender+bid为base匹配company
+def export(request, mode, tender_ids):
+    list_tender_ids = tender_ids.split("|")
+    tender_objs = Tender.objects.filter(pk__in=list_tender_ids).distinct()
+    bid_objs = Bid.objects.filter(tender__in=tender_objs).distinct()
+    volume_objs = Volume.objects.filter(tender__in=tender_objs).distinct()
+    company_objs = Company.objects.filter(bids__in=bid_objs).distinct()
 
+    if mode == "volume":
+        tenders = pd.DataFrame(list(tender_objs.values()))
+        bids = pd.DataFrame(list(bid_objs.values()))
+        volumes = pd.DataFrame(list(volume_objs.values()))
+        companies = pd.DataFrame(list(company_objs.values()))
+
+        tenders.rename(
+            columns={"id": "tender_id"}, inplace=True
+        )  # 修改列名，为之后merge匹配列做准备，下同
+        df = pd.merge(
+            volumes, tenders, how="left", on="tender_id"
+        )  # 以volume为base匹配tender
+
+        bids.rename(columns={"id": "winner_id"}, inplace=True)
+        df = pd.merge(df, bids, how="left", on="winner_id")  # 以volume+tender为base匹配bid
+
+        companies.rename(columns={"id": "bidder_id"}, inplace=True)
+        df = pd.merge(
+            df, companies, how="left", on="bidder_id"
+        )  # 以volume+tender+bid为base匹配company
+
+        df = df[
+            [
+                "vol",
+                "target",
+                "spec",
+                "tender_begin",
+                "ceiling_price",
+                "region",
+                "amount_contract",
+                "full_name",
+                "abbr_name",
+                "mnc_or_local",
+                "origin",
+                "bid_price",
+                "original_price",
+            ]
+        ]
+
+        df.columns = [
+            "批次",
+            "标的",
+            "剂型剂量",
+            "标期开始时间",
+            "最高有效申报价",
+            "地区",
+            "合同量",
+            "竞标公司全称",
+            "竞标公司简称",
+            "是否跨国公司",
+            "是否此标的原研",
+            "竞标价",
+            "集采前价格",
+        ]
+    elif mode == "tender":
+        tenders = pd.DataFrame(list(tender_objs.values()))
+        bids = pd.DataFrame(list(bid_objs.values()))
+        companies = pd.DataFrame(list(company_objs.values()))
+
+        companies.rename(columns={"id": "bidder_id"}, inplace=True)
+        df = pd.merge(bids, companies, how="left", on="bidder_id")  # 以bid为base匹配company
+
+        tenders.rename(columns={"id": "tender_id"}, inplace=True)
+        df = pd.merge(
+            df, tenders, how="left", on="tender_id"
+        )  # 以bid+company为base匹配tender
+
+        df["is_winner"] = df.apply(
+            lambda x: Bid.objects.get(pk=x["id"]).is_winner(), axis=1
+        )  # 添加列：是否中标
+        df["specs"] = df.apply(
+            lambda x: ",".join(list(Tender.objects.get(pk=x["tender_id"]).get_specs())),
+            axis=1,
+        )  # 添加列：剂型剂量
+        df["regions_win"] = df.apply(
+            lambda x: ",".join(list(Bid.objects.get(pk=x["id"]).regions_win())), axis=1,
+        )  # 添加中标区域
+        df = df[
+            [
+                "vol",
+                "target",
+                "specs",
+                "tender_begin",
+                "ceiling_price",
+                "full_name",
+                "abbr_name",
+                "mnc_or_local",
+                "origin",
+                "bid_price",
+                "original_price",
+                "is_winner",
+                "regions_win",
+            ]
+        ]
+
+        df.columns = [
+            "批次",
+            "标的",
+            "标的剂型剂量",
+            "标期开始时间",
+            "最高有效申报价",
+            "竞标公司全称",
+            "竞标公司简称",
+            "是否跨国公司",
+            "是否此标的原研",
+            "竞标价",
+            "集采前价格",
+            "是否中标",
+            "中标区域",
+        ]
     excel_file = IO()
 
     xlwriter = pd.ExcelWriter(excel_file, engine="xlsxwriter")
 
-    df.to_excel(xlwriter, "data", index=True)
+    df.to_excel(xlwriter, "data", index=False)
 
     xlwriter.save()
     xlwriter.close()
