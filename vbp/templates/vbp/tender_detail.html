@@ -112,7 +112,7 @@
                                 <tr>
                                     <th>区域<i class="sort icon"></i></th>
                                     {% for bid in tender.winners %}
-                                        <th><a href="{% url 'vbp:bid_detail' bid.pk %}">{{ bid.bidder }}</a><i
+                                        <th><a href="{% url 'vbp:bid_detail' bid.pk %}">{{ bid.bidder.abbr_name }}</a><i
                                                 class="sort icon"></i></th>
                                     {% endfor %}
                                 </tr>

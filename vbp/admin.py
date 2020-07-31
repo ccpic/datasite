@@ -19,10 +19,11 @@ from .models import *
 #     filter_horizontal = ('winner',)
 #     form = VolumeForm
 
+class TenderAdmin(admin.ModelAdmin):
+    search_fields = ['vol', 'target']
 
-# admin.site.register(Volume, VolumeAdmin)
-admin.site.register([Tender,
-                     Company,
+admin.site.register(Tender, TenderAdmin)
+admin.site.register([Company,
                      Bid,
                      Volume
                      ])

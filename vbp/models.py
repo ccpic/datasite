@@ -74,6 +74,18 @@ D_MAIN_SPEC = {
     "头孢氨苄口服常释剂型": {"0.25g": 1, "0.5g": 2},
     "辛伐他汀口服常释剂型": {"20mg": 1, "40mg": 2},
     "异烟肼口服常释剂型": {"0.1g": 1, "0.3g": 3},
+    "阿托伐他汀口服常释剂型": {"10mg": 0.5, "20mg": 1},
+    "艾司西酞普兰口服常释剂型": {"5mg": 0.5, "10mg": 1, "20mg": 2},
+    "奥氮平口服常释剂型": {"5mg": 0.5, "10mg": 1},
+    "厄贝沙坦口服常释剂型": {"75mg": 1, "150mg": 2},
+    "恩替卡韦口服常释剂型": {"0.5mg": 1, "1mg": 2},
+    "赖诺普利口服常释剂型": {"5mg": 0.5, "10mg": 1},
+    "利培酮口服常释剂型": {"1mg": 1, "3mg": 3},
+    "氯吡格雷口服常释剂型": {"25mg": 1 / 3, "75mg": 1},
+    "氯沙坦口服常释剂型": {"50mg": 1, "100mg": 2},
+    "培美曲塞注射剂": {"100mg": 1, "500mg": 5},
+    "瑞舒伐他汀口服常释剂型": {"5mg": 0.5, "10mg": 1},
+    "依那普利口服常释剂型": {"5mg": 0.5, "10mg": 1, "100mg": 10},
 }
 
 
@@ -201,7 +213,7 @@ class Tender(models.Model):
 
 
 class Company(models.Model):
-    full_name = models.CharField(max_length=50, verbose_name="企业全称", unique=True)
+    full_name = models.CharField(max_length=100, verbose_name="企业全称", unique=True)
     abbr_name = models.CharField(max_length=50, verbose_name="企业简称")
     mnc_or_local = models.BooleanField(verbose_name="是否跨国企业")
 
@@ -354,7 +366,7 @@ class Volume(models.Model):
         related_name="region_volume",
     )
     region = models.CharField(max_length=10, choices=REGION_CHOICES, verbose_name="区域")
-    spec = models.CharField(max_length=10, verbose_name="规格")
+    spec = models.CharField(max_length=20, verbose_name="规格")
     amount_contract = models.FloatField(verbose_name="合同量")
     winner = models.ForeignKey(
         Bid,

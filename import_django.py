@@ -21,7 +21,7 @@ D_BOOLEAN = {"是": True, "否": False}
 
 
 def import_tender():
-    df = pd.read_excel("vbp.xlsx", sheet_name="第二批集采", header=2)
+    df = pd.read_excel("vbp.xlsx", sheet_name="第一批联盟地区", header=2)
     df = df.drop_duplicates("药品通用名")
     # pivoted = pd.pivot_table(df, index='药品通用名', values='最高限价', aggfunc=np.mean)
     # d = pivoted.to_dict()['最高限价']
@@ -29,11 +29,11 @@ def import_tender():
     l = []
     for tender in df.values:
         print(tender)
-        tender_begin = datetime.datetime.strptime("10-03-2020", "%d-%m-%Y")
+        tender_begin = datetime.datetime.strptime("01-01-2020", "%d-%m-%Y")
         l.append(
             Tender(
                 target=tender[1],
-                vol="第二轮33品种",
+                vol="第一轮25品种扩围联盟地区",
                 tender_begin=tender_begin,
                 ceiling_price=tender[9],
             )
@@ -43,7 +43,7 @@ def import_tender():
 
 
 def import_volume():
-    df = pd.read_excel("vbp_amount.xlsx", sheet_name="第二轮集采 by 省")
+    df = pd.read_excel("vbp_amount.xlsx", sheet_name="联盟地区 by 省")
     df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
     print(df)
 
@@ -63,7 +63,7 @@ def import_volume():
 
 
 def import_bid():
-    df = pd.read_excel("vbp.xlsx", sheet_name="第二批集采", header=2)
+    df = pd.read_excel("vbp.xlsx", sheet_name="第一批联盟地区", header=2)
     df.fillna("-", inplace=True)
     print(df)
 
@@ -139,7 +139,7 @@ def importModel(dict):
 
 if __name__ == "__main__":
     # importModel(d_model)
-    # import_tender()
+    import_tender()
     import_volume()
     import_bid()
     print("Done!", time.process_time())

@@ -66,9 +66,10 @@ def search(request):
     print(request.GET)
     kw = request.GET.get("kw")
     search_result = Tender.objects.filter(
-        Q(target__icontains=kw)
-        | Q(bids__bidder__full_name__icontains=kw)
-        | Q(bids__bidder__abbr_name__icontains=kw)
+        Q(target__icontains=kw)  # 搜索标的名称
+        | Q(bids__bidder__full_name__icontains=kw)  # 搜索竞标公司全称
+        | Q(bids__bidder__abbr_name__icontains=kw)  # 搜索竞标公司简称
+        | Q(vol__icontains=kw)  # 搜索批次
     ).distinct()
 
     context = {"tenders": search_result, "kw": kw}
