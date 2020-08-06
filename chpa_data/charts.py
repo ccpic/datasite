@@ -268,6 +268,7 @@ def echarts_stackbar(
                 df[item].values.tolist(),
                 stack="总量",
                 label_opts=opts.LabelOpts(is_show=False),
+                z_level=1
             )
             # .add_yaxis(series_name=df.index[-5].strftime("%Y-%m"),
             #            yaxis_data=df_ya.values.tolist(),
@@ -326,6 +327,7 @@ def echarts_stackbar(
                     itemstyle_opts=opts.ItemStyleOpts(
                         border_width=1, border_color="", border_color0="white"
                     ),
+                    z_level=2
                 )
             )
     else:
