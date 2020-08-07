@@ -162,6 +162,20 @@ class Tender(models.Model):
                     volume += 0
             return volume
 
+    def lowest_origin_price(self):
+        qs = self.bids.exclude(original_price=None).order_by('original_price').first()
+        try:
+            return qs.original_price
+        except:
+            return None
+
+    def first_winner_pricecut(self):
+        qs = self.bids.order_by('bid_price').first()
+        try:
+            return qs.bid_price/self.lowest_origin_price() - 1
+        except:
+            return None
+
     @property
     def tender_period(self):
         if self.bidder_num == 1:  # 1家竞标，标期1年
@@ -176,20 +190,20 @@ class Tender(models.Model):
         year = timedelta(days=365)  # 1年
         return self.tender_begin + self.tender_period * year
 
-    @property
-    def winner_num_max(self):
-        if self.bidder_num == 1:  # 1家竞标，1家中标，下同
-            return 1
-        elif 2 <= self.bidder_num <= 3:
-            return 2
-        elif self.bidder_num == 4:
-            return 3
-        elif 5 <= self.bidder_num <= 6:
-            return 4
-        elif 7 <= self.bidder_num <= 8:
-            return 5
-        elif self.bidder_num > 8:
-            return 6
+    # @property
+    # def winner_num_max(self):
+    #     if self.bidder_num == 1:  # 1家竞标，1家中标，下同
+    #         return 1
+    #     elif 2 <= self.bidder_num <= 3:
+    #         return 2
+    #     elif self.bidder_num == 4:
+    #         return 3
+    #     elif 5 <= self.bidder_num <= 6:
+    #         return 4
+    #     elif 7 <= self.bidder_num <= 8:
+    #         return 5
+    #     elif self.bidder_num > 8:
+    #         return 6
 
     @property
     def regions(self):

@@ -39,6 +39,11 @@ def objs_id_to_string(objs):
     return "|".join(arr)
 
 
+@register.filter(name='times')
+def times(number):
+    return range(number)
+
+
 @register.simple_tag
 def volume_win(bid, spec=None, region=None):
     try:
@@ -80,3 +85,12 @@ def region_std_volume(tender, region):
         return "{0:,.1f}".format(volume)
     else:
         return None
+
+
+@register.simple_tag
+def qs_by_competition(tenders, bidder_num, winner_num):
+    tender_ids = [tender.id for tender in tenders if tender.bids.count() == bidder_num]
+    qs = tenders.filter(id__in=tender_ids)
+    tender_ids = [tender.id for tender in qs if tender.winners().count() == winner_num]
+    qs = tenders.filter(id__in=tender_ids)
+    return qs

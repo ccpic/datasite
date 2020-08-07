@@ -16,6 +16,31 @@
     <div class="ui container">
         <div id="pusher" class="pusher" style="padding-top:50px">
             <div id="hist" style="height:400px"></div>
+            <table class="ui celled table">
+                <thead>
+                <tr>
+                    <th>m进n</th>
+                    {% for i in 6|times %}
+                        <th>{{ i|add:1 }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for j in 11|times %}
+                    <tr>
+                        <td> {{ j|add:1 }}</td>
+                        {% for i in 6|times %}
+                            {% qs_by_competition tenders j|add:1 i|add:1 as qs %}
+                            <td>
+                                {% for tender in qs %}
+                                    <li>{{ tender.target|truncatechars:5 }}{{ tender.first_winner_pricecut|percentage }}</li>
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -23,7 +48,8 @@
 
     <script>
         var hist = echarts.init(document.getElementById('hist'));
-        var data = [];bids = [];
+        var data = [];
+        bids = [];
         {% for tender in tenders %}
             {% for bid in tender.bids.all %}
                 {% if bid.is_winner %}
@@ -45,13 +71,13 @@
                 data: data,
                 type: 'bar',
                 markLine: {
-                lineStyle: {
-                    type: 'solid'
-                },
-                data: [
-                    {type: 'average', name: '平均值'},
-                ]
-            }
+                    lineStyle: {
+                        type: 'solid'
+                    },
+                    data: [
+                        {type: 'average', name: '平均值'},
+                    ]
+                }
             }]
         };
         // 使用刚指定的配置项和数据显示图表
