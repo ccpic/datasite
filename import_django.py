@@ -11,7 +11,7 @@ import numpy as np
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "datasite.settings")
 django.setup()
 
-from chpa_data.models import *
+from chpa_data.views import *
 from vbp.models import *
 
 engine = create_engine("mssql+pymssql://(local)/CHPA_1806")
@@ -126,7 +126,7 @@ def import_bid():
 
 def importModel(dict):
     for key in dict:
-        sql = "SELECT Distinct [" + key + "] FROM " + table
+        sql = "SELECT Distinct " + key + " FROM " + table
         df = pd.read_sql(sql=sql, con=engine)
         df.dropna(inplace=True)
         print(df)
@@ -134,12 +134,13 @@ def importModel(dict):
         for item in df.values:
             l.append(dict[key](name=item[0]))
 
+        dict[key].objects.all().delete()
         dict[key].objects.bulk_create(l)
 
 
 if __name__ == "__main__":
-    # importModel(d_model)
-    import_tender()
-    import_volume()
-    import_bid()
+    importModel(D_MODEL)
+    # import_tender()
+    # import_volume()
+    # import_bid()
     print("Done!", time.process_time())

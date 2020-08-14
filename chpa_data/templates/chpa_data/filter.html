@@ -228,7 +228,8 @@
 
         // 获取输出选项modal的值
         form_data['lang'] = $('#radio_lang').find('[name="lang"]:checked').val();
-        form_data['toggle_bubble_perf'] = $('#toggle_bubble_performance').checkbox('is checked')
+        form_data['toggle_bubble_perf'] = $('#toggle_bubble_performance').checkbox('is checked');
+        form_data['customized_sql'] = $('#customized_sql').val();
 
         return form_data
     }

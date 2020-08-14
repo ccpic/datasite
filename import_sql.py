@@ -13,7 +13,6 @@ from sqlalchemy import create_engine
 pd.set_option('display.max_columns', 5000)
 pd.set_option('display.width', 5000)
 
-start = time.clock()
 engine = create_engine('mssql+pymssql://(local)/CHPA_1806')
 
 df = pd.read_excel(open('data.xlsx', 'rb'), sheet_name='全国')  #从Excel读取数
@@ -148,8 +147,8 @@ df_combined.to_sql('data', con=engine, if_exists='replace', index=False,
 #                         }
 #                  )
 
-end = time.clock()
-print(end-start)
+
+print(time.process_time())
 
 # def get_agg_df(date, unit, period):
 #     df_new = pd.DataFrame()

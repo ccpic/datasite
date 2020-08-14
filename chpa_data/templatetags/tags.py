@@ -39,7 +39,7 @@ def objs_id_to_string(objs):
     return "|".join(arr)
 
 
-@register.filter(name='times')
+@register.filter(name="times")
 def times(number):
     return range(number)
 
