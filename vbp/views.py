@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from django.shortcuts import render, HttpResponse
 from django.db.models import Q
 import pandas as pd
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -28,9 +29,19 @@ import datetime
 
 
 def index(request):
+    DISPLAY_LENGTH = 20
     tenders = Tender.objects.all()
+    paginator = Paginator(tenders, DISPLAY_LENGTH)
+    page = request.POST.get('page')
 
-    context = {"tenders": tenders}
+    try:
+        rows = paginator.page(page)
+    except PageNotAnInteger:
+        rows = paginator.page(1)
+    except EmptyPage:
+        rows = paginator.page(paginator.num_pages)
+
+    context = {"tenders": rows}
     return render(request, "vbp/tenders.html", context)
 
 
