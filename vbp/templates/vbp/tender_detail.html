@@ -64,20 +64,32 @@
                                         {% if tender.bids.all %}
                                             <div class="ui divided selection list">
                                                 {% for bid in tender.bids.all %}
-                                                    <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
-                                                        <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
-                                                            &yen{{ bid.bid_price|fix_decimal:2 }}
-                                                        </div>
-                                                        {% if bid.original_price %}
-                                                            <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
-                                                                {{ bid.price_cut|percentage }}
+                                                    {% if bid.bid_price == 99999 %}
+                                                        <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
+                                                            <div class="ui red horizontal left floated label">
+                                                                未披露
                                                             </div>
-                                                        {% endif %}
-                                                        <div class="middle aligned content">
-                                                            {{ bid.bidder.abbr_name }}
-                                                            {% if bid.origin %}<i class="star icon"></i>{% endif %}
-                                                        </div>
-                                                    </a>
+                                                            <div class="middle aligned content">
+                                                                {{ bid.bidder.abbr_name }}
+                                                                {% if bid.origin %}<i class="star icon"></i>{% endif %}
+                                                            </div>
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
+                                                            <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
+                                                                &yen{{ bid.bid_price|fix_decimal:2 }}
+                                                            </div>
+                                                            {% if bid.original_price %}
+                                                                <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
+                                                                    {{ bid.price_cut|percentage }}
+                                                                </div>
+                                                            {% endif %}
+                                                            <div class="middle aligned content">
+                                                                {{ bid.bidder.abbr_name }}
+                                                                {% if bid.origin %}<i class="star icon"></i>{% endif %}
+                                                            </div>
+                                                        </a>
+                                                    {% endif %}
                                                 {% endfor %}
                                             </div>
                                         {% else %}

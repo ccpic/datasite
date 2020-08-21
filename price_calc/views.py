@@ -21,9 +21,8 @@ def ajax_calc(request):
     x2 = float(strength_ta)/float(strength_bm)
     l2 = math.log(x2,2)
     k2 = math.pow(1.7, l2)
-    price_ta = round(float(price_bm)*k1*k2, 2)
-    uprice_ta = round(price_ta/float(number_ta), 2)
-    uprice_bm = round(uprice_bm, 2)
+    price_ta = float(price_bm)*k1*k2
+    uprice_ta = price_ta/float(number_ta)
 
     dict_result = {'uprice_bm': uprice_bm,
                    'price_ta': price_ta,
