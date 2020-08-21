@@ -39,9 +39,12 @@ def objs_id_to_string(objs):
     return "|".join(arr)
 
 
-@register.filter(name="times")
+@register.filter(name='times')
 def times(number):
-    return range(number)
+    try:
+        return range(1, number+1)
+    except:
+        return []
 
 
 @register.simple_tag
