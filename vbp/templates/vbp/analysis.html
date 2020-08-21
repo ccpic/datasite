@@ -26,10 +26,10 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for j in 11|times %}
+                {% for j in 10|times %}
                     <tr>
                         <td> {{ j|add:1 }}</td>
-                        {% for i in 6|times %}
+                        {% for i in 5|times %}
                             {% qs_by_competition tenders j|add:1 i|add:1 as qs %}
                             <td>
                                 {% for tender in qs %}

@@ -5,7 +5,7 @@ from django.shortcuts import render, HttpResponse
 from django.db.models import Q
 import pandas as pd
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-
+import random
 try:
     from io import BytesIO as IO  # for modern python
 except ImportError:
@@ -28,11 +28,12 @@ import datetime
 #     serializer_class = TenderSerializer
 
 
+DISPLAY_LENGTH = 10
+
 def index(request):
-    DISPLAY_LENGTH = 20
     tenders = Tender.objects.all()
     paginator = Paginator(tenders, DISPLAY_LENGTH)
-    page = request.POST.get('page')
+    page = request.GET.get('page')
 
     try:
         rows = paginator.page(page)
@@ -41,7 +42,11 @@ def index(request):
     except EmptyPage:
         rows = paginator.page(paginator.num_pages)
 
-    context = {"tenders": rows}
+    context = {"tenders": rows,
+               'num_pages': paginator.num_pages,
+               'record_n': paginator.count,
+               'display_length': DISPLAY_LENGTH,
+               }
     return render(request, "vbp/tenders.html", context)
 
 
@@ -83,7 +88,9 @@ def search(request):
         | Q(vol__icontains=kw)  # 搜索批次
     ).distinct()
 
-    context = {"tenders": search_result, "kw": kw}
+    context = {"tenders": search_result,
+               "kw": kw
+               }
 
     return render(request, "vbp/tenders.html", context)
 

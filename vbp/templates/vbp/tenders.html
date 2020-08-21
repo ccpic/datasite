@@ -38,9 +38,12 @@
             {% if tenders %}
                 <div class="ui dividing header">
                     {% if kw %}
-                        <a href="{% url 'vbp:index' %}">所有标的</a> - 搜索关键字 "{{ kw }}" 结果 - 共{{ tenders.count }}条记录
+                        <a href="{% url 'vbp:index' %}">所有标的</a> - 搜索关键字 "{{ kw }}" 结果 - <span>共{{ tenders.count }}条记录
+                    </span>
                     {% else %}
-                        所有标的 - 共{{ tenders.count }}条记录
+                        所有标的 - <span>当前显示第
+                    {{ tenders.start_index }}-{{ tenders.end_index }} of {{ record_n }}条记录
+                    </span>
                     {% endif %}
                 </div>
                 <div class="ui compact menu">
@@ -126,6 +129,31 @@
                     {% endfor %}
                     </tbody>
                 </table>
+                {% if not kw %}
+                    <div class="ui pagination menu">
+                        <a class="item" href="?page=1">&lt;&lt;</a>
+
+                        {% if tenders.number|add:'-4' > 1 %}
+                        <a class="item" href="?page={{ tenders.number|add:'-5' }}">&hellip;</a>
+                        {% endif %}
+
+
+                        {% for n in num_pages|times %}
+                        {% if n == tenders.number %}
+                        <span class="active item" href="?page={{ n }}">{{ n }}</span>
+                        {% elif n > tenders.number|add:'-5' and n < tenders.number|add:'5' %}
+                        <a class="item" href="?page={{ n }}">{{ n }}</a>
+                        {% endif %}
+                        {% endfor %}
+
+
+                        {% if num_pages > tenders.number|add:'4' %}
+                        <a class="item" href="?page={{ tenders.number|add:'5' }}">&hellip;</a>
+                        {% endif %}
+
+                        <a class="item" href="?page={{ num_pages }}">&gt;&gt;</a>
+                    </div>
+                {% endif %}
             {% else %}
                 <div class="ui error message">
                     没有搜索到符合条件的记录
