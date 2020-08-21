@@ -109,17 +109,39 @@ class Tender(models.Model):
         return self.bids.all().count()
 
     @property
+    def winner_num(self):
+        return self.winners().count()
+
+    @property
     def proc_percentage(self):
-        if self.bidder_num == 1:  # 1家竞标，带量采购合同里量占报量的50%，下同
-            return 0.5
-        elif 2 <= self.bidder_num <= 3:
-            return 0.6
-        elif self.bidder_num == 4:
-            return 0.7
-        elif self.bidder_num > 4:
-            return 0.8
+        if self.target in [
+            "阿莫西林颗粒剂",
+            "利奈唑胺口服常释剂型",
+            "莫西沙星氯化钠注射剂",
+            "左氧氟沙星滴眼剂",
+            "环丙沙星口服常释剂型",
+            "头孢地尼口服常释剂型",
+            "头孢克洛口服常释剂型",
+            "克拉霉素口服常释剂型",
+        ]:
+            if self.winner_num == 1:
+                pct = 0.4
+            elif self.winner_num == 2:
+                pct = 0.5
+            elif self.winner_num == 3:
+                pct = 0.6
+            else:
+                pct = 0.7
         else:
-            return None
+            if self.winner_num == 1:
+                pct = 0.5
+            elif self.winner_num == 2:
+                pct = 0.6
+            elif self.winner_num == 3:
+                pct = 0.7
+            else:
+                pct = 0.8
+        return pct
 
     def get_specs(self):  # 所有相关报量里出现的规格
         return (
@@ -142,11 +164,13 @@ class Tender(models.Model):
     def specs_num(self):  # 规格数量
         return len(self.get_specs())
 
-    def total_std_volume_contract(self):  # 计算报量总和
+    def total_std_volume_contract(self):  # 计算合同量总和
         if self.specs_num == 1:
             qs = self.region_volume.all()
             if qs.exists():
-                return qs.aggregate(Sum("amount_contract"))["amount_contract__sum"]
+                volume = qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
+                volume = volume * self.proc_percentage
+                return volume
             else:
                 return 0
         else:  # 如果不止一种规格要折算后再求和
@@ -155,34 +179,41 @@ class Tender(models.Model):
                 qs = self.region_volume.all().filter(spec=spec)
                 if qs.exists():
                     volume += (
-                        qs.aggregate(Sum("amount_contract"))["amount_contract__sum"]
+                        qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
                         * D_MAIN_SPEC[self.target][spec]
                     )
                 else:
                     volume += 0
+            volume = volume * self.proc_percentage
             return volume
 
+    def total_value_contract(self):  # 计算合同金额总和（根据中标价）
+        value = 0
+        for bid in self.bids.all():
+            value += bid.value_win()
+        return value
+
     def lowest_origin_price(self):
-        qs = self.bids.exclude(original_price=None).order_by('original_price').first()
+        qs = self.bids.exclude(original_price=None).order_by("original_price").first()
         try:
             return qs.original_price
         except:
             return None
 
     def first_winner_pricecut(self):
-        qs = self.bids.order_by('bid_price').first()
+        qs = self.bids.order_by("bid_price").first()
         try:
-            return qs.bid_price/self.lowest_origin_price() - 1
+            return qs.bid_price / self.lowest_origin_price() - 1
         except:
             return None
 
     @property
     def tender_period(self):
-        if self.bidder_num == 1:  # 1家竞标，标期1年
+        if self.winner_num == 1:  # 1家中标，标期1年
             return 1
-        elif 2 <= self.bidder_num <= 4:
+        elif 2 <= self.winner_num <= 3:
             return 2
-        elif self.bidder_num > 4:
+        elif self.winner_num >= 4:
             return 3
 
     @property
@@ -297,22 +328,25 @@ class Bid(models.Model):
         if spec is not None and region is not None:
             qs = self.region_volume.filter(spec=spec, region=region)
             if qs.exists():
-                volume = qs[0].amount_contract
+                volume = qs[0].amount_reported
+                volume = volume * self.tender.proc_percentage
             else:
                 volume = 0
         elif spec is not None and region is None:
             qs = self.region_volume.filter(spec=spec)
             if qs.exists():
-                volume = qs.aggregate(Sum("amount_contract"))["amount_contract__sum"]
+                volume = qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
+                volume = volume * self.tender.proc_percentage
             else:
                 volume = 0
         elif spec is None and region is not None:
             if self.tender.specs_num == 1:
                 qs = self.region_volume.filter(region=region)
                 if qs.exists():
-                    volume = qs.aggregate(Sum("amount_contract"))[
-                        "amount_contract__sum"
+                    volume = qs.aggregate(Sum("amount_reported"))[
+                        "amount_reported__sum"
                     ]
+                    volume = volume * self.tender.proc_percentage
                 else:
                     volume = 0
             else:
@@ -321,18 +355,20 @@ class Bid(models.Model):
                     qs = self.region_volume.filter(spec=spec, region=region)
                     if qs.exists():
                         volume += (
-                            qs.aggregate(Sum("amount_contract"))["amount_contract__sum"]
+                            qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
                             * D_MAIN_SPEC[self.tender.target][spec]
                         )
                     else:
                         volume += 0
+                volume = volume * self.tender.proc_percentage
         else:
             if self.tender.specs_num == 1:
                 qs = self.region_volume.all()
                 if qs.exists():
-                    volume = qs.aggregate(Sum("amount_contract"))[
-                        "amount_contract__sum"
+                    volume = qs.aggregate(Sum("amount_reported"))[
+                        "amount_reported__sum"
                     ]
+                    volume = volume * self.tender.proc_percentage
                 else:
                     volume = 0
             else:
@@ -341,11 +377,12 @@ class Bid(models.Model):
                     qs = self.region_volume.all().filter(spec=spec)
                     if qs.exists():
                         volume += (
-                            qs.aggregate(Sum("amount_contract"))["amount_contract__sum"]
+                            qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
                             * D_MAIN_SPEC[self.tender.target][spec]
                         )
                     else:
                         volume += 0
+                volume = volume * self.tender.proc_percentage
         return volume
 
     def value_win(self):
@@ -381,7 +418,7 @@ class Volume(models.Model):
     )
     region = models.CharField(max_length=10, choices=REGION_CHOICES, verbose_name="区域")
     spec = models.CharField(max_length=20, verbose_name="规格")
-    amount_contract = models.FloatField(verbose_name="合同量")
+    amount_reported = models.FloatField(verbose_name="合同量")
     winner = models.ForeignKey(
         Bid,
         on_delete=models.CASCADE,
@@ -401,5 +438,5 @@ class Volume(models.Model):
             self.tender.target,
             self.region,
             self.spec,
-            self.amount_contract,
+            self.amount_reported,
         )

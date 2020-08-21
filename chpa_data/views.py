@@ -11,6 +11,11 @@ import datetime
 from .models import *
 
 try:
+    import six  # for modern Django
+except ImportError:
+    from django.utils import six  # for legacy Django
+
+try:
     from io import BytesIO as IO  # for modern python
 except ImportError:
     from io import StringIO as IO  # for legacy python
