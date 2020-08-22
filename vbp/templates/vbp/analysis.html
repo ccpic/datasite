@@ -20,7 +20,7 @@
                 <thead>
                 <tr>
                     <th>m进n</th>
-                    {% for i in 6|times %}
+                    {% for i in 5|times %}
                         <th>{{ i|add:1 }}</th>
                     {% endfor %}
                 </tr>
@@ -28,9 +28,9 @@
                 <tbody>
                 {% for j in 10|times %}
                     <tr>
-                        <td> {{ j|add:1 }}</td>
+                        <td> {{ j|add:2 }}</td>
                         {% for i in 5|times %}
-                            {% qs_by_competition tenders j|add:1 i|add:1 as qs %}
+                            {% qs_by_competition tenders j|add:2 i|add:1 as qs %}
                             <td>
                                 {% for tender in qs %}
                                     <li>{{ tender.target|truncatechars:5 }}{{ tender.first_winner_pricecut|percentage }}</li>

@@ -6,13 +6,6 @@ from django.db.models import Avg, Count, Min, Sum
 from django.db.models.signals import m2m_changed
 from django.db.models import Q, UniqueConstraint
 
-# def bids_changed(sender, **kwargs):
-#     bid_num = kwargs['instance'].bid.count()
-#     bid_allowed_num = kwargs['instance'].tender.bidder_num
-#     if bid_num > bid_allowed_num :
-#         raise ValidationError("竞标数%s家超过标的允许的%s家" % (bid_num, bid_allowed_num))
-#
-# m2m_changed.connect(bids_changed, sender=Record.bid.through)
 
 REGION_CHOICES = [
     ("北京", "北京"),
@@ -56,6 +49,7 @@ REGION_CHOICES = [
 ]
 
 
+#  规格换算系数
 D_MAIN_SPEC = {
     "阿卡波糖口服常释剂型": {"50mg": 1, "100mg": 2,},
     "阿莫西林口服常释剂型": {"0.25g": 1, "0.5g": 2,},
@@ -86,26 +80,25 @@ D_MAIN_SPEC = {
     "培美曲塞注射剂": {"100mg": 1, "500mg": 5},
     "瑞舒伐他汀口服常释剂型": {"5mg": 0.5, "10mg": 1},
     "依那普利口服常释剂型": {"5mg": 0.5, "10mg": 1, "100mg": 10},
-    '氨基葡萄糖口服常释剂型': {'0.25g':1,'0.75g':3},
-    '奥氮平口腔崩解片':{'5mg':1, '10mg':2},
-    '奥美拉唑口服常释剂型':{'10mg':1,'20mg':2},
-    '布洛芬颗粒剂': {'0.1g': 0.5,'0.2g':1},
-    '二甲双胍口服常释剂型': {'0.25g': 0.5, '0.5g': 1},
-    '非布司他口服常释剂型': {'20mg':0.5,'40mg':1},
-    '枸橼酸西地那非片':{'25mg':0.5,'50mg':1,'100mg':2},
-    '卡培他滨口服常释剂型':{'0.15g':0.3 ,'0.5g': 1},
-    '卡托普利口服常释剂型':{'12.5mg':0.5, '25mg':1},
-    '喹硫平口服常释剂型': {'25mg':0.25,'0.1g':1,'0.2g':2,'0.3g':3},
-    '拉米夫定口服常释剂型':{'0.15g':0.5,'0.3g':1},
-    '孟鲁司特咀嚼片':{'4mg':0.8, '5mg':1},
-    '匹伐他汀口服常释剂型':{'1mg':0.5, '2mg':1},
-    '普芦卡必利口服常释剂型':{'1mg':0.5,'2mg':1},
-    '缬沙坦口服常释剂型':{'40mg':0.5,'80mg':1,'160mg':2},
-    '盐酸达泊西汀片':{'30mg':1, '60mg':2},
-    '依托考昔口服常释剂型':{'30mg':0.5,'60mg':1,'90mg':1.5,'120mg':2},
-    '头孢克洛口服常释剂型':{'0.25g':1,'0.5g':2},
-    '克拉霉素口服常释剂型':{'250mg':1,'500mg':2},
-
+    "氨基葡萄糖口服常释剂型": {"0.25g": 1, "0.75g": 3},
+    "奥氮平口腔崩解片": {"5mg": 1, "10mg": 2},
+    "奥美拉唑口服常释剂型": {"10mg": 1, "20mg": 2},
+    "布洛芬颗粒剂": {"0.1g": 0.5, "0.2g": 1},
+    "二甲双胍口服常释剂型": {"0.25g": 0.5, "0.5g": 1},
+    "非布司他口服常释剂型": {"20mg": 0.5, "40mg": 1},
+    "枸橼酸西地那非片": {"25mg": 0.5, "50mg": 1, "100mg": 2},
+    "卡培他滨口服常释剂型": {"0.15g": 0.3, "0.5g": 1},
+    "卡托普利口服常释剂型": {"12.5mg": 0.5, "25mg": 1},
+    "喹硫平口服常释剂型": {"25mg": 0.25, "0.1g": 1, "0.2g": 2, "0.3g": 3},
+    "拉米夫定口服常释剂型": {"0.15g": 0.5, "0.3g": 1},
+    "孟鲁司特咀嚼片": {"4mg": 0.8, "5mg": 1},
+    "匹伐他汀口服常释剂型": {"1mg": 0.5, "2mg": 1},
+    "普芦卡必利口服常释剂型": {"1mg": 0.5, "2mg": 1},
+    "缬沙坦口服常释剂型": {"40mg": 0.5, "80mg": 1, "160mg": 2},
+    "盐酸达泊西汀片": {"30mg": 1, "60mg": 2},
+    "依托考昔口服常释剂型": {"30mg": 0.5, "60mg": 1, "90mg": 1.5, "120mg": 2},
+    "头孢克洛口服常释剂型": {"0.25g": 1, "0.5g": 2},
+    "克拉霉素口服常释剂型": {"250mg": 1, "500mg": 2},
 }
 
 
@@ -215,16 +208,22 @@ class Tender(models.Model):
 
     def lowest_origin_price(self):
         qs = self.bids.exclude(original_price=None).order_by("original_price").first()
-        try:
-            return qs.original_price
-        except:
+        if qs != 99999:
+            try:
+                return qs.original_price
+            except:
+                return None
+        else:
             return None
 
     def first_winner_pricecut(self):
         qs = self.bids.order_by("bid_price").first()
-        try:
-            return qs.bid_price / self.lowest_origin_price() - 1
-        except:
+        if qs != 99999:
+            try:
+                return qs.bid_price / self.lowest_origin_price() - 1
+            except:
+                return None
+        else:
             return None
 
     @property
@@ -319,21 +318,30 @@ class Bid(models.Model):
             return False
 
     def price_cut(self):  # 相比集采前降价幅度
-        try:
-            return self.bid_price / self.original_price - 1
-        except:
+        if self.bid_price != 99999:
+            try:
+                return self.bid_price / self.original_price - 1
+            except:
+                return None
+        else:
             return None
 
     def price_cut_to_ceiling(self):  # 相比最高限价降价幅度
-        try:
-            return self.bid_price / self.tender.ceiling_price - 1
-        except:
+        if self.bid_price != 99999:
+            try:
+                return self.bid_price / self.tender.ceiling_price - 1
+            except:
+                return None
+        else:
             return None
 
     def price_cut_to_lowest(self):  # 相比集采前降价幅度
-        try:
-            return self.bid_price / self.tender.get_lowest_original_price() - 1
-        except:
+        if self.bid_price != 99999:
+            try:
+                return self.bid_price / self.tender.get_lowest_original_price() - 1
+            except:
+                return None
+        else:
             return None
 
     def regions_win(self):
@@ -460,3 +468,12 @@ class Volume(models.Model):
             self.spec,
             self.amount_reported,
         )
+
+
+# def bids_changed(sender, **kwargs):
+#     bid_num = kwargs['instance'].bid.count()
+#     bid_allowed_num = kwargs['instance'].tender.bidder_num
+#     if bid_num > bid_allowed_num :
+#         raise ValidationError("竞标数%s家超过标的允许的%s家" % (bid_num, bid_allowed_num))
+#
+# m2m_changed.connect(bids_changed, sender=Record.bid.through)

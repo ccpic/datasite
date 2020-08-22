@@ -32,7 +32,8 @@
                                     <th style="display:none">id</th>
                                     <th>带量品种</th>
                                     <th>带量批次</th>
-                                    <th>合同量<br>（折算主规格）</th>
+                                    <th>合同量<br>（折算为一种规格）</th>
+                                    <th>合同金额<br>（按中标价）</th>
                                     <th>标期开始</th>
                                     <th>标期</th>
                                     <th>最高限价</th>
@@ -56,6 +57,9 @@
                                         {% if tender.specs_num > 1 %}
                                             <br><u>折算为{{ tender.main_spec }}</u>
                                         {% endif %}
+                                    </td>
+                                    <td style="width: 100px">
+                                        {{ tender.total_value_contract|fix_decimal:0 }}万
                                     </td>
                                     <td style="width: 100px">{{ tender.tender_begin|date:'Y年m月' }}</td>
                                     <td style="width: 100px">{{ tender.tender_period }}年</td>
