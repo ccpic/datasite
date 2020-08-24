@@ -177,12 +177,11 @@ class Tender(models.Model):
     def specs_num(self):  # 规格数量
         return len(self.get_specs())
 
-    def total_std_volume_contract(self):  # 计算合同量总和
+    def total_std_volume_reported(self):  # 计算报量总和
         if self.specs_num == 1:
             qs = self.region_volume.all()
             if qs.exists():
                 volume = qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
-                volume = volume * self.proc_percentage
                 return volume
             else:
                 return 0
@@ -197,8 +196,10 @@ class Tender(models.Model):
                     )
                 else:
                     volume += 0
-            volume = volume * self.proc_percentage
             return volume
+
+    def total_std_volume_contract(self):  # 计算合同量总和
+        return self.total_std_volume_reported() * self.proc_percentage
 
     def total_value_contract(self):  # 计算合同金额总和（根据中标价）
         value = 0
@@ -468,6 +469,9 @@ class Volume(models.Model):
             self.spec,
             self.amount_reported,
         )
+
+    def amount_contract(self):
+        return self.amount_reported * self.tender.proc_percentage
 
 
 # def bids_changed(sender, **kwargs):

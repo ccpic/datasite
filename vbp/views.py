@@ -111,7 +111,9 @@ def search(request):
     sr_ids = [tender.id for tender in search_result]
     search_result2 = Tender.objects.filter(id__in=sr_ids)
 
-    paginator = Paginator(search_result2, DISPLAY_LENGTH)  #  为了克服pagination bug这里的参数时search_result2
+    paginator = Paginator(
+        search_result2, DISPLAY_LENGTH
+    )  #  为了克服pagination bug这里的参数时search_result2
     page = request.GET.get("page")
 
     try:
@@ -133,12 +135,18 @@ def search(request):
     return render(request, "vbp/tenders.html", context)
 
 
-def export(request, mode, tender_ids):
-    list_tender_ids = tender_ids.split("|")
-    tender_objs = Tender.objects.filter(pk__in=list_tender_ids).distinct()
-    bid_objs = Bid.objects.filter(tender__in=tender_objs).distinct()
-    volume_objs = Volume.objects.filter(tender__in=tender_objs).distinct()
-    company_objs = Company.objects.filter(bids__in=bid_objs).distinct()
+def export(request, mode, tender_ids=None):
+    if tender_ids is None:
+        tender_objs = Tender.objects.all()
+        bid_objs = Bid.objects.all()
+        volume_objs = Volume.objects.all()
+        company_objs = Company.objects.all()
+    else:
+        list_tender_ids = tender_ids.split("|")
+        tender_objs = Tender.objects.filter(pk__in=list_tender_ids).distinct()
+        bid_objs = Bid.objects.filter(tender__in=tender_objs).distinct()
+        volume_objs = Volume.objects.filter(tender__in=tender_objs).distinct()
+        company_objs = Company.objects.filter(bids__in=bid_objs).distinct()
 
     if mode == "volume":
         tenders = pd.DataFrame(list(tender_objs.values()))
@@ -161,6 +169,13 @@ def export(request, mode, tender_ids):
             df, companies, how="left", on="bidder_id"
         )  # 以volume+tender+bid为base匹配company
 
+        # df["proc_percentage"] = df.apply(
+        #     lambda x: Tender.objects.get(pk=x["tender_id"]).proc_percentage, axis=1
+        # )  # 添加列：集采比例
+        df["amount_contract"] = df.apply(
+            lambda x: Volume.objects.get(pk=x["id"]).amount_contract(), axis=1
+        )  # 添加列：实际合同量
+
         df = df[
             [
                 "vol",
@@ -169,6 +184,8 @@ def export(request, mode, tender_ids):
                 "tender_begin",
                 "ceiling_price",
                 "region",
+                "amount_reported",
+                # "proc_percentage",
                 "amount_contract",
                 "full_name",
                 "abbr_name",
@@ -186,7 +203,9 @@ def export(request, mode, tender_ids):
             "标期开始时间",
             "最高有效申报价",
             "地区",
-            "合同量",
+            "区域报量",
+            # "集采比例",
+            "实际合同量",
             "竞标公司全称",
             "竞标公司简称",
             "是否跨国公司",
@@ -214,16 +233,50 @@ def export(request, mode, tender_ids):
             lambda x: ",".join(list(Tender.objects.get(pk=x["tender_id"]).get_specs())),
             axis=1,
         )  # 添加列：剂型剂量
+        df["total_std_volume_reported"] = df.apply(
+            lambda x: Tender.objects.get(pk=x["tender_id"]).total_std_volume_reported(),
+            axis=1,
+        )  # 添加列：标的官方报量
+        df["total_std_volume_contract"] = df.apply(
+            lambda x: Tender.objects.get(pk=x["tender_id"]).total_std_volume_contract(),
+            axis=1,
+        )  # 添加列：标的实际合同量
+        df["total_value_contract"] = df.apply(
+            lambda x: Tender.objects.get(pk=x["tender_id"]).total_value_contract(),
+            axis=1,
+        )  # 添加列：标的实际合同金额
+        df["specs"] = df.apply(
+            lambda x: ",".join(list(Tender.objects.get(pk=x["tender_id"]).get_specs())),
+            axis=1,
+        )  # 添加列：剂型剂量
         df["regions_win"] = df.apply(
             lambda x: ",".join(list(Bid.objects.get(pk=x["id"]).regions_win())), axis=1,
         )  # 添加中标区域
+        df["std_volume_win"] = df.apply(
+            lambda x: Bid.objects.get(pk=x["id"]).std_volume_win(), axis=1
+        )  # 添加列：竞标者赢得实际合同量
+        df["value_win"] = df.apply(
+            lambda x: Bid.objects.get(pk=x["id"]).value_win(), axis=1
+        )  # 添加列：竞标者赢得实际合同金额
+        df["tender_period"] = df.apply(
+            lambda x: Tender.objects.get(pk=x["tender_id"]).tender_period, axis=1
+        )  # 添加列：标期
+        df["proc_percentage"] = df.apply(
+            lambda x: Tender.objects.get(pk=x["tender_id"]).proc_percentage, axis=1
+        )  # 添加列：带量比例
+
         df = df[
             [
                 "vol",
                 "target",
                 "specs",
                 "tender_begin",
+                "tender_period",
                 "ceiling_price",
+                "total_std_volume_reported",
+                "proc_percentage",
+                "total_std_volume_contract",
+                "total_value_contract",
                 "full_name",
                 "abbr_name",
                 "mnc_or_local",
@@ -231,6 +284,8 @@ def export(request, mode, tender_ids):
                 "bid_price",
                 "original_price",
                 "is_winner",
+                "std_volume_win",
+                "value_win",
                 "regions_win",
             ]
         ]
@@ -240,7 +295,12 @@ def export(request, mode, tender_ids):
             "标的",
             "标的剂型剂量",
             "标期开始时间",
+            "标期",
             "最高有效申报价",
+            "标的官方报量",
+            "标的带量比例",
+            "标的实际合同量",
+            "标的实际合同金额",
             "竞标公司全称",
             "竞标公司简称",
             "是否跨国公司",
@@ -248,6 +308,8 @@ def export(request, mode, tender_ids):
             "竞标价",
             "集采前价格",
             "是否中标",
+            "竞标者赢得实际合同量",
+            "竞标者赢得实际合同金额",
             "中标区域",
         ]
     excel_file = IO()

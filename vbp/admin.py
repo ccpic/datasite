@@ -22,8 +22,11 @@ from .models import *
 class TenderAdmin(admin.ModelAdmin):
     search_fields = ['vol', 'target']
 
+class BidAdmin(admin.ModelAdmin):
+    search_fields = ['tender', 'bidder']
+
 admin.site.register(Tender, TenderAdmin)
+admin.site.register(Bid, BidAdmin)
 admin.site.register([Company,
-                     Bid,
                      Volume
                      ])
