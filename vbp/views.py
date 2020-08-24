@@ -31,6 +31,21 @@ import datetime
 
 DISPLAY_LENGTH = 10
 
+HOT_KWS = [
+    "扩围",
+    "第二轮",
+    "第三轮",
+    "信立泰",
+    "齐鲁",
+    "石药",
+    "正大天晴",
+    "氯吡格雷",
+    "奥美沙坦",
+    "替格瑞洛",
+    "地氯雷他定",
+    "匹伐他汀",
+]
+
 
 def index(request):
     tenders = Tender.objects.all()
@@ -49,6 +64,7 @@ def index(request):
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
+        "hot_kws": HOT_KWS,
     }
     return render(request, "vbp/tenders.html", context)
 
@@ -91,7 +107,11 @@ def search(request):
         | Q(vol__icontains=kw)  # 搜索批次
     ).distinct()
 
-    paginator = Paginator(search_result, DISPLAY_LENGTH)
+    #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
+    sr_ids = [tender.id for tender in search_result]
+    search_result2 = Tender.objects.filter(id__in=sr_ids)
+
+    paginator = Paginator(search_result2, DISPLAY_LENGTH)  #  为了克服pagination bug这里的参数时search_result2
     page = request.GET.get("page")
 
     try:
@@ -106,7 +126,8 @@ def search(request):
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
-        "kw": kw
+        "kw": kw,
+        "hot_kws": HOT_KWS,
     }
 
     return render(request, "vbp/tenders.html", context)

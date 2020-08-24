@@ -445,7 +445,7 @@ class Volume(models.Model):
         related_name="region_volume",
     )
     region = models.CharField(max_length=10, choices=REGION_CHOICES, verbose_name="区域")
-    spec = models.CharField(max_length=20, verbose_name="规格")
+    spec = models.CharField(max_length=30, verbose_name="规格")
     amount_reported = models.FloatField(verbose_name="合同量")
     winner = models.ForeignKey(
         Bid,

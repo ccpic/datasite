@@ -24,15 +24,8 @@
                             <button type="submit" class="ui blue submit button">搜索</button>
                         </div>
                     </div>
-                    常用关键字：<a class="quick link">扩围</a>;
-                    <a class="quick link">第二轮</a>;
-                    <a class="quick link">信立泰</a>;
-                    <a class="quick link">华海</a>;
-                    <a class="quick link">正大天晴</a>;
-                    <a class="quick link">石药</a>;
-                    <a class="quick link">拜耳</a>;
-                    <a class="quick link">氯吡格雷</a>;
-                    <a class="quick link">奥美沙坦</a>
+                    常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %}
+
                 </form>
             </div>
             {% if tenders %}
