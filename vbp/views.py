@@ -6,6 +6,7 @@ from django.db.models import Q
 import pandas as pd
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import random
+
 try:
     from io import BytesIO as IO  # for modern python
 except ImportError:
@@ -30,10 +31,11 @@ import datetime
 
 DISPLAY_LENGTH = 10
 
+
 def index(request):
     tenders = Tender.objects.all()
     paginator = Paginator(tenders, DISPLAY_LENGTH)
-    page = request.GET.get('page')
+    page = request.GET.get("page")
 
     try:
         rows = paginator.page(page)
@@ -42,11 +44,12 @@ def index(request):
     except EmptyPage:
         rows = paginator.page(paginator.num_pages)
 
-    context = {"tenders": rows,
-               'num_pages': paginator.num_pages,
-               'record_n': paginator.count,
-               'display_length': DISPLAY_LENGTH,
-               }
+    context = {
+        "tenders": rows,
+        "num_pages": paginator.num_pages,
+        "record_n": paginator.count,
+        "display_length": DISPLAY_LENGTH,
+    }
     return render(request, "vbp/tenders.html", context)
 
 
@@ -88,9 +91,23 @@ def search(request):
         | Q(vol__icontains=kw)  # 搜索批次
     ).distinct()
 
-    context = {"tenders": search_result,
-               "kw": kw
-               }
+    paginator = Paginator(search_result, DISPLAY_LENGTH)
+    page = request.GET.get("page")
+
+    try:
+        rows = paginator.page(page)
+    except PageNotAnInteger:
+        rows = paginator.page(1)
+    except EmptyPage:
+        rows = paginator.page(paginator.num_pages)
+
+    context = {
+        "tenders": rows,
+        "num_pages": paginator.num_pages,
+        "record_n": paginator.count,
+        "display_length": DISPLAY_LENGTH,
+        "kw": kw
+    }
 
     return render(request, "vbp/tenders.html", context)
 
