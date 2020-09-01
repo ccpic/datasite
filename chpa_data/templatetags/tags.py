@@ -54,7 +54,7 @@ def volume_win(bid, spec=None, region=None):
         if volume == 0:
             return ""
         else:
-            return "{0:,.1f}".format(volume)
+            return "{0:.1f}".format(volume)
     except:
         return None
 

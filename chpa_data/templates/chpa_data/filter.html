@@ -181,6 +181,9 @@
                 updateChart(stackarea_share_trend, ret['stackarea_share_trend']);
                 // 展示Pyecharts图表 - Top items增长率趋势图
                 updateChart(line_gr_trend, ret['line_gr_trend']);
+                // 展示Squarify Treemap
+                    $("#treemap_share_div").html("<img id='treemap_share' style='width: 100%' alt='' />");
+                    $("#treemap_share").attr('src', '').attr('src', ret['treemap_share']);
                 // 展示Matplotlib气泡图
                 if (ret.hasOwnProperty('bubble_performance') === false){
                     $("#bubble_performance_div").html("<div align='center' style='font-size: 24px;'><span>请在选项菜单勾选输出该图表</span></div>")

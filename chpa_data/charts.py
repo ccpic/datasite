@@ -9,10 +9,59 @@ from adjustText import adjust_text
 from io import BytesIO
 import base64
 import scipy.stats as stats
+import squarify
+from math import log
 
 myfont = fm.FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
 
 
+# Squarify Treemap
+def treemap(sizes, diff, labels, title, label_limit=10):
+    fig, ax = plt.subplots(1, figsize=(15, 15))
+
+    # 创造和同比净增长关联的颜色方案
+    cmap = mpl.cm.bwr_r
+    # diff = [log(abs(y),10)*(y/abs(y)) for y in diff]  # 取对数
+    min_diff = min(diff)
+    max_diff = max(diff)
+    print(min_diff, max_diff)
+    if min_diff > 0 or max_diff < 0:
+        norm = mpl.colors.Normalize(vmin=min_diff, vmax=max_diff)
+    else:
+        norm = mpl.colors.TwoSlopeNorm(vmin=min_diff,
+                                      vcenter=0, vmax=max_diff)
+
+    colors = [cmap(norm(value)) for value in diff]
+
+
+    ax = squarify.plot(sizes=sizes,
+                  label=labels[:label_limit],
+                  ax=ax,
+                  bar_kwargs=dict(linewidth=1, edgecolor="#222222"),
+                  text_kwargs={'fontname': 'SimHei',
+                               'fontsize': 20},
+                  alpha=.8,
+                  color=colors
+                  )
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    # 保存到字符串
+    sio = BytesIO()
+    plt.savefig(sio, format="png", bbox_inches="tight", transparent=True, dpi=600)
+    data = base64.encodebytes(sio.getvalue()).decode()  # 解码为base64编码的png图片数据
+    src = "data:image/png;base64," + str(data)  # 增加Data URI scheme
+
+    # 关闭绘图进程
+    plt.clf()
+    plt.cla()
+    plt.close()
+
+    return src
+
+
+# Matplotlib气泡图
 def mpl_bubble(
     x,
     y,
