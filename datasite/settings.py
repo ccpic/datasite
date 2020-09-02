@@ -78,8 +78,9 @@ TEMPLATES = [
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        # 'LOCATION': '/var/tmp/django_cache',
+        # 'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         'LOCATION': 'D:/foo/bar',  # 缓存文件存放文件夹，需要有读写权限
+        # 'LOCATION': '/var/tmp/django_cache',
     }
 }
 

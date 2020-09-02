@@ -14,8 +14,7 @@
     <a class="item" data-tab="trend_summary"><i class="braille icon"></i>趋势表现汇总</a>
     <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>
     <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
-    <a class="item" data-tab="treemap_share" id="tab_treemap"><i class="braille icon"></i>绘图 - 份额Treemap</a>
-    <a class="item" data-tab="bubble_performance" id="tab_bubble"><i class="buromobelexperte icon"></i>绘图 - 规模 vs. 增长</a>
+    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>
 </div>
 <div class="ui tab segment active" data-tab="total">
     <h3 class="ui header">
@@ -199,19 +198,7 @@
         <input class="ui blue button" type='button' id='export_raw' value="导出原始数据"/>
     </div>
 </div>
-<div class="ui tab segment" data-tab="bubble_performance">
-    <h3 class="ui header">
-        <div class="content">
-            规模 versus 增长
-            <div class="sub header">带线性拟合的气泡图</div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui container" id="bubble_performance_div">
-        <img id="bubble_performance" style="width: 100%" alt="" />
-    </div>
-</div>
-<div class="ui tab segment" data-tab="treemap_share">
+<div class="ui tab segment" data-tab="mpl">
     <h3 class="ui header">
         <div class="content">
             份额分布
@@ -221,6 +208,16 @@
     <div class="ui divider"></div>
     <div class="ui container" id="treemap_share_div">
         <img id="treemap_share" style="width: 100%" alt="" />
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            规模 versus 增长
+            <div class="sub header">带线性拟合的气泡图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container" id="bubble_performance_div">
+        <img id="bubble_performance" style="width: 100%" alt="" />
     </div>
 </div>
 <div class="ui modal" id="modal_options">
@@ -254,6 +251,12 @@
             <div class="ui hidden divider"></div>
             <div class="grouped fields">
                 <label for="output">输出高级图表（可能大幅增加查询时长）</label>
+                <div class="field">
+                    <div class="ui toggle checkbox" id="toggle_treemap_share">
+                        <input type="checkbox" name="output">
+                        <label>份额矩形Treemap</label>
+                    </div>
+                </div>
                 <div class="field">
                     <div class="ui toggle checkbox" id="toggle_bubble_performance">
                         <input type="checkbox" name="output">

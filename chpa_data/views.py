@@ -139,8 +139,6 @@ def query(request):
     stackarea_share_trend = json.loads(prepare_chart(pivoted, "stackarea_share_trend", form_dict))
     line_gr_trend = json.loads(prepare_chart(pivoted, "line_gr_trend", form_dict))
 
-    treemap_share = prepare_chart(pivoted, "treemap_share", form_dict)
-
     context = {
         "label": label,
         "market_size": kpi(pivoted)[0],
@@ -154,10 +152,12 @@ def query(request):
         "stackarea_abs_trend": stackarea_abs_trend,
         "stackarea_share_trend": stackarea_share_trend,
         "line_gr_trend": line_gr_trend,
-        "treemap_share": treemap_share,
     }
 
     # 根据查询选线决定是否展示Matplotlib静态图表
+    if form_dict["toggle_treemap_share"][0] == "true":
+        treemap_share = prepare_chart(pivoted, "treemap_share", form_dict)
+        context["treemap_share"] = treemap_share
     if form_dict["toggle_bubble_perf"][0] == "true":
         bubble_performance = prepare_chart(pivoted, "bubble_performance", form_dict)
         context["bubble_performance"] = bubble_performance
@@ -250,6 +250,7 @@ def sqlparse(context):
                 "UNIT_select",
                 "lang",
                 "toggle_bubble_perf",
+                "toggle_treemap_share",
                 "customized_sql",
             ]:
                 if k[-2:] == "[]":
@@ -521,11 +522,16 @@ def prepare_chart(
 
         # 合并名称和值为Labels
         list_index = df_abs.index.tolist()
+        list_name = []
+        for name in list_index:
+            if len(name) > 8:
+                name = name[:8] + "..."
+            list_name.append(name)
         list_value = df_abs.tolist()
         list_diff = df_diff.tolist()
         list_labels = [
-            m + "\n" + str("{:,.0f}".format(n)) + "\n" + str("{:,.0f}".format(p))
-            for m, n, p in zip(list_index, list_value, list_diff)
+            m + "\n" + str("{:,.0f}".format(n)) + "\n" + str("{:+,.0f}".format(p))
+            for m, n, p in zip(list_name, list_value, list_diff)
         ]
 
         chart = treemap(sizes=df_abs, diff=df_diff, labels=list_labels, title="")
