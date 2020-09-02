@@ -1,35 +1,39 @@
 from pyecharts.charts import Line, Pie, Bar, Geo, Scatter
 from pyecharts import options as opts
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.font_manager as fm
-import matplotlib as mpl
 from matplotlib.ticker import FuncFormatter
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from adjustText import adjust_text
 from io import BytesIO
 import base64
 import scipy.stats as stats
 import squarify
-from math import log
 
 myfont = fm.FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
 
 
-# Squarify Treemap
-def treemap(sizes, diff, labels, title):
-    fig, ax = plt.subplots(1, figsize=(15, 15))
+# Squarify 矩形Treemap
+def treemap(sizes, diff, labels, x=0, y=0, width=1, height=1, title=None):
+    # 准备画布
+    fig, ax = plt.subplots(1, figsize=(15, 15 * height / width))
+    ax.set_xlim(x, width)
+    ax.set_ylim(y, height)
 
     # 创造和同比净增长关联的颜色方案
-    cmap = mpl.cm.bwr_r
-    # diff = [log(abs(y)-1,10)*(y/abs(y)) for y in diff]  # 取对数
     min_diff = min(diff)
     max_diff = max(diff)
-    if min_diff > 0 or max_diff < 0:
+    if min_diff > 0:
+        cmap = mpl.cm.Blues
+        norm = mpl.colors.Normalize(vmin=min_diff, vmax=max_diff)
+    elif max_diff < 0:
+        cmap = mpl.cm.Reds
         norm = mpl.colors.Normalize(vmin=min_diff, vmax=max_diff)
     else:
-        norm = mpl.colors.TwoSlopeNorm(vmin=min_diff, vcenter=0, vmax=max_diff)
+        cmap = mpl.cm.bwr_r
+        norm = mpl.colors.TwoSlopeNorm(vmin=min_diff, vcenter=0, vmax=max_diff)  # 强制0为中点的正太分布渐变色
 
     colors = [cmap(norm(value)) for value in diff]
 
@@ -45,22 +49,18 @@ def treemap(sizes, diff, labels, title):
     #               )
 
     # 使用Squarify导出四边形数据，以数据手动画图，可以控制更多元素
-    x = 0.0
-    y = 0.0
-    width = 1.0
-    height = 1.0
-    sizes = sizes.tolist()
     sizes.sort(reverse=True)  # sizes必须先由大到小排序
-    sizes = squarify.normalize_sizes(sizes, width, height)  # 根据设置的总体宽高正太化数据
+    sizes = squarify.normalize_sizes(sizes, width, height)  # 根据设置的总体宽高正态化数据
     rects_data = squarify.squarify(sizes, x, y, width, height)  # Squarify算法计算出所有四边形的数据
 
+    # 根据数据循环创建矩形并添加标签
     for i, r in enumerate(rects_data):
         rect = patches.Rectangle(
             (r["x"], r["y"]), r["dx"], r["dy"], linewidth=2, edgecolor="#222222", facecolor=colors[i]
         )  # 创建四边形
         ax.add_patch(rect)  # Add patch到轴
-        #  动态添加标签并设置标签字体大小
-        if r["dx"] > 0.02 or r["dx"] * r["dy"] > 0.01:
+        # 动态添加标签并设置标签字体大小
+        if r["dx"] > 0.02 * (width * height) or r["dx"] * r["dy"] > 0.01 * (width * height):
             plt.text(
                 r["x"] + r["dx"] / 2,  # rect的水平中心
                 r["y"] + r["dy"] / 2,  # rect的垂直中心
@@ -69,11 +69,28 @@ def treemap(sizes, diff, labels, title):
                 va="center",
                 multialignment="center",
                 fontproperties=myfont,
-                fontsize=80 * r["dx"],
+                fontsize=80 * r["dx"] / (width * height),
+            )
+        # 前十名左上角添加Rank
+        if i < 10:
+            plt.text(
+                r["x"] + r["dx"] * 0.1,  # rect的left稍往右偏移
+                r["y"] + r["dy"] - r["dx"] * 0.1,  # rect的Top稍往下偏移
+                i + 1,
+                ha="center",
+                va="center",
+                multialignment="center",
+                fontproperties=myfont,
+                fontsize=80 * r["dx"] / (width * height),
             )
 
+    # 去除边框的刻度
     ax.set_xticks([])
     ax.set_yticks([])
+
+    # 添加标题
+    if title is not None:
+        fig.suptitle(title, fontproperties=myfont)
 
     # 保存到字符串
     sio = BytesIO()

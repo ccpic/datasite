@@ -511,21 +511,19 @@ def prepare_chart(
         )
         return chart
     elif chart_type == "treemap_share":
-        s = df.iloc[-1]
-        a = s.index[s != 0]
-        df2 = df[a]
+        # 后续Squarify计算矩形面积不支持数据为0，要先去除pandas df最后一行为0的列
+        mask = df.iloc[-1].index[df.iloc[-1] != 0]
+        df2 = df[mask]
 
-        df_abs = df2.iloc[-1, :]  # 获取同比净增长
-        df_diff = df2.diff(periods=4).iloc[-1, :]  # 获取同比净增长
-        # df_diff = df2.iloc[-1, :]/df2.iloc[-5, :] - 1  # 获取同比增长率
-        # df_diff.replace([np.inf, -np.inf, np.nan], 0, inplace=True)  # 替换正负无穷
+        df_abs = df2.iloc[-1, :]  # 获取最新周期绝对值
+        df_diff = df2.diff(periods=4).iloc[-1, :]  # 获取同比净增长，环比可以把4改成1
 
         # 合并名称和值为Labels
         list_index = df_abs.index.tolist()
         list_name = []
         for name in list_index:
             if len(name) > 8:
-                name = name[:8] + "..."
+                name = name[:8] + "..."  # 防止太长的标签，在之后的可视化中会出界
             list_name.append(name)
         list_value = df_abs.tolist()
         list_diff = df_diff.tolist()
@@ -534,6 +532,6 @@ def prepare_chart(
             for m, n, p in zip(list_name, list_value, list_diff)
         ]
 
-        chart = treemap(sizes=df_abs, diff=df_diff, labels=list_labels, title="")
+        chart = treemap(sizes=list_value, diff=list_diff, labels=list_labels, width=2, height=1)
 
         return chart
