@@ -138,9 +138,20 @@ def importModel(dict):
         dict[key].objects.bulk_create(l)
 
 
+def update_tender():
+    tenders = Tender.objects.all()
+    tender_begin = datetime.datetime.strptime("01-11-2020", "%d-%m-%Y")
+    for tender in tenders:
+        if tender.vol == '第三轮56品种':
+            tender.tender_begin = tender_begin
+            tender.save()
+            print(tender_begin)
+
+
 if __name__ == "__main__":
     # importModel(D_MODEL)
-    import_tender()
-    import_volume()
-    import_bid()
+    # import_tender()
+    # import_volume()
+    # import_bid()
+    update_tender()
     print("Done!", time.process_time())
