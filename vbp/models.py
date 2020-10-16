@@ -157,12 +157,7 @@ class Tender(models.Model):
         return pct
 
     def get_specs(self):  # 所有相关报量里出现的规格
-        return (
-            self.region_volume.all()
-            .order_by("spec")
-            .values_list("spec", flat=True)
-            .distinct()
-        )
+        return self.region_volume.all().order_by("spec").values_list("spec", flat=True).distinct()
 
     @property
     def main_spec(self):  # 区分主规格，字典里折算index为1的是主规格
@@ -191,8 +186,7 @@ class Tender(models.Model):
                 qs = self.region_volume.all().filter(spec=spec)
                 if qs.exists():
                     volume += (
-                        qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
-                        * D_MAIN_SPEC[self.target][spec]
+                        qs.aggregate(Sum("amount_reported"))["amount_reported__sum"] * D_MAIN_SPEC[self.target][spec]
                     )
                 else:
                     volume += 0
@@ -229,12 +223,25 @@ class Tender(models.Model):
 
     @property
     def tender_period(self):
-        if self.winner_num == 1:  # 1家中标，标期1年
-            return 1
-        elif 2 <= self.winner_num <= 3:
-            return 2
-        elif self.winner_num >= 4:
-            return 3
+        if "第一轮" in self.vol or "第二轮" in self.vol:
+            if self.winner_num == 1:  # 1家中标，标期1年
+                return 1
+            elif 2 <= self.winner_num <= 3:
+                return 2
+            elif self.winner_num >= 4:
+                return 3
+        elif "第三轮" in self.vol:  # 第三轮集采规则有改变，包括2家中标标期2年改为1年，并明确指定了3家注射剂标期为1年
+            if self.target in ["阿扎胞苷注射剂", "莫西沙星氯化钠注射剂", "左乙拉西坦注射用浓溶液"]:
+                return 1
+            else:
+                if self.winner_num <= 2:  # 1-2家中标，标期1年
+                    return 1
+                elif self.winner_num == 3:
+                    return 2
+                elif self.winner_num >= 4:
+                    return 3
+        else:
+            return None
 
     @property
     def tender_end(self):
@@ -258,12 +265,7 @@ class Tender(models.Model):
 
     @property
     def regions(self):
-        return (
-            self.region_volume.all()
-            .order_by("region")
-            .values_list("region", flat=True)
-            .distinct()
-        )
+        return self.region_volume.all().order_by("region").values_list("region", flat=True).distinct()
 
     def winners(self):
         winner_ids = [bid.id for bid in self.bids.all() if bid.is_winner()]
@@ -292,12 +294,8 @@ class Company(models.Model):
 
 
 class Bid(models.Model):
-    tender = models.ForeignKey(
-        Tender, on_delete=models.CASCADE, verbose_name="所属记录", related_name="bids"
-    )
-    bidder = models.ForeignKey(
-        Company, on_delete=models.CASCADE, verbose_name="竞标厂商", related_name="bids"
-    )
+    tender = models.ForeignKey(Tender, on_delete=models.CASCADE, verbose_name="所属记录", related_name="bids")
+    bidder = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name="竞标厂商", related_name="bids")
     origin = models.BooleanField(verbose_name="是否该标的原研")
     bid_price = models.FloatField(verbose_name="报价")
     original_price = models.FloatField(verbose_name="集采前最低价", blank=True, null=True)
@@ -346,12 +344,7 @@ class Bid(models.Model):
             return None
 
     def regions_win(self):
-        return (
-            self.region_volume.all()
-            .order_by("region")
-            .values_list("region", flat=True)
-            .distinct()
-        )
+        return self.region_volume.all().order_by("region").values_list("region", flat=True).distinct()
 
     def std_volume_win(self, spec=None, region=None):
         if spec is not None and region is not None:
@@ -372,9 +365,7 @@ class Bid(models.Model):
             if self.tender.specs_num == 1:
                 qs = self.region_volume.filter(region=region)
                 if qs.exists():
-                    volume = qs.aggregate(Sum("amount_reported"))[
-                        "amount_reported__sum"
-                    ]
+                    volume = qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
                     volume = volume * self.tender.proc_percentage
                 else:
                     volume = 0
@@ -394,9 +385,7 @@ class Bid(models.Model):
             if self.tender.specs_num == 1:
                 qs = self.region_volume.all()
                 if qs.exists():
-                    volume = qs.aggregate(Sum("amount_reported"))[
-                        "amount_reported__sum"
-                    ]
+                    volume = qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
                     volume = volume * self.tender.proc_percentage
                 else:
                     volume = 0
@@ -422,39 +411,24 @@ class Bid(models.Model):
             bid_num = self.tender.bids.exclude(pk=self.pk).count()
             bid_allowed_num = self.tender.bidder_num
             if bid_num >= bid_allowed_num:
-                raise ValidationError(
-                    "同一记录下竞标数量%s家已达到标的允许的%s家" % (bid_num, bid_allowed_num)
-                )
+                raise ValidationError("同一记录下竞标数量%s家已达到标的允许的%s家" % (bid_num, bid_allowed_num))
         except ObjectDoesNotExist:
             pass
 
         try:
-            if (
-                self.tender.bids.filter(origin=True).exclude(pk=self.pk).count() > 0
-                and self.origin is True
-            ):  # 只能有1家原研
+            if self.tender.bids.filter(origin=True).exclude(pk=self.pk).count() > 0 and self.origin is True:  # 只能有1家原研
                 raise ValidationError("同一记录下最多只能有1家原研")
         except ObjectDoesNotExist:
             pass
 
 
 class Volume(models.Model):
-    tender = models.ForeignKey(
-        Tender,
-        on_delete=models.CASCADE,
-        verbose_name="标的",
-        related_name="region_volume",
-    )
+    tender = models.ForeignKey(Tender, on_delete=models.CASCADE, verbose_name="标的", related_name="region_volume",)
     region = models.CharField(max_length=10, choices=REGION_CHOICES, verbose_name="区域")
     spec = models.CharField(max_length=30, verbose_name="规格")
     amount_reported = models.FloatField(verbose_name="合同量")
     winner = models.ForeignKey(
-        Bid,
-        on_delete=models.CASCADE,
-        verbose_name="中标供应商",
-        blank=True,
-        null=True,
-        related_name="region_volume",
+        Bid, on_delete=models.CASCADE, verbose_name="中标供应商", blank=True, null=True, related_name="region_volume",
     )
 
     class Meta:
@@ -463,12 +437,7 @@ class Volume(models.Model):
         ordering = ["tender", "region", "spec"]
 
     def __str__(self):
-        return "%s %s %s %s" % (
-            self.tender.target,
-            self.region,
-            self.spec,
-            self.amount_reported,
-        )
+        return "%s %s %s %s" % (self.tender.target, self.region, self.spec, self.amount_reported,)
 
     def amount_contract(self):
         return self.amount_reported * self.tender.proc_percentage
