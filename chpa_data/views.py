@@ -336,12 +336,14 @@ def get_df(form_dict, is_pivoted=True):
 
 
 def kpi(df):
-    # 市场按列求和，最后一行（最后一个DATE）就是最新的市场规模
-    market_size = df.sum(axis=1).iloc[-1]
+    # 按列求和为市场总值的Series
+    market_total = df.sum(axis=1)
+    # 最后一行（最后一个DATE）就是最新的市场规模
+    market_size = market_total.iloc[-1]
     # 市场按列求和，倒数第5行（倒数第5个DATE）就是同比的市场规模，可以用来求同比增长率
-    market_gr = df.sum(axis=1).iloc[-1] / df.sum(axis=1).iloc[-5] - 1
+    market_gr = market_total.iloc[-1] / market_total.iloc[-5] - 1
     # 因为数据第一年是四年前的同期季度，时间序列收尾相除后开四次方根可得到年复合增长率
-    market_cagr = (df.sum(axis=1).iloc[-1] / df.sum(axis=1).iloc[0]) ** (0.25) - 1
+    market_cagr = (market_total.iloc[-1] / market_total.iloc[0]) ** (0.25) - 1
     if market_size == np.inf or market_size == -np.inf:
         market_size = "N/A"
     if market_gr == np.inf or market_gr == -np.inf:
