@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'chpa_data',
     'price_calc',
-    'vbp'
+    'vbp',
+    'forecast',
 ]
 
 MIDDLEWARE = [

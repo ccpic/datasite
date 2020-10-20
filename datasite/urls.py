@@ -22,6 +22,7 @@ urlpatterns = [
     path('chpa/', include('chpa_data.urls')),
     path('price_calc/', include('price_calc.urls')),
     path('vbp/', include('vbp.urls')),
+    path('forecast/', include('forecast.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
