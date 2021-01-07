@@ -1,0 +1,332 @@
+{% extends "internal_sales/3on1.html" %}
+
+{% block display %}
+
+<!-- 数据处理时的loading遮罩 -->
+<div class="ui active dimmer" id="dimmer">
+    <div class="ui text" style="color: #FFFFFF">请使用左侧筛选框选择分析维度和定义市场</div>
+</div>
+<!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
+<div class="ui pointing secondary menu">
+    <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
+    <a class="item" data-tab="competition"><i class="trophy icon"></i>竞争现状</a>
+    <a class="item" data-tab="trend"><i class="signal icon"></i>竞争趋势</a>
+    <a class="item" data-tab="trend_summary"><i class="braille icon"></i>趋势表现汇总</a>
+    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>
+    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
+    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>
+</div>
+<div class="ui tab segment active" data-tab="total">
+    <h3 class="ui header">
+        <div class="content">
+            定义市场当前表现
+            <div class="sub header">KPIs</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <!-- Semantic UI的statistic类能呈现“醒目大数字”的效果 -->
+    <div class="ui small three statistics">
+        <div class="statistic">
+            <div class="value" id="value_size">
+                {{ market_size }}
+            </div>
+            <div class="label" id="label_size_unit">
+                最新表现
+            </div>
+        </div>
+        <div class="statistic" id="div_gr">
+            <div class="value" id="value_gr">
+                {{ market_gr }}
+            </div>
+            <div class="label">
+                同比增长
+            </div>
+        </div>
+        <div class="statistic" id="div_cagr">
+            <div class="value" id="value_cagr">
+                {{ market_cagr }}
+            </div>
+            <div class="label">
+                4年CAGR
+            </div>
+        </div>
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            定义市场总量趋势
+            <div class="sub header">柱状折线复合图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="bar_total_trend" style="width:1000px; height:600px;"></div>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="competition">
+    <h3 class="ui header">
+        <div class="content">
+            最新横断面KPI一览
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='ptable_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
+<div class="ui tab segment" data-tab="trend">
+    <h3 class="ui header">
+        <div class="content">
+            定义市场竞争趋势 - 绝对值
+            <div class="ui red basic label">
+                Top10
+            </div>
+            <div class="sub header">堆积面积图
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="stackarea_abs_trend" style="width:1000px; height:600px;"></div>
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            定义市场竞争趋势 - 份额
+            <div class="ui red basic label">
+                Top10
+            </div>
+            <div class="sub header">百分百堆积面积图
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="stackarea_share_trend" style="width:1000px; height:600px;"></div>
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            定义市场竞争趋势 - 同比增长率
+            <div class="ui red basic label">
+                Top10
+            </div>
+            <div class="sub header">折线图
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="line_gr_trend" style="width:1000px; height:600px;"></div>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="trend_summary">
+    <h3 class="ui header">
+        <div class="content">
+            趋势汇总
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable_trend') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container" id='ptable_trend_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
+<div class="ui tab segment" data-tab="price">
+    <h3 class="ui header">
+        <div class="content">
+            价格趋势汇总
+            <div class="ui red basic label">
+                单价/最小制剂单位
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('price_table_cnt') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container" id='price_table_cnt_div'
+         style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            价格趋势汇总
+            <div class="ui red basic label">
+                单价/盒
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('price_table_box') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container" id='price_table_box_div'
+         style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
+<div class="ui tab segment" data-tab="export">
+    <div class="ui buttons">
+        <input class="ui blue button" type='button' id='export_pivot' value="导出整理后时间序列数据"/>
+    </div>
+    <div class="ui buttons">
+        <input class="ui blue button" type='button' id='export_raw' value="导出原始数据"/>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="mpl">
+    <h3 class="ui header">
+        <div class="content">
+            份额分布
+            <div class="sub header">矩形Treemap</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container" id="treemap_share_div">
+        <img id="treemap_share" style="width: 100%" alt="" />
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            规模 versus 增长
+            <div class="sub header">带线性拟合的气泡图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container" id="bubble_performance_div">
+        <img id="bubble_performance" style="width: 100%" alt="" />
+    </div>
+</div>
+<div class="ui modal" id="modal_options">
+    <div class="header">
+        查询选项
+    </div>
+    <div class="content">
+        <div class="ui form">
+            <div class="grouped fields" id="radio_lang">
+                <label for="lang">数据显示偏好</label>
+                <div class="field">
+                    <div class="ui radio checkbox">
+                        <input type="radio" name="lang" value="CN" checked="" tabindex="0" class="hidden">
+                        <label>中文</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="ui radio checkbox">
+                        <input type="radio" name="lang" value="EN" tabindex="0" class="hidden">
+                        <label>英文</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="ui radio checkbox">
+                        <input type="radio" name="lang" value="CE" tabindex="0" class="hidden">
+                        <label>中英文（原始）</label>
+                    </div>
+                </div>
+            </div>
+            <div class="ui hidden divider"></div>
+            <div class="ui hidden divider"></div>
+            <div class="grouped fields">
+                <label for="output">输出高级图表（可能大幅增加查询时长）</label>
+                <div class="field">
+                    <div class="ui toggle checkbox" id="toggle_treemap_share">
+                        <input type="checkbox" name="output">
+                        <label>份额矩形Treemap</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="ui toggle checkbox" id="toggle_bubble_performance">
+                        <input type="checkbox" name="output">
+                        <label>规模 versus 增长 气泡图</label>
+                    </div>
+                </div>
+            </div>
+            <div class="ui hidden divider"></div>
+            <div class="ui hidden divider"></div>
+              <div class="field">
+                <label>自定义SQL</label>
+                <textarea id="customized_sql"></textarea>
+              </div>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui positive button">OK</div>
+    </div>
+</div>
+<!-- 下方js为保证Semantic UI tab类工作 -->
+<script>
+    $('.pointing.secondary.menu .item').tab();
+    $('.ui.radio.checkbox')
+      .checkbox()
+    ;
+</script>
+<script>
+    // 复制有node结构的文本区域
+    function selectElementContents(el) {
+        var body = document.body, range, sel;
+        if (document.createRange && window.getSelection) {
+            range = document.createRange();
+            sel = window.getSelection();
+            sel.removeAllRanges();
+            try {
+                range.selectNodeContents(el);
+                sel.addRange(range);
+            } catch (e) {
+                range.selectNode(el);
+                sel.addRange(range);
+            }
+        } else if (body.createTextRange) {
+            range = body.createTextRange();
+            range.moveToElementText(el);
+            range.select();
+        }
+        document.execCommand("Copy");
+    }
+</script>
+<script>
+    // 按钮点击后有弹出文本，显示data-content内容“复制成功”
+    $('.ui.top.attached.button')
+        .popup({
+            on: 'click'
+        })
+    ;
+</script>
+<script>
+    $("#export_pivot").click(function(){
+        var form_data = getForm();
+
+        var downloadUrl = '{% url 'chpa:export' 'pivoted' %}'+ '?' + $.param(form_data, true);
+        window.location.href = downloadUrl;
+    });
+
+    $("#export_raw").click(function(){
+        var form_data = getForm();
+
+        var downloadUrl = '{% url 'chpa:export' 'raw' %}'+ '?' + $.param(form_data, true);
+        window.location.href = downloadUrl;
+    })
+</script>
+{% endblock display %}

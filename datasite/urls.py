@@ -23,6 +23,7 @@ urlpatterns = [
     path('price_calc/', include('price_calc.urls')),
     path('vbp/', include('vbp.urls')),
     path('forecast/', include('forecast.urls')),
+    path('internal_sales/', include('internal_sales.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
 ]

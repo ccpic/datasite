@@ -149,9 +149,9 @@ def update_tender():
 
 
 if __name__ == "__main__":
-    # importModel(D_MODEL)
+    importModel(D_MODEL)
     # import_tender()
     # import_volume()
     # import_bid()
-    update_tender()
+    # update_tender()
     print("Done!", time.process_time())

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'price_calc',
     'vbp',
     'forecast',
+    'internal_sales',
 ]
 
 MIDDLEWARE = [
