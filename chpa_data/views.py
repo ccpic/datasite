@@ -170,7 +170,7 @@ def query(request):
 # @login_required
 @cache_page(60 * 60 * 24 * 90)
 def search(request, column, kw):
-    # sql = "SELECT DISTINCT TOP 20 %s FROM %s WHERE %s like '%%%s%%'" % (column, DB_TABLE, column, kw) # 返回不重复的前10个结果
+    # sql = "SELECT DISTINCT TOP 20 %s FROM %s WHERE %s like '%%%s%%'" % (column, DB_TABLE, column, kw) # 返回不重复的前20个结果
     try:
         # df = pd.read_sql_query(sql, ENGINE)
         # l = df.values.flatten().tolist()

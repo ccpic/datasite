@@ -15,8 +15,6 @@
                                     <option value="{{ value.select }}">{{ key }}</option>
                                 {% endif %}
                             {% endfor %}
-                            <option value="PRODUCT_CORP">产品（公司）|PRODUCT(CORP)</option>
-                            <option value="MOLECULE_TC">通用名（TC III）|MOLECULE(TC III)</option>
                         </select>
                     </div>
                 </div>
@@ -94,7 +92,7 @@
     // 在JS中再次使用字段字典
     var dict = {{ mselect_dict|safe }};
     // 在Django模板中遇到带有{}的字符串必须使用replace这种方式
-    var url = "{% url 'chpa:search' 'COLUMNPLACEHOLDER' 'QUERYPLACEHOLDER' %}".replace(
+    var url = "{% url 'internal_sales:search' 'COLUMNPLACEHOLDER' 'QUERYPLACEHOLDER' %}".replace(
         'QUERYPLACEHOLDER', '{query}'
     );
     // jQuery语法遍历所有多选框
@@ -126,18 +124,18 @@
         dimmer.children('div').remove(); // 删除初始化文字
         dimmer.append('<div class="ui text loader">数据加载中……</div>'); // 增加loading效果和文字
 
-        // Pyecharts图表初始化
-        var bar_total_trend = initChart('bar_total_trend');
-        var stackarea_abs_trend = initChart('stackarea_abs_trend');
-        var stackarea_share_trend = initChart('stackarea_share_trend');
-        var line_gr_trend = initChart('line_gr_trend');
+        {#// Pyecharts图表初始化#}
+        {#var bar_total_trend = initChart('bar_total_trend');#}
+        {#var stackarea_abs_trend = initChart('stackarea_abs_trend');#}
+        {#var stackarea_share_trend = initChart('stackarea_share_trend');#}
+        {#var line_gr_trend = initChart('line_gr_trend');#}
 
         // 获取交互表单数据
         var form_data = getForm();
 
         $.ajax({
             // 请求的url
-            url: '{% url 'chpa:query' %}',
+            url: '{% url 'internal_sales:query' %}',
             // 请求的type
             type: 'GET',
             // 发送的数据
@@ -146,57 +144,11 @@
             success: function (ret) {     //成功执行
                 // 去除加载遮罩（去掉active）
                 dimmer.attr('class', 'ui dimmer');
-                // 更新单位标签
-                $("#label_size_unit").html("最新"+ ret['label']);
-                // 把查询结果输出到网页上预留的id为result_table的div中
-                $("#value_size").html(ret["market_size"].toLocaleString());
-                $("#value_gr").html(toPercent(ret["market_gr"]));
-                if (ret["market_gr"] < 0){
-                    $("#div_gr").removeClass().addClass("red statistic"); // 负则为红
-                } else if (ret["market_gr"] > 0) {
-                    $("#div_gr").removeClass().addClass("green statistic"); // 正则为绿
-                }
-                $("#value_cagr").html(toPercent(ret["market_cagr"]));
-                if (ret["market_cagr"] < 0){
-                    $("#div_cagr").removeClass().addClass("red statistic"); // 负则为红
-                } else if (ret["market_cagr"] > 0) {
-                    $("#div_cagr").removeClass().addClass("green statistic"); // 正则为绿
-                }
+
                 // 展示ptable表格
                 $("#ptable_div").html(ret['ptable']);
-                initPTable($("#ptable"));
-                // 展示ptable_trend表格
-                $("#ptable_trend_div").html(ret['ptable_trend']);
-                initPTableTrend($("#ptable_trend"));
-                // 展示价格分析表格
-                $("#price_table_cnt_div").html(ret['price_table_cnt']);
-                initPriceTable($("#price_table_cnt"));
-                $("#price_table_box_div").html(ret['price_table_box']);
-                initPriceTable($("#price_table_box"));
-                // 展示Pyecharts图表 - 总体定义市场趋势图
-                updateChart(bar_total_trend, ret['bar_total_trend']);
-                // 展示Pyecharts图表 - Top items绝对值趋势图
-                updateChart(stackarea_abs_trend, ret['stackarea_abs_trend']);
-                // 展示Pyecharts图表 - Top items份额趋势图
-                updateChart(stackarea_share_trend, ret['stackarea_share_trend']);
-                // 展示Pyecharts图表 - Top items增长率趋势图
-                updateChart(line_gr_trend, ret['line_gr_trend']);
-                // 展示Squarify Treemap
-                if (ret.hasOwnProperty('treemap_share') === false){
-                    $("#treemap_share_div").html("<div align='center' style='font-size: 24px;'><span>请在选项菜单勾选输出该图表</span></div>")
-                }
-                else {
-                    $("#treemap_share_div").html("<img id='treemap_share' style='width: 100%' alt='' />");
-                    $("#treemap_share").attr('src', '').attr('src', ret['treemap_share']);
-                }
-                // 展示Matplotlib气泡图
-                if (ret.hasOwnProperty('bubble_performance') === false){
-                    $("#bubble_performance_div").html("<div align='center' style='font-size: 24px;'><span>请在选项菜单勾选输出该图表</span></div>")
-                }
-                else {
-                    $("#bubble_performance_div").html("<img id='bubble_performance' style='width: 100%' alt='' />");
-                    $("#bubble_performance").attr('src', '').attr('src', ret['bubble_performance']);
-                }
+                {#initPTable($("#ptable"));#}
+
             },
             error: function () {            //失败
                 console.log('失败');
@@ -235,9 +187,6 @@
         }
 
         // 获取输出选项modal的值
-        form_data['lang'] = $('#radio_lang').find('[name="lang"]:checked').val();
-        form_data['toggle_bubble_perf'] = $('#toggle_bubble_performance').checkbox('is checked');
-        form_data['toggle_treemap_share'] = $('#toggle_treemap_share').checkbox('is checked');
         form_data['customized_sql'] = $('#customized_sql').val();
 
         return form_data
