@@ -21,9 +21,9 @@
                 <div class="fields">
                     <div class="eight wide field">
                         <select name="UNIT_select" id="UNIT_select" class="ui fluid small search dropdown">
-                            <option value="Value" selected>金额</option>
-                            <option value="Volume">盒数</option>
-                            <option value="Volume (Counting Unit)">最小制剂单位数</option>
+                            <option value="VALUE" selected>金额</option>
+                            <option value="VOLUME">盒数</option>
+                            <option value="VOLUME_STD">标准盒数</option>
                         </select>
                     </div>
                     <div class="eight wide field">
@@ -44,12 +44,13 @@
             </h3>
             <div class="field">
                 {% for key, value in mselect_dict.items %}
-                <div class="field">
-                    <select name="{{ value.select|add:"_select[]" }}" id="{{ value.select|add:"_select" }}" multiple=""
-                            class="ui fluid small search dropdown">
-                        <option value="">{{ key }}</option>
-                    </select>
-                </div>
+                    <div class="field">
+                        <select name="{{ value.select|add:"_select[]" }}" id="{{ value.select|add:"_select" }}"
+                                multiple=""
+                                class="ui fluid small search dropdown">
+                            <option value="">{{ key }}</option>
+                        </select>
+                    </div>
                 {% endfor %}
             </div>
             <br>
@@ -65,7 +66,7 @@
 
 
 <script>
-    function submitForm(){
+    function submitForm() {
         //获取form表单对象
         var form = document.getElementById("myform");
         form.submit(); //form表单提交
@@ -75,7 +76,7 @@
 <!-- 因为用到Semantic UI的Search Dropdown控件，必须有下面语句初始化 -->
 <script>
     $('.ui.fluid.search.dropdown')
-        .dropdown({ fullTextSearch: true });
+        .dropdown({fullTextSearch: true});
 </script>
 <script>
     $("#show_options").click(function () {
@@ -85,7 +86,7 @@
                 $("#modal_options").modal('hide')
             }
         })
-        .modal('show')
+            .modal('show')
     })
 </script>
 <script>
@@ -110,7 +111,7 @@
                     url: url.replace('COLUMNPLACEHOLDER', column)
                 },
                 // 输入至少2个字符后才query
-                minCharacters : 2,
+                minCharacters: 2,
                 cache: false
             })
         ;
@@ -146,8 +147,8 @@
                 dimmer.attr('class', 'ui dimmer');
 
                 // 展示ptable表格
-                $("#ptable_div").html(ret['ptable']);
-                {#initPTable($("#ptable"));#}
+                $("#ptable_monthly_div").html(ret['ptable_monthly']);
+                initPTableMonthly($("#ptable_monthly"));
 
             },
             error: function () {            //失败
@@ -159,10 +160,10 @@
 </script>
 
 <script>
-    function toPercent(str){
-        if (isNaN(str) === false){
-            var strP=Number(str*100).toFixed(1);
-            strP+="%";
+    function toPercent(str) {
+        if (isNaN(str) === false) {
+            var strP = Number(str * 100).toFixed(1);
+            strP += "%";
         } else {
             strP = str;
         }
@@ -170,7 +171,7 @@
     }
 </script>
 <script>
-    function getForm(){
+    function getForm() {
         // 获取单选下拉框的值
         var form_data = {
             "DIMENSION_select": $("#DIMENSION_select").val(),
@@ -197,7 +198,7 @@
     function initChart(chart_id) {
         var chart = echarts.init(document.getElementById(chart_id), 'white', {renderer: 'canvas'});
         chart.showLoading({
-          text : '正在加载数据'
+            text: '正在加载数据'
         });  //增加加载提示
         return chart
     }
@@ -271,6 +272,67 @@
 </script>
 
 <script>
+    function initPTableMonthly(table) {
+        var indexLastColumn = table.find('tr')[0].cells.length - 1;
+        table.DataTable(
+            {
+                order: [[indexLastColumn, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
+                pageLength: 25, // 前端分页，初始每页显示25条记录
+                autoWidth: false, // 不自动调整表格宽度
+                oLanguage: { // UI Label本地化
+                    "sLengthMenu": "显示 _MENU_ 项结果",
+                    "sProcessing": "处理中...",
+                    "sZeroRecords": "没有匹配结果",
+                    "sInfo": "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
+                    "sInfoEmpty": "没有数据",
+                    "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
+                    "sInfoPostFix": "",
+                    "sSearch": "搜索:",
+                    "sUrl": "",
+                    "sEmptyTable": "表中数据为空",
+                    "sLoadingRecords": "载入中...",
+                    "sInfoThousands": ",",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "上页",
+                        "sNext": "下页",
+                        "sLast": "末页"
+                    },
+                },
+                columnDefs: [],
+                initComplete: function () {
+                    var api = this.api();
+
+                    api.columns(':not(:first)').every(function () {
+                        // get sorted list
+                        var col = this.index();
+                        var data = this.data().unique().map(function (value) {
+                            return parseFloat(value.replace(/,/g, ''));
+                        })
+                            .toArray()
+                            .sort(function (a, b) {
+                                return b - a
+                            });
+
+                        console.log(data);
+
+                        api.cells(null, col).every(function () {
+                            var cell = parseFloat(this.data().replace(/,/g, ''));
+                            if (cell === data[0]) {
+                                $(this.node()).css('background-color', 'Gold')
+                            } else if (cell === data[1]) {
+                                $(this.node()).css('background-color', 'Silver')
+                            } else if (cell === data[2]) {
+                                $(this.node()).css('background-color', 'DarkGoldenRod')
+                            }
+                        });
+                    });
+                }
+            }
+        );
+    }
+</script>
+<script>
     function initPTableTrend(table) {
         table.DataTable(
             {
@@ -315,7 +377,6 @@
         );
     }
 </script>
-
 <script>
     function initPriceTable(table) {
         table.DataTable(
