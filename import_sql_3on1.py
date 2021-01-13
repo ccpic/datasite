@@ -68,6 +68,8 @@ mask = df["IF_DUALCALL"] == 1
 df.loc[mask, "IF_DUALCALL"] = True
 df.loc[~mask, "IF_DUALCALL"] = False
 
+df["DATE"] = df["DATE"] * 100 + 1
+df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
 print(df)
 
 print("start importing...")
@@ -78,7 +80,7 @@ df.to_sql(
     index=False,
     dtype={
         "YEAR": t.INTEGER(),
-        "DATE": t.INTEGER(),
+        "DATE": t.DateTime(),
         "MONTH": t.INTEGER(),
         "QUARTER": t.INTEGER(),
         "HP_ID": t.NVARCHAR(length=10),

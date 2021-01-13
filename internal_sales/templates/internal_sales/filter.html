@@ -145,6 +145,21 @@
             success: function (ret) {     //成功执行
                 // 去除加载遮罩（去掉active）
                 dimmer.attr('class', 'ui dimmer');
+                // 展示kpi
+                $("#sales_ytd").html(ret["sales_ytd"].toLocaleString());
+                $("#sales_ytd_gr").html(toPercent(ret["sales_gr_ytd"]));
+                if (ret["sales_gr_ytd"] < 0){
+                    $("#div_sales_gr_ytd").removeClass().addClass("red statistic"); // 负则为红
+                } else if (ret["sales_gr_ytd"] > 0) {
+                    $("#div_sales_gr_ytd").removeClass().addClass("green statistic"); // 正则为绿
+                }
+                $("#target_ytd").html(ret["target_ytd"].toLocaleString());
+                $("#ach_ytd").html(toPercent(ret["ach_ytd"]));
+                if (ret["ach_ytd"] < 1){
+                    $("#div_ach_ytd").removeClass().addClass("red statistic"); // 负则为红
+                } else if (ret["ach_ytd"] > 1) {
+                    $("#div_ach_ytd").removeClass().addClass("green statistic"); // 正则为绿
+                }
 
                 // 展示ptable表格
                 $("#ptable_monthly_div").html(ret['ptable_monthly']);
@@ -327,25 +342,6 @@
                         $(this).sparkline(sparkdata,
                             {height:20, type:'bar', disableTooltips:true, barColor:"#2185D0"})
                     });
-                    {#$('.spark:not(:has(canvas))').sparkline([1,22,45]#}
-                    {#    ,{height:200, weight:200, type:'bar'});#}
-
-                    {#var rowLength = table.length#}
-                    {#console.log(rowLength)#}
-
-                    {#for (var i = 0; i < rowLength; i += 1) {#}
-                    {#    var row = table.rows[i];#}
-                    {##}
-                    {#    //your code goes here, looping over every row.#}
-                    {#    //cells are accessed as easy#}
-                    {#    console.log(row.find('span'));#}
-                    {#    var cellLength = row.cells.length;#}
-                    {#    for (var y = 0; y < cellLength; y += 1) {#}
-                    {#        var cell = row.cells[y];#}
-                    {##}
-                    {#        //do something with every cell here#}
-                    {#    }#}
-                    {#}#}
 
                         var api = this.api();
 

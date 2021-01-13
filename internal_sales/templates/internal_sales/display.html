@@ -26,32 +26,40 @@
     </h3>
     <div class="ui divider"></div>
     <!-- Semantic UI的statistic类能呈现“醒目大数字”的效果 -->
-    <div class="ui small three statistics">
-        <div class="statistic">
-            <div class="value" id="value_size">
-                {{ market_size }}
+    <div class="ui segment">
+        <a class="ui red ribbon label">YTD（本年迄今）</a>
+        <div class="ui small four statistics">
+            <div class="statistic">
+                <div class="value" id="sales_ytd">
+                </div>
+                <div class="label" id="label_size_unit">
+                    YTD销售
+                </div>
             </div>
-            <div class="label" id="label_size_unit">
-                最新表现
+            <div class="statistic" id="div_sales_gr_ytd">
+                <div class="value" id="sales_ytd_gr">
+                </div>
+                <div class="label">
+                    YTD销售同比增长
+                </div>
             </div>
-        </div>
-        <div class="statistic" id="div_gr">
-            <div class="value" id="value_gr">
-                {{ market_gr }}
+            <div class="statistic">
+                <div class="value" id="target_ytd">
+                </div>
+                <div class="label">
+                    YTD指标
+                </div>
             </div>
-            <div class="label">
-                同比增长
-            </div>
-        </div>
-        <div class="statistic" id="div_cagr">
-            <div class="value" id="value_cagr">
-                {{ market_cagr }}
-            </div>
-            <div class="label">
-                4年CAGR
+            <div class="statistic" id="div_ach_ytd">
+                <div class="value" id="ach_ytd">
+                </div>
+                <div class="label">
+                    YTD达成
+                </div>
             </div>
         </div>
     </div>
+
     <h3 class="ui header">
         <div class="content">
             定义市场总量趋势

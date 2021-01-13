@@ -141,9 +141,9 @@ def query(request):
 
     context = {
         "label": label,
-        "market_size": kpi(pivoted)[0],
-        "market_gr": kpi(pivoted)[1],
-        "market_cagr": kpi(pivoted)[2],
+        "market_size": get_kpi(pivoted)[0],
+        "market_gr": get_kpi(pivoted)[1],
+        "market_cagr": get_kpi(pivoted)[2],
         "ptable": ptable,
         "ptable_trend": ptable_trend,
         "price_table_box": price_table_box,
@@ -335,7 +335,7 @@ def get_df(form_dict, is_pivoted=True):
         return df
 
 
-def kpi(df):
+def get_kpi(df):
     # 按列求和为市场总值的Series
     market_total = df.sum(axis=1)
     # 最后一行（最后一个DATE）就是最新的市场规模

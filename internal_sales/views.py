@@ -5,9 +5,14 @@ import json
 import numpy as np
 from .models import *
 import six
+import datetime
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "data"
+date = datetime.datetime(year=2020,month=11,day=1)
+date_ya = date.replace(year=date.year-1)  # 同比月份
+date_year_begin = date.replace(month=1)   # 本年度开头
+date_ya_begin = date_ya.replace(month=1)   # 去年开头
 
 # 该字典为数据库字段名和Django Model的关联
 D_MODEL = {
@@ -37,9 +42,10 @@ def index(request):
 
 def query(request):
     form_dict = dict(six.iterlists(request.GET))
-    df = get_df(form_dict)
+    df_sales = get_df(form_dict)
+    df_target = get_df(form_dict, "指标")
 
-    table = get_ptable_monthly(df)
+    table = get_ptable_monthly(df_sales)
     ptable_monthly = table.to_html(
         escape=False,
         formatters=build_formatters_by_col(table),  # 逐列调整表格内数字格式
@@ -47,7 +53,12 @@ def query(request):
         table_id="ptable_monthly",  # 指定表格id
     )
 
-    context = {"ptable_monthly": ptable_monthly}
+    kpi = get_kpi(df_sales, df_target)
+
+    context = {"ptable_monthly": ptable_monthly,
+               }
+
+    context = dict(context, **kpi)
 
     return HttpResponse(
         json.dumps(context, ensure_ascii=False), content_type="application/json charset=utf-8",
@@ -55,25 +66,73 @@ def query(request):
 
 
 def get_ptable_monthly(df):
-    df_ptable = df[df.index >= 202001].T
+    df_ptable = df[df.index >= date_year_begin].T
     df_ptable.fillna(0, inplace=True)
-    df_ptable["趋势"] = None
+    df_ptable["趋势"] = None  # 表格最右侧预留Sparkline空列
 
     return df_ptable
 
 
-def get_df(form_dict, tag="销量", is_pivoted=True):
+def get_kpi(df_sales, df_target):
+    kpi = {}
+
+    for period in ['ytd', 'mon']:
+        # 按列求和为查询总销售的Series
+        sales_total = df_sales.sum(axis=1)
+        # YTD销售
+        sales = sales_total.loc[date_mask(df_sales,period)[0]].sum()
+        # YTDYA销售
+        sales_ya = sales_total.loc[date_mask(df_sales,period)[1]].sum()
+        # YTD同比增长
+        sales_gr = sales / sales_ya - 1
+
+        # 按列求和为查询总指标的Series
+        target_total = df_target.sum(axis=1)
+        print(target_total)
+        # YTD指标
+        target = target_total.loc[date_mask(df_target,period)[0]].sum()
+        # YTD达标率
+        ach = sales / target
+
+        kpi = dict(kpi,
+                   **{"sales_%s" % period: int(sales),
+                      "sales_gr_%s" % period: sales_gr,
+                      "target_%s" % period: int(target),
+                      "ach_%s" % period: ach,
+                      }
+                   )
+
+    print(kpi)
+
+    return kpi
+
+
+def date_mask(df, period):
+    if period == 'ytd':
+        mask = (df.index >= date_year_begin) & (df.index <= date)
+        mask_ya = (df.index >= date_ya_begin) & (df.index <= date_ya)
+    elif period == 'mon':
+        mask = (df.index == date)
+        mask_ya = (df.index == date_ya)
+
+    return  mask, mask_ya
+
+
+def get_df(form_dict, tag="销售", is_pivoted=True):
     sql = sqlparse(form_dict)  # sql拼接
     print(sql)
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
-    df = df[df.TAG == tag]  # 区分销售、药房销售和指标
+    # 区分销售和指标
+    if tag=="销售":
+        df = df[df.TAG != "指标"]
+    else:
+        df = df[df.TAG == "指标"]
 
     if is_pivoted is True:
         dimension_selected = form_dict["DIMENSION_select"][0]  # 分析维度
         unit_selected = form_dict["UNIT_select"][0]  # 单位（盒数、标准盒数、金额）
         if dimension_selected[0] == "[":
-
             column = dimension_selected[1:][:-1]
         else:
             column = dimension_selected
