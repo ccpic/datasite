@@ -55,17 +55,9 @@ def query(request):
 
 
 def get_ptable_monthly(df):
-    df.fillna(0, inplace=True)
     df_ptable = df[df.index >= 202001].T
-    # df_ptable["趋势"] = 1
-    # df_ptable["趋势"] = df_ptable["趋势"].apply(
-    #     lambda x: (
-    #         '<span id="trend_sparkline" class="inlinesparkline">1,2,3,4,5</span>'
-    #         # + df_ptable.apply(lambda row: ",".join(row.dropna().astype(str).tolist()), axis=1)
-    #     )
-    #     # .to_string(header=False, index=False)
-    #     .format(x)
-    # )
+    df_ptable.fillna(0, inplace=True)
+    df_ptable["趋势"] = None
 
     return df_ptable
 
@@ -89,7 +81,7 @@ def get_df(form_dict, tag="销量", is_pivoted=True):
         pivoted = pd.pivot_table(
             df,
             values=unit_selected,  # 数据透视汇总值为AMOUNT字段，一般保持不变
-            index="FILL_DATE",  # 数据透视行为DATE字段，一般保持不变
+            index="DATE",  # 数据透视行为DATE字段，一般保持不变
             columns=column,  # 数据透视列为前端选择的分析维度
             aggfunc=np.sum,
         )  # 数据透视汇总方式为求和，一般保持不变
@@ -97,7 +89,7 @@ def get_df(form_dict, tag="销量", is_pivoted=True):
             pivoted.sort_values(by=pivoted.index[-1], axis=1, ascending=False, inplace=True)  # 结果按照最后一个DATE表现排序
 
         pivoted = pd.DataFrame(pivoted.to_records())
-        pivoted.set_index("FILL_DATE", inplace=True)
+        pivoted.set_index("DATE", inplace=True)
 
         return pivoted
     else:

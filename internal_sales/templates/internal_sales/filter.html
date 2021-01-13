@@ -273,7 +273,7 @@
 
 <script>
     function initPTableMonthly(table) {
-        var indexLastColumn = table.find('tr')[0].cells.length - 1;
+        var indexLastColumn = table.find('tr')[0].cells.length - 2;
         table.DataTable(
             {
                 order: [[indexLastColumn, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
@@ -299,36 +299,82 @@
                         "sLast": "末页"
                     },
                 },
-                columnDefs: [],
+                aoColumnDefs: [
+                    {
+                        "aTargets": -1,
+                        "mRender": function (data, type, full) {
+                            return '<span class="spark"></span>'
+                        }
+                    }
+                ],
                 initComplete: function () {
-                    var api = this.api();
+                    {#console.log($('.spark:not(:has(canvas))'));#}
+                    {#console.log(parseInt($('.spark:not(:has(canvas))').parent('td').parent('tr').find("td").eq(0).html()));#}
+                    $('.spark:not(:has(canvas))').each(function () {
+                        var row = $(this).parent('td').parent('tr');
+                        var numCols = table.DataTable().columns().nodes().length;
+                        var sparkdata = [];
 
-                    api.columns(':not(:first)').every(function () {
-                        // get sorted list
-                        var col = this.index();
-                        var data = this.data().unique().map(function (value) {
-                            return parseFloat(value.replace(/,/g, ''));
-                        })
-                            .toArray()
-                            .sort(function (a, b) {
-                                return b - a
-                            });
+                        for (var y = 0; y < numCols; y += 1) {
 
-                        console.log(data);
-
-                        api.cells(null, col).every(function () {
-                            var cell = parseFloat(this.data().replace(/,/g, ''));
-                            if (cell === data[0]) {
-                                $(this.node()).css('background-color', 'Gold')
-                            } else if (cell === data[1]) {
-                                $(this.node()).css('background-color', 'Silver')
-                            } else if (cell === data[2]) {
-                                $(this.node()).css('background-color', 'DarkGoldenRod')
+                            if (y < indexLastColumn) {
+                                var sparkvalue = parseInt(row.find('td').eq(y).html().replace(/,/g, ''));
+                                sparkdata.push(sparkvalue)
                             }
-                        });
+                        }
+                        console.log(sparkdata);
+
+                        $(this).sparkline(sparkdata,
+                            {height:20, type:'bar', disableTooltips:true, barColor:"#2185D0"})
                     });
+                    {#$('.spark:not(:has(canvas))').sparkline([1,22,45]#}
+                    {#    ,{height:200, weight:200, type:'bar'});#}
+
+                    {#var rowLength = table.length#}
+                    {#console.log(rowLength)#}
+
+                    {#for (var i = 0; i < rowLength; i += 1) {#}
+                    {#    var row = table.rows[i];#}
+                    {##}
+                    {#    //your code goes here, looping over every row.#}
+                    {#    //cells are accessed as easy#}
+                    {#    console.log(row.find('span'));#}
+                    {#    var cellLength = row.cells.length;#}
+                    {#    for (var y = 0; y < cellLength; y += 1) {#}
+                    {#        var cell = row.cells[y];#}
+                    {##}
+                    {#        //do something with every cell here#}
+                    {#    }#}
+                    {#}#}
+
+                        var api = this.api();
+
+                        api.columns(':not(:first)').every(function () {
+                            // get sorted list
+                            var col = this.index();
+                            var data = this.data().unique().map(function (value) {
+                                return parseFloat(value.replace(/,/g, ''));
+                            })
+                                .toArray()
+                                .sort(function (a, b) {
+                                    return b - a
+                                });
+
+                            {#console.log(data);#}
+
+                            api.cells(null, col).every(function () {
+                                var cell = parseFloat(this.data().replace(/,/g, ''));
+                                if (cell === data[0]) {
+                                    $(this.node()).css('background-color', 'Gold')
+                                } else if (cell === data[1]) {
+                                    $(this.node()).css('background-color', 'Silver')
+                                } else if (cell === data[2]) {
+                                    $(this.node()).css('background-color', 'DarkGoldenRod')
+                                }
+                            });
+                        });
+                    }
                 }
-            }
         );
     }
 </script>

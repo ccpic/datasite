@@ -20,7 +20,7 @@ print("Finished data reading...")
 
 df.columns = [
     "YEAR",
-    "FILL_DATE",
+    "DATE",
     "MONTH",
     "QUARTER",
     "HP_ID",
@@ -78,7 +78,7 @@ df.to_sql(
     index=False,
     dtype={
         "YEAR": t.INTEGER(),
-        "FILL_DATE": t.INTEGER(),
+        "DATE": t.INTEGER(),
         "MONTH": t.INTEGER(),
         "QUARTER": t.INTEGER(),
         "HP_ID": t.NVARCHAR(length=10),
