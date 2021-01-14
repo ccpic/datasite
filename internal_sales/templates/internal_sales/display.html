@@ -26,39 +26,41 @@
     </h3>
     <div class="ui divider"></div>
     <!-- Semantic UI的statistic类能呈现“醒目大数字”的效果 -->
-    <div class="ui segment">
-        <a class="ui red ribbon label">YTD（本年迄今）</a>
-        <div class="ui small four statistics">
-            <div class="statistic">
-                <div class="value" id="sales_ytd">
+    {% for k, v in period_dict.items %}
+        <div class="ui segment">
+            <a class="ui {% if v == 'ytd' %}red{% elif v == 'mqt' %}blue{% else %}purple{% endif %}  ribbon label">最新{{ k }}</a>
+            <div class="ui small four statistics">
+                <div class="statistic">
+                    <div class="value" id="sales_{{ v }}">
+                    </div>
+                    <div class="label" id="label_sales_{{ v }}">
+                        销售
+                    </div>
                 </div>
-                <div class="label" id="label_size_unit">
-                    YTD销售
+                <div class="statistic" id="div_sales_gr_{{ v }}">
+                    <div class="value" id="sales_gr_{{ v }}">
+                    </div>
+                    <div class="label">
+                        销售同比增长
+                    </div>
                 </div>
-            </div>
-            <div class="statistic" id="div_sales_gr_ytd">
-                <div class="value" id="sales_ytd_gr">
+                <div class="statistic">
+                    <div class="value" id="target_{{ v }}">
+                    </div>
+                    <div class="label">
+                        指标
+                    </div>
                 </div>
-                <div class="label">
-                    YTD销售同比增长
-                </div>
-            </div>
-            <div class="statistic">
-                <div class="value" id="target_ytd">
-                </div>
-                <div class="label">
-                    YTD指标
-                </div>
-            </div>
-            <div class="statistic" id="div_ach_ytd">
-                <div class="value" id="ach_ytd">
-                </div>
-                <div class="label">
-                    YTD达成
+                <div class="statistic" id="div_ach_{{ v }}">
+                    <div class="value" id="ach_{{ v }}">
+                    </div>
+                    <div class="label">
+                        达成
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    {% endfor %}
 
     <h3 class="ui header">
         <div class="content">

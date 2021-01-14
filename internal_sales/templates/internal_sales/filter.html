@@ -145,20 +145,24 @@
             success: function (ret) {     //成功执行
                 // 去除加载遮罩（去掉active）
                 dimmer.attr('class', 'ui dimmer');
+
                 // 展示kpi
-                $("#sales_ytd").html(ret["sales_ytd"].toLocaleString());
-                $("#sales_ytd_gr").html(toPercent(ret["sales_gr_ytd"]));
-                if (ret["sales_gr_ytd"] < 0){
-                    $("#div_sales_gr_ytd").removeClass().addClass("red statistic"); // 负则为红
-                } else if (ret["sales_gr_ytd"] > 0) {
-                    $("#div_sales_gr_ytd").removeClass().addClass("green statistic"); // 正则为绿
-                }
-                $("#target_ytd").html(ret["target_ytd"].toLocaleString());
-                $("#ach_ytd").html(toPercent(ret["ach_ytd"]));
-                if (ret["ach_ytd"] < 1){
-                    $("#div_ach_ytd").removeClass().addClass("red statistic"); // 负则为红
-                } else if (ret["ach_ytd"] > 1) {
-                    $("#div_ach_ytd").removeClass().addClass("green statistic"); // 正则为绿
+                var d = {{ period_dict|safe }};
+                for (k in d) {
+                    $("#sales_" + d[k]).html(ret["sales_" + d[k]].toLocaleString());
+                    $("#sales_gr_" + d[k]).html(toPercent(ret["sales_gr_" + d[k]]));
+                    if (ret["sales_gr_" + d[k]] < 0) {
+                        $("#div_sales_gr_" + d[k]).removeClass().addClass("red statistic"); // 负则为红
+                    } else if (ret["sales_gr_" + d[k]] > 0) {
+                        $("#div_sales_gr_" + d[k]).removeClass().addClass("green statistic"); // 正则为绿
+                    }
+                    $("#target_"+d[k]).html(ret["target_"+d[k]].toLocaleString());
+                    $("#ach_"+d[k]).html(toPercent(ret["ach_"+d[k]]));
+                    if (ret["ach_"+d[k]] < 1) {
+                        $("#div_ach_"+d[k]).removeClass().addClass("red statistic"); // 负则为红
+                    } else if (ret["ach_"+d[k]] > 1) {
+                        $("#div_ach_"+d[k]).removeClass().addClass("green statistic"); // 正则为绿
+                    }
                 }
 
                 // 展示ptable表格
@@ -340,37 +344,37 @@
                         console.log(sparkdata);
 
                         $(this).sparkline(sparkdata,
-                            {height:20, type:'bar', disableTooltips:true, barColor:"#2185D0"})
+                            {height: 20, type: 'bar', disableTooltips: true, barColor: "#2185D0"})
                     });
 
-                        var api = this.api();
+                    var api = this.api();
 
-                        api.columns(':not(:first)').every(function () {
-                            // get sorted list
-                            var col = this.index();
-                            var data = this.data().unique().map(function (value) {
-                                return parseFloat(value.replace(/,/g, ''));
-                            })
-                                .toArray()
-                                .sort(function (a, b) {
-                                    return b - a
-                                });
-
-                            {#console.log(data);#}
-
-                            api.cells(null, col).every(function () {
-                                var cell = parseFloat(this.data().replace(/,/g, ''));
-                                if (cell === data[0]) {
-                                    $(this.node()).css('background-color', 'Gold')
-                                } else if (cell === data[1]) {
-                                    $(this.node()).css('background-color', 'Silver')
-                                } else if (cell === data[2]) {
-                                    $(this.node()).css('background-color', 'DarkGoldenRod')
-                                }
+                    api.columns(':not(:first)').every(function () {
+                        // get sorted list
+                        var col = this.index();
+                        var data = this.data().unique().map(function (value) {
+                            return parseFloat(value.replace(/,/g, ''));
+                        })
+                            .toArray()
+                            .sort(function (a, b) {
+                                return b - a
                             });
+
+                        {#console.log(data);#}
+
+                        api.cells(null, col).every(function () {
+                            var cell = parseFloat(this.data().replace(/,/g, ''));
+                            if (cell === data[0]) {
+                                $(this.node()).css('background-color', 'Gold')
+                            } else if (cell === data[1]) {
+                                $(this.node()).css('background-color', 'Silver')
+                            } else if (cell === data[2]) {
+                                $(this.node()).css('background-color', 'DarkGoldenRod')
+                            }
                         });
-                    }
+                    });
                 }
+            }
         );
     }
 </script>

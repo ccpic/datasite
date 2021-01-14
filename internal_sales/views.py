@@ -6,13 +6,14 @@ import numpy as np
 from .models import *
 import six
 import datetime
+from dateutil.relativedelta import relativedelta
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "data"
-date = datetime.datetime(year=2020,month=11,day=1)
-date_ya = date.replace(year=date.year-1)  # 同比月份
-date_year_begin = date.replace(month=1)   # 本年度开头
-date_ya_begin = date_ya.replace(month=1)   # 去年开头
+date = datetime.datetime(year=2020, month=11, day=1)
+date_ya = date.replace(year=date.year - 1)  # 同比月份
+date_year_begin = date.replace(month=1)  # 本年度开头
+date_ya_begin = date_ya.replace(month=1)  # 去年开头
 
 # 该字典为数据库字段名和Django Model的关联
 D_MODEL = {
@@ -30,13 +31,22 @@ D_MULTI_SELECT = {
 }
 
 
+# 该字典为数据分析的不同时间区间维度，键为其完完整命名，值为英文缩写
+D_PERIOD = {
+    "本年迄今YTD": "ytd",
+    "滚动季MQT": "mqt",
+    "单月MON": "mon",
+}
+
+
 def index(request):
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
         mselect_dict[key] = {}
         mselect_dict[key]["select"] = value
 
-    context = {"mselect_dict": mselect_dict}
+    context = {"date": date, "mselect_dict": mselect_dict, "period_dict": D_PERIOD}
+
     return render(request, "internal_sales/display.html", context)
 
 
@@ -55,8 +65,9 @@ def query(request):
 
     kpi = get_kpi(df_sales, df_target)
 
-    context = {"ptable_monthly": ptable_monthly,
-               }
+    context = {
+        "ptable_monthly": ptable_monthly,
+    }
 
     context = dict(context, **kpi)
 
@@ -66,23 +77,25 @@ def query(request):
 
 
 def get_ptable_monthly(df):
-    df_ptable = df[df.index >= date_year_begin].T
-    df_ptable.fillna(0, inplace=True)
-    df_ptable["趋势"] = None  # 表格最右侧预留Sparkline空列
+    df = df[df.index >= date_year_begin]
+    df.index = df.index.strftime("%Y-%m")
+    df.fillna(0, inplace=True)
+    df = df.T
+    df["趋势"] = None  # 表格最右侧预留Sparkline空列
 
-    return df_ptable
+    return df
 
 
 def get_kpi(df_sales, df_target):
     kpi = {}
 
-    for period in ['ytd', 'mon']:
+    for k, v in D_PERIOD.items():
         # 按列求和为查询总销售的Series
         sales_total = df_sales.sum(axis=1)
         # YTD销售
-        sales = sales_total.loc[date_mask(df_sales,period)[0]].sum()
+        sales = sales_total.loc[date_mask(df_sales, v)[0]].sum()
         # YTDYA销售
-        sales_ya = sales_total.loc[date_mask(df_sales,period)[1]].sum()
+        sales_ya = sales_total.loc[date_mask(df_sales, v)[1]].sum()
         # YTD同比增长
         sales_gr = sales / sales_ya - 1
 
@@ -90,17 +103,19 @@ def get_kpi(df_sales, df_target):
         target_total = df_target.sum(axis=1)
         print(target_total)
         # YTD指标
-        target = target_total.loc[date_mask(df_target,period)[0]].sum()
+        target = target_total.loc[date_mask(df_target, v)[0]].sum()
         # YTD达标率
         ach = sales / target
 
-        kpi = dict(kpi,
-                   **{"sales_%s" % period: int(sales),
-                      "sales_gr_%s" % period: sales_gr,
-                      "target_%s" % period: int(target),
-                      "ach_%s" % period: ach,
-                      }
-                   )
+        kpi = dict(
+            kpi,
+            **{
+                "sales_%s" % v: int(sales),
+                "sales_gr_%s" % v: sales_gr,
+                "target_%s" % v: int(target),
+                "ach_%s" % v: ach,
+            }
+        )
 
     print(kpi)
 
@@ -108,14 +123,17 @@ def get_kpi(df_sales, df_target):
 
 
 def date_mask(df, period):
-    if period == 'ytd':
+    if period == "ytd":
         mask = (df.index >= date_year_begin) & (df.index <= date)
         mask_ya = (df.index >= date_ya_begin) & (df.index <= date_ya)
-    elif period == 'mon':
-        mask = (df.index == date)
-        mask_ya = (df.index == date_ya)
+    elif period == "mqt":
+        mask = (df.index >= date + relativedelta(months=-3)) & (df.index <= date)
+        mask_ya = (df.index >= date_ya + relativedelta(months=-3)) & (df.index <= date_ya)
+    elif period == "mon":
+        mask = df.index == date
+        mask_ya = df.index == date_ya
 
-    return  mask, mask_ya
+    return mask, mask_ya
 
 
 def get_df(form_dict, tag="销售", is_pivoted=True):
@@ -124,7 +142,7 @@ def get_df(form_dict, tag="销售", is_pivoted=True):
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
     # 区分销售和指标
-    if tag=="销售":
+    if tag == "销售":
         df = df[df.TAG != "指标"]
     else:
         df = df[df.TAG == "指标"]
