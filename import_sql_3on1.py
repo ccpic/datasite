@@ -70,6 +70,10 @@ df.loc[~mask, "IF_DUALCALL"] = False
 
 df["DATE"] = df["DATE"] * 100 + 1
 df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
+
+df['HOSPITAL'] = df['HP_ID'] + " " + df['HP_NAME']
+df['STORE'] = df['STORE_ID'] + " " + df['STORE_NAME']
+
 print(df)
 
 print("start importing...")
@@ -85,8 +89,10 @@ df.to_sql(
         "QUARTER": t.INTEGER(),
         "HP_ID": t.NVARCHAR(length=10),
         "HP_NAME": t.NVARCHAR(length=100),
+        "HOSPITAL": t.NVARCHAR(length=110),
         "STORE_ID": t.NVARCHAR(length=10),
         "STORE_NAME": t.NVARCHAR(length=100),
+        "STORE": t.NVARCHAR(length=110),
         "PROVINCE": t.NVARCHAR(length=3),
         "CITY": t.NVARCHAR(length=30),
         "COUNTY": t.NVARCHAR(length=30),

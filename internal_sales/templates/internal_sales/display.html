@@ -2,16 +2,19 @@
 
 {% block display %}
 
+
 <!-- 数据处理时的loading遮罩 -->
 <div class="ui active dimmer" id="dimmer">
-    <div class="ui text" style="color: #FFFFFF">请使用左侧筛选框选择分析维度和定义市场</div>
+</div>
+<div class="ui active dimmer" id="dimmer_dummy" style="height: 100vh">
+    <div class="ui text" style="color: #FFFFFF;">请使用左侧筛选框选择分析维度和定义市场</div>
 </div>
 
 <!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
 <div class="ui pointing secondary menu">
     <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
-    <a class="item" data-tab="competition"><i class="trophy icon"></i>竞争现状</a>
-    <a class="item" data-tab="trend"><i class="signal icon"></i>竞争趋势</a>
+    <a class="item" data-tab="competition"><i class="trophy icon"></i>指标汇总</a>
+    <a class="item" data-tab="trend"><i class="signal icon"></i>月度明细</a>
     <a class="item" data-tab="trend_summary"><i class="braille icon"></i>趋势表现汇总</a>
     <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>
     <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
@@ -20,7 +23,7 @@
 <div class="ui tab segment active" data-tab="total">
     <h3 class="ui header">
         <div class="content">
-            定义市场当前表现
+            当前周期表现
             <div class="sub header">KPIs</div>
         </div>
     </h3>
@@ -29,7 +32,7 @@
     {% for k, v in period_dict.items %}
         <div class="ui segment">
             <a class="ui {% if v == 'ytd' %}red{% elif v == 'mqt' %}blue{% else %}purple{% endif %}  ribbon label">最新{{ k }}</a>
-            <div class="ui small four statistics">
+            <div class="ui small three statistics">
                 <div class="statistic">
                     <div class="value" id="sales_{{ v }}">
                     </div>
@@ -44,13 +47,13 @@
                         销售同比增长
                     </div>
                 </div>
-                <div class="statistic">
-                    <div class="value" id="target_{{ v }}">
-                    </div>
-                    <div class="label">
-                        指标
-                    </div>
-                </div>
+{#                <div class="statistic">#}
+{#                    <div class="value" id="target_{{ v }}">#}
+{#                    </div>#}
+{#                    <div class="label">#}
+{#                        指标#}
+{#                    </div>#}
+{#                </div>#}
                 <div class="statistic" id="div_ach_{{ v }}">
                     <div class="value" id="ach_{{ v }}">
                     </div>
@@ -64,19 +67,29 @@
 
     <h3 class="ui header">
         <div class="content">
-            定义市场总量趋势
+            销售趋势
             <div class="sub header">柱状折线复合图</div>
         </div>
     </h3>
     <div class="ui divider"></div>
     <div class="ui container">
-        <div id="bar_total_trend" style="width:1000px; height:600px;"></div>
+        <div id="bar_total_monthly_trend" style="width:1000px; height:600px;"></div>
     </div>
+{#    <h3 class="ui header">#}
+{#        <div class="content">#}
+{#            产品销售贡献#}
+{#            <div class="sub header">饼图</div>#}
+{#        </div>#}
+{#    </h3>#}
+{#    <div class="ui divider"></div>#}
+{#    <div class="ui container">#}
+{#        <div id="pie_product" style="width:1000px; height:600px;"></div>#}
+{#    </div>#}
 </div>
-<div class="ui tab segment" data-tab="competition">
+<div class="ui tab segment" data-tab="trend">
     <h3 class="ui header">
         <div class="content">
-            最新横断面KPI一览
+            月度销售明细
             <div class="sub header">数据表格</div>
         </div>
     </h3>
@@ -91,7 +104,7 @@
     <div class="ui container" id='ptable_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
     </div>
 </div>
-<div class="ui tab segment" data-tab="trend">
+<div class="ui tab segment" data-tab="competition">
     <h3 class="ui header">
         <div class="content">
             定义市场竞争趋势 - 绝对值
@@ -287,6 +300,13 @@
         <div class="ui positive button">OK</div>
     </div>
 </div>
+
+<style>
+#dimmer_dummy
+{
+    background: rgba(255, 255, 255, 0) !important;
+}
+</style>
 <!-- 下方js为保证Semantic UI tab类工作 -->
 <script>
     $('.pointing.secondary.menu .item').tab();

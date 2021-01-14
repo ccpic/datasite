@@ -476,6 +476,7 @@ def prepare_chart(
         df_gr = df_abs.pct_change(periods=4)  # 获取同比增长率
         df_gr.dropna(how="all", inplace=True)  # 删除没有同比增长率的行，也就是时间序列数据的最前面几行，他们没有同比
         df_gr.replace([np.inf, -np.inf, np.nan], "-", inplace=True)  # 所有分母为0或其他情况导致的inf和nan都转换为'-'
+        df_gr.columns = ['同比增长率']
         chart = echarts_stackbar(df=df_abs, df_gr=df_gr)  # 调用stackbar方法生成Pyecharts图表对象
         return chart.dump_options()  # 用json格式返回Pyecharts图表对象的全局设置
     elif chart_type == "stackarea_abs_trend":
