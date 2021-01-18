@@ -6,25 +6,17 @@
             <h3 class="ui header" id="analysis">分析维度</h3>
             <div class="field">
                 <div class="fields">
-                    <div class="sixteen wide field">
+                    <div class="eight wide field">
                         <select name="DIMENSION_select" id="DIMENSION_select" class="ui fluid small search dropdown">
                             {% for key, value in mselect_dict.items %}
                                 <option value="{{ value.select }}">{{ key }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                </div>
-                <div class="fields">
                     <div class="eight wide field">
                         <select name="UNIT_select" id="UNIT_select" class="ui fluid small search dropdown">
                             <option value="VALUE" selected>金额</option>
                             <option value="VOLUME_STD">标准盒数</option>
-                        </select>
-                    </div>
-                    <div class="eight wide field">
-                        <select name="PERIOD_select" id="PERIOD_select" class="ui fluid small search dropdown">
-                            <option value="MAT" selected>滚动年</option>
-                            <option value="QTR">季度</option>
                         </select>
                     </div>
                 </div>
@@ -33,7 +25,7 @@
                 数据筛选
                 <div class="content">
                     <div class="ui pointing below red basic label">
-                        请至少输入2个字符搜索
+                        请选择销售数据筛选的范围
                     </div>
                 </div>
             </h3>
@@ -44,6 +36,9 @@
                                 multiple=""
                                 class="ui fluid small search dropdown">
                             <option value="">{{ key }}</option>
+                            {% for item in value.options %}
+                                <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 {% endfor %}
@@ -84,34 +79,34 @@
             .modal('show')
     })
 </script>
-<script>
-    // 在JS中再次使用字段字典
-    var dict = {{ mselect_dict|safe }};
-    // 在Django模板中遇到带有{}的字符串必须使用replace这种方式
-    var url = "{% url 'internal_sales:search' 'COLUMNPLACEHOLDER' 'QUERYPLACEHOLDER' %}".replace(
-        'QUERYPLACEHOLDER', '{query}'
-    );
-    // jQuery语法遍历所有多选框
-    $('.ui.fluid.search.dropdown.selection.multiple').each(function () {
-        // Semantic UI语法获得多选框默认文本
-        {#var text = $(this).dropdown('get default text');#}
-        // 上方语句如遇到bug可不使用Semantic UI API，直接用Jquery语句
-        var text = $(this).children('select').children('option:first').text();
-        // 根据字典倒推该多选框是哪个字段
-        var column = dict[text]['select'];
-        $(this).dropdown(
-            {
-                apiSettings: {
-                    // 用下方URL从后端返回查询后的json
-                    url: url.replace('COLUMNPLACEHOLDER', column)
-                },
-                // 输入至少2个字符后才query
-                minCharacters: 2,
-                cache: false
-            })
-        ;
-    })
-</script>
+{#<script>#}
+{#    // 在JS中再次使用字段字典#}
+{#    var dict = {{ mselect_dict|safe }};#}
+{#    // 在Django模板中遇到带有{}的字符串必须使用replace这种方式#}
+{#    var url = "{% url 'internal_sales:search' 'COLUMNPLACEHOLDER' 'QUERYPLACEHOLDER' %}".replace(#}
+{#        'QUERYPLACEHOLDER', '{query}'#}
+{#    );#}
+{#    // jQuery语法遍历所有多选框#}
+{#    $('.ui.fluid.search.dropdown.selection.multiple').each(function () {#}
+{#        // Semantic UI语法获得多选框默认文本#}
+{#        var text = $(this).dropdown('get default text');#}
+{#        // 上方语句如遇到bug可不使用Semantic UI API，直接用Jquery语句#}
+{#        var text = $(this).children('select').children('option:first').text();#}
+{#        // 根据字典倒推该多选框是哪个字段#}
+{#        var column = dict[text]['select'];#}
+{#        $(this).dropdown(#}
+{#            {#}
+{#                apiSettings: {#}
+{#                    // 用下方URL从后端返回查询后的json#}
+{#                    url: url.replace('COLUMNPLACEHOLDER', column)#}
+{#                },#}
+{#                // 输入至少2个字符后才query#}
+{#                minCharacters: 2,#}
+{#                cache: false#}
+{#            })#}
+{#        ;#}
+{#    })#}
+{#</script>#}
 <script type="text/javascript">
     $("#AJAX_get").click(function (event) {
         event.preventDefault(); // 防止表单默认的提交
@@ -147,21 +142,27 @@
                 for (k in d) {
                     $("#sales_" + d[k]).html(ret["sales_" + d[k]].toLocaleString());
                     $("#sales_gr_" + d[k]).html(toPercent(ret["sales_gr_" + d[k]]));
+                    var div_sales_gr=$("#div_sales_gr_" + d[k])
+                    div_sales_gr.removeClass().addClass("statistic");
                     if (ret["sales_gr_" + d[k]] < 0) {
-                        $("#div_sales_gr_" + d[k]).removeClass().addClass("red statistic"); // 负则为红
+                        div_sales_gr.addClass("red statistic"); // 负则为红
                     } else if (ret["sales_gr_" + d[k]] > 0) {
-                        $("#div_sales_gr_" + d[k]).removeClass().addClass("green statistic"); // 正则为绿
+                        div_sales_gr.addClass("green statistic"); // 正则为绿
                     }
                     {#$("#target_"+d[k]).html(ret["target_"+d[k]].toLocaleString());#}
-                    $("#ach_"+d[k]).html(toPercent(ret["ach_"+d[k]]));
-                    if (ret["ach_"+d[k]] < 1) {
-                        $("#div_ach_"+d[k]).removeClass().addClass("red statistic"); // 负则为红
-                    } else if (ret["ach_"+d[k]] > 1) {
-                        $("#div_ach_"+d[k]).removeClass().addClass("green statistic"); // 正则为绿
+                    $("#ach_" + d[k]).html(toPercent(ret["ach_" + d[k]]));
+                    var div_ach=$("#div_ach_" + d[k])
+                    div_ach.removeClass().addClass("statistic");
+                    if (ret["ach_" + d[k]] < 1) {
+                        div_ach.addClass("red statistic"); // 负则为红
+                    } else if (ret["ach_" + d[k]] > 1) {
+                        div_ach.addClass("green statistic"); // 正则为绿
                     }
                 }
 
                 // 展示ptable表格
+                $("#ptable_div").html(ret['ptable']);
+                initPTable($("#ptable"));
                 $("#ptable_monthly_div").html(ret['ptable_monthly']);
                 initPTableMonthly($("#ptable_monthly"));
 
@@ -259,25 +260,25 @@
                     },
                 },
                 columnDefs: [
-                    {"width": "10%", "targets": 3}, // 保持第4列份额列宽度固定，使条形图更美观
+                    {"width": "10%", "targets": [2,4,5,7]}, // 保持表格相对列宽度固定
+                    {"width": "15%", "targets": [1,3,6]},
                     {
-                        targets: 3,
+                        targets: 2,
                         render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
                     },
                     {
-                        "targets": 6, // 指定第7列EI
+                        "targets": 7, // 指定第8列达成率
                         "createdCell": function (td, cellData, rowData, row, col) {
-                            if (cellData < 100) {
+                            var value_ach = parseFloat(cellData.replace('%', ''));
+                            if (value_ach < 100) {
                                 $(td).css('color', 'red')
-                            } else if (cellData > 100) {
-                                $(td).css('color', 'green')
-                            } else if (cellData.indexOf(",") !== -1) {
+                            } else if (value_ach >= 100) {
                                 $(td).css('color', 'green')
                             }
                         }
                     },
                     {
-                        "targets": [2, 4, 5], // 指定第3,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
+                        "targets": [3, 4, 5], // 指定第4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
                         "createdCell": function (td, cellData, rowData, row, col) {
                             if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
                                 $(td).css('color', 'red')
@@ -327,8 +328,6 @@
                     }
                 ],
                 initComplete: function () {
-                    {#console.log($('.spark:not(:has(canvas))'));#}
-                    {#console.log(parseInt($('.spark:not(:has(canvas))').parent('td').parent('tr').find("td").eq(0).html()));#}
                     $('.spark:not(:has(canvas))').each(function () {
                         var row = $(this).parent('td').parent('tr');
                         var numCols = table.DataTable().columns().nodes().length;
@@ -341,7 +340,6 @@
                                 sparkdata.push(sparkvalue)
                             }
                         }
-                        console.log(sparkdata);
 
                         $(this).sparkline(sparkdata,
                             {height: 20, type: 'bar', disableTooltips: true, barColor: "#2185D0"})
@@ -359,8 +357,6 @@
                             .sort(function (a, b) {
                                 return b - a
                             });
-
-                        {#console.log(data);#}
 
                         api.cells(null, col).every(function () {
                             var cell = parseFloat(this.data().replace(/,/g, ''));

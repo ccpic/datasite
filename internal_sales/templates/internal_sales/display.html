@@ -13,12 +13,12 @@
 <!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
 <div class="ui pointing secondary menu">
     <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
-    <a class="item" data-tab="competition"><i class="trophy icon"></i>指标汇总</a>
+    <a class="item" data-tab="metrics"><i class="trophy icon"></i>指标汇总</a>
     <a class="item" data-tab="trend"><i class="signal icon"></i>月度明细</a>
-    <a class="item" data-tab="trend_summary"><i class="braille icon"></i>趋势表现汇总</a>
-    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>
-    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
-    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>
+{#    <a class="item" data-tab="trend_summary"><i class="braille icon"></i>趋势表现汇总</a>#}
+{#    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>#}
+{#    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>#}
+{#    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>#}
 </div>
 <div class="ui tab segment active" data-tab="total">
     <h3 class="ui header">
@@ -86,6 +86,26 @@
 {#        <div id="pie_product" style="width:1000px; height:600px;"></div>#}
 {#    </div>#}
 </div>
+<div class="ui tab segment" data-tab="metrics">
+    <h3 class="ui header">
+        <div class="content">
+            YTD指标汇总
+            <div class="sub header">数据表格
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='ptable_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
 <div class="ui tab segment" data-tab="trend">
     <h3 class="ui header">
         <div class="content">
@@ -102,53 +122,6 @@
     </div>
     <div class="ui hidden divider"></div>
     <div class="ui container" id='ptable_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
-</div>
-<div class="ui tab segment" data-tab="competition">
-    <h3 class="ui header">
-        <div class="content">
-            定义市场竞争趋势 - 绝对值
-            <div class="ui red basic label">
-                Top10
-            </div>
-            <div class="sub header">堆积面积图
-
-            </div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui container">
-        <div id="stackarea_abs_trend" style="width:1000px; height:600px;"></div>
-    </div>
-    <h3 class="ui header">
-        <div class="content">
-            定义市场竞争趋势 - 份额
-            <div class="ui red basic label">
-                Top10
-            </div>
-            <div class="sub header">百分百堆积面积图
-
-            </div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui container">
-        <div id="stackarea_share_trend" style="width:1000px; height:600px;"></div>
-    </div>
-    <h3 class="ui header">
-        <div class="content">
-            定义市场竞争趋势 - 同比增长率
-            <div class="ui red basic label">
-                Top10
-            </div>
-            <div class="sub header">折线图
-
-            </div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui container">
-        <div id="line_gr_trend" style="width:1000px; height:600px;"></div>
     </div>
 </div>
 <div class="ui tab segment" data-tab="trend_summary">
