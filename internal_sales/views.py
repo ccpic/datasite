@@ -152,7 +152,7 @@ def get_ptable_comm(df_sales, df_sales_comm, df_target_comm):  # 社区表现
             df_combined = pd.concat([df_combined, df_sales_comm_contrib_ytd, df_sales_comm_contrib_diff_ytd], axis=1)
             df_combined.rename(columns={0: "自身社区占比", 1: "社区占比同比变化"}, inplace=True)
             df_combined.fillna(
-                {"社区销售": 0, "社区销售贡献份额": 0, "社区同比净增长": 0, "社区销售贡献份额同比变化": 0, "社区自身社区占比": 0, "社区占比同比变化": 0}, inplace=True
+                {"社区销售": 0, "社区销售贡献份额": 0, "社区同比净增长": 0, "社区销售贡献份额同比变化": 0, "自身社区占比": 0, "社区占比同比变化": 0}, inplace=True
             )
         else:
             df_combined = pd.DataFrame(columns=["社区表现"])
