@@ -165,6 +165,8 @@
                 initPTable($("#ptable"));
                 $("#ptable_monthly_div").html(ret['ptable_monthly']);
                 initPTableMonthly($("#ptable_monthly"));
+                $("#ptable_comm_div").html(ret['ptable_comm']);
+                initPTableComm($("#ptable_comm"));
 
                 // 展示Pyecharts图表 - 总体定义市场趋势图 - 总体月度趋势图
                 updateChart(bar_total_monthly_trend, ret['bar_total_monthly_trend']);
@@ -249,7 +251,7 @@
                     "sInfoPostFix": "",
                     "sSearch": "搜索:",
                     "sUrl": "",
-                    "sEmptyTable": "表中数据为空",
+                    "sEmptyTable": "未查询到数据",
                     "sLoadingRecords": "载入中...",
                     "sInfoThousands": ",",
                     "oPaginate": {
@@ -260,15 +262,15 @@
                     },
                 },
                 columnDefs: [
-                    {"width": "10%", "targets": [2,4,5,7]}, // 保持表格相对列宽度固定
-                    {"width": "15%", "targets": [1,3,6]},
-                    { type: 'percent', targets: [2,4,5,7] },
+                    {"width": "10%", "targets": [2,4,5,6,8]}, // 保持表格相对列宽度固定
+                    {"width": "13%", "targets": [1,3,7]},
+                    { type: 'percent', targets: [2,4,5,6,8] },
                     {
                         targets: 2,
                         render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
                     },
                     {
-                        "targets": 7, // 指定第8列达成率
+                        "targets": 8, // 指定第8列达成率
                         "createdCell": function (td, cellData, rowData, row, col) {
                             var value_ach = parseFloat(cellData.replace('%', ''));
                             if (value_ach < 100) {
@@ -279,7 +281,7 @@
                         }
                     },
                     {
-                        "targets": [3, 4, 5], // 指定第4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
+                        "targets": [3, 4, 5, 6], // 指定第3, 4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
                         "createdCell": function (td, cellData, rowData, row, col) {
                             if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
                                 $(td).css('color', 'red')
@@ -306,7 +308,84 @@
         } );
     }
 </script>
+<script>
+    function initPTableComm(table) {
+        table.DataTable(
+            {
+                order: [[1, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
+                pageLength: 25, // 前端分页，初始每页显示25条记录
+                autoWidth: false, // 不自动调整表格宽度
+                oLanguage: { // UI Label本地化
+                    "sLengthMenu": "显示 _MENU_ 项结果",
+                    "sProcessing": "处理中...",
+                    "sZeroRecords": "没有匹配结果",
+                    "sInfo": "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
+                    "sInfoEmpty": "没有数据",
+                    "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
+                    "sInfoPostFix": "",
+                    "sSearch": "搜索:",
+                    "sUrl": "",
+                    "sEmptyTable": "未查询到数据",
+                    "sLoadingRecords": "载入中...",
+                    "sInfoThousands": ",",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "上页",
+                        "sNext": "下页",
+                        "sLast": "末页"
+                    },
+                },
+                columnDefs: [
+                    {"width": "8%", "targets": [2,4,5,6,8,9,10]}, // 保持表格相对列宽度固定
+                    {"width": "10%", "targets": [1,3,7]},
+                    { type: 'percent', targets: [2,4,5,6,8,9,10] },
+                    {
+                        targets: 2,
+                        render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
+                    },
+                    {
+                        targets: 9,
+                        render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFD700', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
+                    },
+                    {
+                        "targets": 8, // 指定第8列达成率
+                        "createdCell": function (td, cellData, rowData, row, col) {
+                            var value_ach = parseFloat(cellData.replace('%', ''));
+                            if (value_ach < 100) {
+                                $(td).css('color', 'red')
+                            } else if (value_ach >= 100) {
+                                $(td).css('color', 'green')
+                            }
+                        }
+                    },
+                    {
+                        "targets": [3, 4, 5,6, 10], // 指定第4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
+                        "createdCell": function (td, cellData, rowData, row, col) {
+                            if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
+                                $(td).css('color', 'red')
+                            }
+                        }
+                    },
+                ]
+            }
+        );
+        jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+            "percent-pre": function ( a ) {
 
+                var x = (a == "+nan%" || a === 'nan%' || a === '-nan%'|| a === 'inf%'|| a === '+inf%'|| a === '-inf%'    ) ? 0 : a.replace( /%/, "" );
+                return parseFloat( x );
+            },
+
+            "percent-asc": function ( a, b ) {
+                return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+            },
+
+            "percent-desc": function ( a, b ) {
+                return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+            }
+        } );
+    }
+</script>
 <script>
     function initPTableMonthly(table) {
         var indexLastColumn = table.find('tr')[0].cells.length - 2;
@@ -325,7 +404,7 @@
                     "sInfoPostFix": "",
                     "sSearch": "搜索:",
                     "sUrl": "",
-                    "sEmptyTable": "表中数据为空",
+                    "sEmptyTable": "未查询到数据",
                     "sLoadingRecords": "载入中...",
                     "sInfoThousands": ",",
                     "oPaginate": {
@@ -407,7 +486,7 @@
                     "sInfoPostFix": "",
                     "sSearch": "搜索:",
                     "sUrl": "",
-                    "sEmptyTable": "表中数据为空",
+                    "sEmptyTable": "未查询到数据",
                     "sLoadingRecords": "载入中...",
                     "sInfoThousands": ",",
                     "oPaginate": {
@@ -452,7 +531,7 @@
                     "sInfoPostFix": "",
                     "sSearch": "搜索:",
                     "sUrl": "",
-                    "sEmptyTable": "表中数据为空",
+                    "sEmptyTable": "未查询到数据",
                     "sLoadingRecords": "载入中...",
                     "sInfoThousands": ",",
                     "oPaginate": {

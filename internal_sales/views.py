@@ -77,26 +77,26 @@ def get_distinct_list(column, db_table):
 
 def query(request):
     form_dict = dict(six.iterlists(request.GET))
-
-    df_sales = get_df(form_dict)["销售"]
-    df_sales_tpo = get_df(form_dict)["带指标销售"]  # 只计算有指标的产品销售，用来计算达标率
-    df_target = get_df(form_dict)["指标"]
+    df = get_df(form_dict)
 
     # KPI字典
-    kpi = get_kpi(df_sales, df_sales_tpo, df_target)
+    kpi = get_kpi(df["销售"], df["带指标销售"], df["指标"])
 
     # 月度表现趋势表格
-    ptable = format_table(get_ptable(df_sales, df_target), "ptable")
-    ptable_monthly = format_table(get_ptable_monthly(df_sales), "ptable_monthly")
+    ptable = format_table(get_ptable(df_sales=df["销售"], df_target=df["指标"]), "ptable")
+    ptable_monthly = format_table(get_ptable_monthly(df_sales=df["销售"]), "ptable_monthly")
+    ptable_comm = format_table(
+        get_ptable_comm(df_sales=df["销售"], df_sales_comm=df["社区销售"], df_target_comm=df["社区指标"]), "ptable_comm"
+    )
 
     # # Pyecharts交互图表
-    bar_total_monthly_trend = prepare_chart(df_sales, df_target, "bar_total_monthly_trend", form_dict)
-
+    bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
         "ptable": ptable,
         "ptable_monthly": ptable_monthly,
+        "ptable_comm": ptable_comm,
         "bar_total_monthly_trend": bar_total_monthly_trend,
         # "pie_product": pie_product,
     }
@@ -108,15 +108,72 @@ def query(request):
     )  # 返回结果必须是json格式
 
 
-def get_ptable(df_sales, df_target):
-    mask_ytd = date_mask(df_sales, "ytd")[0]  # ytd同比时间段销售
+def get_ptable(df_sales, df_target):  # 指标汇总
+    if df_sales.empty is False:
+        df_combined = calculate_sales_metric(df_sales, df_target)
+    else:
+        df_combined = pd.DataFrame(columns=["指标汇总"])
+
+    return df_combined
+
+
+def get_ptable_monthly(df_sales):  # 月度明细
+    if df_sales.empty is False:
+        mask = date_mask(df_sales, "ytd")[0]
+        df_sales = df_sales.loc[mask, :]
+        df_sales.index = df_sales.index.strftime("%Y-%m")
+        df_sales = df_sales.T
+        df_sales["趋势"] = None  # 表格最右侧预留Sparkline空列
+    else:
+        df_sales = pd.DataFrame(columns=["月度明细"])
+    return df_sales
+
+
+def get_ptable_comm(df_sales, df_sales_comm, df_target_comm):  # 社区表现
+    if df_sales.empty is False:
+        mask_ytd = date_mask(df_sales, "ytd")[0]  # ytd时间段销售
+        df_sales_ytd = df_sales.loc[mask_ytd, :].sum(axis=0)
+        mask_ytdya = date_mask(df_sales, "ytd")[1]  # ytd同比时间段销售
+        df_sales_ytdya = df_sales.loc[mask_ytdya, :].sum(axis=0)
+
+        if df_sales_comm.empty is False:
+            df_combined = calculate_sales_metric(df_sales_comm, df_target_comm)
+            df_combined.columns = "社区" + df_combined.columns
+
+            mask_ytd = date_mask(df_sales_comm, "ytd")[0]  # ytd时间段销售
+            df_sales_comm_ytd = df_sales_comm.loc[mask_ytd, :].sum(axis=0)
+            df_sales_comm_contrib_ytd = df_sales_comm_ytd / df_sales_ytd  # ytd时间段自身社区占比
+
+            mask_ytdya = date_mask(df_sales_comm, "ytd")[1]  # ytd同比时间段销售
+            df_sales_comm_ytdya = df_sales_comm.loc[mask_ytdya, :].sum(axis=0)
+            df_sales_comm_contrib_ytdya = df_sales_comm_ytdya / df_sales_ytdya  # ytd同比时间段自身社区占比
+            df_sales_comm_contrib_diff_ytd = df_sales_comm_contrib_ytd - df_sales_comm_contrib_ytdya
+
+            df_combined = pd.concat([df_combined, df_sales_comm_contrib_ytd, df_sales_comm_contrib_diff_ytd], axis=1)
+            df_combined.rename(columns={0: "自身社区占比", 1: "社区占比同比变化"}, inplace=True)
+            df_combined.fillna(
+                {"社区销售": 0, "社区销售贡献份额": 0, "社区同比净增长": 0, "社区销售贡献份额同比变化": 0, "社区自身社区占比": 0, "社区占比同比变化": 0}, inplace=True
+            )
+        else:
+            df_combined = pd.DataFrame(columns=["社区表现"])
+
+    else:
+        df_combined = pd.DataFrame(columns=["社区表现"])
+
+    return df_combined
+
+
+def calculate_sales_metric(df_sales, df_target):
+    mask_ytd = date_mask(df_sales, "ytd")[0]  # ytd时间段销售
     df_sales_ytd = df_sales.loc[mask_ytd, :].sum(axis=0)
     df_sales_share_ytd = df_sales_ytd.div(df_sales_ytd.sum())
 
-    mask_ytdya = date_mask(df_sales, "ytd")[1]
-    df_sales_ytdya = df_sales.loc[mask_ytdya, :].sum(axis=0)  # ytd同比时间段销售
+    mask_ytdya = date_mask(df_sales, "ytd")[1]  # ytd同比时间段销售
+    df_sales_ytdya = df_sales.loc[mask_ytdya, :].sum(axis=0)
+    df_sales_share_ytdya = df_sales_ytdya.div(df_sales_ytdya.sum())
 
     df_sales_diff_ytd = df_sales_ytd - df_sales_ytdya  # ytd净增长
+    df_sales_share_diff_ytd = df_sales_share_ytd - df_sales_share_ytdya  # ytd份额变化
     df_sales_gr_ytd = df_sales_ytd / df_sales_ytdya - 1  # ytd增长率
 
     mask_mqt = date_mask(df_sales, "mqt")[0]
@@ -137,13 +194,12 @@ def get_ptable(df_sales, df_target):
         df_target_ytd = pd.Series(np.nan, index=df_sales_ytd.index)
         df_ach_ytd = pd.Series(np.nan, index=df_sales_ytd.index)
 
-    print(df_sales_ytd, df_target_ytd, df_ach_ytd)
-
     df_combined = pd.concat(
         [
             df_sales_ytd,
             df_sales_share_ytd,
             df_sales_diff_ytd,
+            df_sales_share_diff_ytd,
             df_sales_gr_ytd,
             df_sales_gr_qa,
             df_target_ytd,
@@ -152,22 +208,10 @@ def get_ptable(df_sales, df_target):
         axis=1,
     )
 
-    df_combined.columns = ["YTD销售", "YTD销售贡献", "YTD同比净增长", "YTD同比增长率", "滚动季环比增长率", "YTD指标", "YTD同期达成"]
-    df_combined.fillna({"YTD销售": 0, "YTD销售贡献": 0, "YTD同比净增长": 0}, inplace=True)
-    print(df_combined)
+    df_combined.columns = ["销售", "销售贡献份额", "同比净增长", "销售贡献份额同比变化", "同比增长率", "滚动季环比增长率", "指标", "同期达成"]
+    df_combined.fillna({"销售": 0, "销售贡献份额": 0, "同比净增长": 0, "销售贡献份额同比变化": 0}, inplace=True)
 
     return df_combined
-
-
-def get_ptable_monthly(df_sales):
-    if df_sales.empty is False:
-        mask = date_mask(df_sales, "ytd")[0]
-        df_sales = df_sales.loc[mask, :]
-        df_sales.index = df_sales.index.strftime("%Y-%m")
-        df_sales = df_sales.T
-        df_sales["趋势"] = None  # 表格最右侧预留Sparkline空列
-
-    return df_sales
 
 
 def get_kpi(df_sales, df_sales_tpo, df_target):
@@ -250,6 +294,10 @@ def date_mask(df, period):
         mask = df.index == date
         mask_ya = df.index == date_ya
 
+    # if comm_only is True:
+    #     mask = mask & (df['客户分级'].isin(['旗舰社区', '普通社区']))
+    #     mask_ya = mask_ya & (df['客户分级'].isin(['旗舰社区', '普通社区']))
+
     return mask, mask_ya
 
 
@@ -263,8 +311,10 @@ def get_df(form_dict, is_pivoted=True):
     if is_pivoted is True:
         return {
             "销售": pivot(df=df[df.TAG != "指标"], form_dict=form_dict),
+            "社区销售": pivot(df=df[(df.TAG != "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))], form_dict=form_dict),
             "带指标销售": pivot(df=df[(df.TAG != "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))], form_dict=form_dict),
             "指标": pivot(df=df[(df.TAG == "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))], form_dict=form_dict),
+            "社区指标": pivot(df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))], form_dict=form_dict),
         }
 
     else:
@@ -373,12 +423,12 @@ def build_formatters_by_col(df):
     format_currency = lambda x: "¥{:,.1f}".format(x)
     d = {}
     for column in df.columns:
-        if "份额" in str(column) or "贡献" in str(column) or "达成" in str(column):
+        if "同比增长" in str(column) or "增长率" in str(column) or "CAGR" in str(column) or "同比变化" in str(column):
+            d[column] = format_gr
+        elif "份额" in str(column) or "贡献" in str(column) or "达成" in str(column) or "占比" in str(column):
             d[column] = format_share
         elif "价格" in str(column) or "单价" in str(column):
             d[column] = format_currency
-        elif "同比增长" in str(column) or "增长率" in str(column) or "CAGR" in str(column) or "同比变化" in str(column):
-            d[column] = format_gr
         elif "趋势" in str(column):
             d[column] = None
         else:
