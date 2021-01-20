@@ -90,7 +90,8 @@ def query(request):
     ptable_monthly = format_table(get_ptable_monthly(df_sales), "ptable_monthly")
 
     # # Pyecharts交互图表
-    bar_total_monthly_trend = json.loads(prepare_chart(df_sales, df_target, "bar_total_monthly_trend", form_dict))
+    bar_total_monthly_trend = prepare_chart(df_sales, df_target, "bar_total_monthly_trend", form_dict)
+
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
@@ -128,9 +129,15 @@ def get_ptable(df_sales, df_target):
 
     df_sales_gr_qa = df_sales_mqt / df_sales_mqtqa - 1  # 滚动季环比增长率
 
-    mask_ytd = date_mask(df_target, "ytd")[0]
-    df_target_ytd = df_target.loc[mask_ytd, :].sum(axis=0)  # YTD指标
-    df_ach_ytd = df_sales_ytd / df_target_ytd  # YTD达成
+    if df_target.empty is False:
+        mask_ytd = date_mask(df_target, "ytd")[0]
+        df_target_ytd = df_target.loc[mask_ytd, :].sum(axis=0)  # YTD指标
+        df_ach_ytd = df_sales_ytd / df_target_ytd  # YTD达成
+    else:
+        df_target_ytd = pd.Series(np.nan, index=df_sales_ytd.index)
+        df_ach_ytd = pd.Series(np.nan, index=df_sales_ytd.index)
+
+    print(df_sales_ytd, df_target_ytd, df_ach_ytd)
 
     df_combined = pd.concat(
         [
@@ -144,6 +151,7 @@ def get_ptable(df_sales, df_target):
         ],
         axis=1,
     )
+
     df_combined.columns = ["YTD销售", "YTD销售贡献", "YTD同比净增长", "YTD同比增长率", "滚动季环比增长率", "YTD指标", "YTD同期达成"]
     df_combined.fillna({"YTD销售": 0, "YTD销售贡献": 0, "YTD同比净增长": 0}, inplace=True)
     print(df_combined)
@@ -152,11 +160,12 @@ def get_ptable(df_sales, df_target):
 
 
 def get_ptable_monthly(df_sales):
-    mask = date_mask(df_sales, "ytd")[0]
-    df_sales = df_sales.loc[mask, :]
-    df_sales.index = df_sales.index.strftime("%Y-%m")
-    df_sales = df_sales.T
-    df_sales["趋势"] = None  # 表格最右侧预留Sparkline空列
+    if df_sales.empty is False:
+        mask = date_mask(df_sales, "ytd")[0]
+        df_sales = df_sales.loc[mask, :]
+        df_sales.index = df_sales.index.strftime("%Y-%m")
+        df_sales = df_sales.T
+        df_sales["趋势"] = None  # 表格最右侧预留Sparkline空列
 
     return df_sales
 
@@ -280,9 +289,8 @@ def pivot(df, form_dict):
     if pivoted.empty is False:
         pivoted.sort_values(by=pivoted.index[-1], axis=1, ascending=False, inplace=True)  # 结果按照最后一个DATE表现排序
         pivoted.fillna(0, inplace=True)
-
-    pivoted = pd.DataFrame(pivoted.to_records())
-    pivoted.set_index("DATE", inplace=True)
+        pivoted = pd.DataFrame(pivoted.to_records())
+        pivoted.set_index("DATE", inplace=True)
 
     return pivoted
 
@@ -387,37 +395,41 @@ def prepare_chart(
 ):
     SERIES_LIMIT = 10
     # label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
+    if df_sales.empty is False:
+        if chart_type == "bar_total_monthly_trend":
+            form_dict_by_product = form_dict.copy()
+            form_dict_by_product["DIMENSION_select"] = ["PRODUCT"]  # 前端控件交互字典将分析维度替换成PRODUCT
 
-    if chart_type == "bar_total_monthly_trend":
-        form_dict_by_product = form_dict.copy()
-        form_dict_by_product["DIMENSION_select"] = ["PRODUCT"]  # 前端控件交互字典将分析维度替换成PRODUCT
+            df_sales_by_product = get_df(form_dict_by_product)["销售"].astype("int")
+            df_sales_by_product.index = df_sales_by_product.index.strftime("%Y-%m")  # 行索引日期数据变成2020-06的形式
+            # df_target_total = df_target.sum(axis=1)[:-1]  # 获取目标总和
+            # df_target_total.index = df_target_total.index.strftime("%Y-%m")
+            # df_ach_total = df_sales_total/df_target_total
+            # df_ach_total.replace([np.inf, -np.inf, np.nan], "-", inplace=True)  # 所有分母为0或其他情况导致的inf和nan都转换为'-'
+            #
+            # df_sales_total = df_sales_total.to_frame()  # series转换成df
+            # df_sales_total.columns = ['月度销售']
+            # df_ach_total = df_ach_total.to_frame() # series转换成df
+            # df_ach_total.columns = ['指标达成率']
 
-        df_sales_by_product = get_df(form_dict_by_product)["销售"].astype("int")
-        df_sales_by_product.index = df_sales_by_product.index.strftime("%Y-%m")  # 行索引日期数据变成2020-06的形式
-        # df_target_total = df_target.sum(axis=1)[:-1]  # 获取目标总和
-        # df_target_total.index = df_target_total.index.strftime("%Y-%m")
-        # df_ach_total = df_sales_total/df_target_total
-        # df_ach_total.replace([np.inf, -np.inf, np.nan], "-", inplace=True)  # 所有分母为0或其他情况导致的inf和nan都转换为'-'
-        #
-        # df_sales_total = df_sales_total.to_frame()  # series转换成df
-        # df_sales_total.columns = ['月度销售']
-        # df_ach_total = df_ach_total.to_frame() # series转换成df
-        # df_ach_total.columns = ['指标达成率']
+            chart = echarts_stackbar(df=df_sales_by_product)  # 调用stackbar方法生成Pyecharts图表对象
+            return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
+        elif chart_type == "pie_product":
+            form_dict_by_product = form_dict.copy()
+            form_dict_by_product["DIMENSION_select"] = ["PRODUCT"]  # 前端控件交互字典将分析维度替换成PRODUCT
+            df_by_product = get_df(form_dict_by_product)["销售"]
 
-        chart = echarts_stackbar(df=df_sales_by_product)  # 调用stackbar方法生成Pyecharts图表对象
-        return chart.dump_options()  # 用json格式返回Pyecharts图表对象的全局设置
-    elif chart_type == "pie_product":
-        form_dict_by_product = form_dict.copy()
-        form_dict_by_product["DIMENSION_select"] = ["PRODUCT"]  # 前端控件交互字典将分析维度替换成PRODUCT
-        df_by_product = get_df(form_dict_by_product)["销售"]
-
-        mask = date_mask(df_by_product, "ytd")[0]
-        df_by_product_ytd = df_by_product.loc[mask, :]
-        df_by_product_ytd = df_by_product_ytd.sum(axis=0)
-        # df_count = df['客户姓名'].groupby(df['所在科室']).count()
-        # df_count = df_count.reindex(['心内科', '肾内科', '神内科', '内分泌科', '老干科', '其他科室'])
-        chart = pie_radius(df_by_product_ytd)
-        return chart.dump_options()  # 用json格式返回Pyecharts图表对象的全局设置
+            mask = date_mask(df_by_product, "ytd")[0]
+            df_by_product_ytd = df_by_product.loc[mask, :]
+            df_by_product_ytd = df_by_product_ytd.sum(axis=0)
+            # df_count = df['客户姓名'].groupby(df['所在科室']).count()
+            # df_count = df_count.reindex(['心内科', '肾内科', '神内科', '内分泌科', '老干科', '其他科室'])
+            chart = pie_radius(df_by_product_ytd)
+            return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
+        else:
+            return json.dumps(None)
+    else:
+        return json.dumps(None)
     # elif chart_type == "stackarea_abs_trend":
     #     chart = echarts_stackarea(df.iloc[:, :SERIES_LIMIT], datatype="ABS")  # 直接使用绝对值时间序列
     #     return chart.dump_options()
