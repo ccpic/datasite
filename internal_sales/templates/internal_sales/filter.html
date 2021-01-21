@@ -142,7 +142,7 @@
                 for (k in d) {
                     $("#sales_" + d[k]).html(ret["sales_" + d[k]].toLocaleString());
                     $("#sales_gr_" + d[k]).html(toPercent(ret["sales_gr_" + d[k]]));
-                    var div_sales_gr=$("#div_sales_gr_" + d[k])
+                    var div_sales_gr = $("#div_sales_gr_" + d[k])
                     div_sales_gr.removeClass().addClass("statistic");
                     if (ret["sales_gr_" + d[k]] < 0) {
                         div_sales_gr.addClass("red statistic"); // 负则为红
@@ -151,7 +151,7 @@
                     }
                     {#$("#target_"+d[k]).html(ret["target_"+d[k]].toLocaleString());#}
                     $("#ach_" + d[k]).html(toPercent(ret["ach_" + d[k]]));
-                    var div_ach=$("#div_ach_" + d[k])
+                    var div_ach = $("#div_ach_" + d[k])
                     div_ach.removeClass().addClass("statistic");
                     if (ret["ach_" + d[k]] < 1) {
                         div_ach.addClass("red statistic"); // 负则为红
@@ -262,9 +262,9 @@
                     },
                 },
                 columnDefs: [
-                    {"width": "10%", "targets": [2,4,5,6,8]}, // 保持表格相对列宽度固定
-                    {"width": "13%", "targets": [1,3,7]},
-                    { type: 'percent', targets: [2,4,5,6,8] },
+                    {"width": "10%", "targets": [2, 4, 5, 6, 8]}, // 保持表格相对列宽度固定
+                    {"width": "13%", "targets": [1, 3, 7]},
+                    {type: 'percent', targets: [2, 4, 5, 6, 8]},
                     {
                         targets: 2,
                         render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
@@ -291,21 +291,21 @@
                 ]
             }
         );
-        jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-            "percent-pre": function ( a ) {
+        jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+            "percent-pre": function (a) {
 
-                var x = (a == "+nan%" || a === 'nan%' || a === '-nan%'|| a === 'inf%'|| a === '+inf%'|| a === '-inf%'    ) ? 0 : a.replace( /%/, "" );
-                return parseFloat( x );
+                var x = (a == "+nan%" || a === 'nan%' || a === '-nan%' || a === 'inf%' || a === '+inf%' || a === '-inf%') ? 0 : a.replace(/%/, "");
+                return parseFloat(x);
             },
 
-            "percent-asc": function ( a, b ) {
+            "percent-asc": function (a, b) {
                 return ((a < b) ? -1 : ((a > b) ? 1 : 0));
             },
 
-            "percent-desc": function ( a, b ) {
+            "percent-desc": function (a, b) {
                 return ((a < b) ? 1 : ((a > b) ? -1 : 0));
             }
-        } );
+        });
     }
 </script>
 <script>
@@ -336,9 +336,9 @@
                     },
                 },
                 columnDefs: [
-                    {"width": "8%", "targets": [2,4,5,6,8,9,10]}, // 保持表格相对列宽度固定
-                    {"width": "10%", "targets": [1,3,7]},
-                    { type: 'percent', targets: [2,4,5,6,8,9,10] },
+                    {"width": "8%", "targets": [2, 4, 5, 6, 8, 9, 10]}, // 保持表格相对列宽度固定
+                    {"width": "10%", "targets": [1, 3, 7]},
+                    {type: 'percent', targets: [2, 4, 5, 6, 8, 9, 10]},
                     {
                         targets: 2,
                         render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
@@ -359,7 +359,7 @@
                         }
                     },
                     {
-                        "targets": [3, 4, 5,6, 10], // 指定第4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
+                        "targets": [3, 4, 5, 6, 10], // 指定第4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
                         "createdCell": function (td, cellData, rowData, row, col) {
                             if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
                                 $(td).css('color', 'red')
@@ -369,21 +369,21 @@
                 ]
             }
         );
-        jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-            "percent-pre": function ( a ) {
+        jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+            "percent-pre": function (a) {
 
-                var x = (a == "+nan%" || a === 'nan%' || a === '-nan%'|| a === 'inf%'|| a === '+inf%'|| a === '-inf%'    ) ? 0 : a.replace( /%/, "" );
-                return parseFloat( x );
+                var x = (a == "+nan%" || a === 'nan%' || a === '-nan%' || a === 'inf%' || a === '+inf%' || a === '-inf%') ? 0 : a.replace(/%/, "");
+                return parseFloat(x);
             },
 
-            "percent-asc": function ( a, b ) {
+            "percent-asc": function (a, b) {
                 return ((a < b) ? -1 : ((a > b) ? 1 : 0));
             },
 
-            "percent-desc": function ( a, b ) {
+            "percent-desc": function (a, b) {
                 return ((a < b) ? 1 : ((a > b) ? -1 : 0));
             }
-        } );
+        });
     }
 </script>
 <script>
@@ -422,8 +422,9 @@
                         }
                     }
                 ],
-                initComplete: function () {
-                    $('.spark:not(:has(canvas))').each(function () {
+                "drawCallback": (oSettings) => {
+                    console.log('callback')
+                        $('.spark:not(:has(canvas))').each(function () {
                         var row = $(this).parent('td').parent('tr');
                         var numCols = table.DataTable().columns().nodes().length;
                         var sparkdata = [];
@@ -439,7 +440,8 @@
                         $(this).sparkline(sparkdata,
                             {height: 20, type: 'bar', disableTooltips: true, barColor: "#2185D0"})
                     });
-
+                },
+                initComplete: function () {
                     var api = this.api();
 
                     api.columns(':not(:first)').every(function () {
