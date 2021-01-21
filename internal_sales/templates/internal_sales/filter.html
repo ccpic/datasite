@@ -7,14 +7,14 @@
             <div class="field">
                 <div class="fields">
                     <div class="eight wide field">
-                        <select name="DIMENSION_select" id="DIMENSION_select" class="ui fluid small search dropdown">
+                        <select name="DIMENSION_select" id="DIMENSION_select" class="ui fluid tiny search dropdown">
                             {% for key, value in mselect_dict.items %}
                                 <option value="{{ value.select }}">{{ key }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="eight wide field">
-                        <select name="UNIT_select" id="UNIT_select" class="ui fluid small search dropdown">
+                        <select name="UNIT_select" id="UNIT_select" class="ui fluid tiny search dropdown">
                             <option value="VALUE" selected>金额</option>
                             <option value="VOLUME_STD">标准盒数</option>
                         </select>
@@ -23,18 +23,18 @@
             </div>
             <h3 class="ui header" id="data_filter">
                 数据筛选
-                <div class="content">
-                    <div class="ui pointing below red basic label">
-                        请选择销售数据筛选的范围
-                    </div>
-                </div>
+{#                <div class="content">#}
+{#                    <div class="ui pointing below red basic label">#}
+{#                        请选择销售数据筛选的范围#}
+{#                    </div>#}
+{#                </div>#}
             </h3>
             <div class="field">
                 {% for key, value in mselect_dict.items %}
                     <div class="field">
                         <select name="{{ value.select|add:"_select[]" }}" id="{{ value.select|add:"_select" }}"
                                 multiple=""
-                                class="ui fluid small search dropdown">
+                                class="ui fluid tiny search dropdown">
                             <option value="">{{ key }}</option>
                             {% for item in value.options %}
                                 <option value="{{ item }}">{{ item }}</option>
@@ -110,8 +110,8 @@
 <script type="text/javascript">
     $("#AJAX_get").click(function (event) {
         event.preventDefault(); // 防止表单默认的提交
-        var dimmer_dummy = $("#dimmer_dummy");
-        $(".ui.dimmer").attr('class', 'ui active dimmer'); // 点击筛选按钮后dimmer变成active
+        var dimmer_dummy = $("#dimmer_dummy"); // 使用一个透明dummy dimmer保证loading文字一直显示在viewport中央
+        $(".ui.dimmer").attr('class', 'ui active dimmer'); // 非透明的dimmer依旧负责遮罩功能，点击筛选按钮后dimmer变成active
         dimmer_dummy.children('div').remove(); // 删除初始化文字
         dimmer_dummy.append('<div class="ui text loader">数据加载中……</div>'); // 增加loading效果和文字
 
