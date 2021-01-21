@@ -80,11 +80,6 @@ D_TRANS = {
 
 
 # @login_required
-# def index(request):
-#     return render(request, 'tenders.html')
-
-
-# @login_required
 def index(request):
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
@@ -102,6 +97,9 @@ def query(request):
     form_dict = dict(six.iterlists(request.GET))
     label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]  # 分析时间段+单位组成数据标签
     pivoted = get_df(form_dict)
+
+    # KPI
+    kpi = get_kpi(pivoted)
 
     # 最新横截面表现表格
     table = get_ptable(pivoted, label)
@@ -141,9 +139,9 @@ def query(request):
 
     context = {
         "label": label,
-        "market_size": get_kpi(pivoted)[0],
-        "market_gr": get_kpi(pivoted)[1],
-        "market_cagr": get_kpi(pivoted)[2],
+        "market_size": kpi["market_size"],
+        "market_gr": kpi["market_gr"],
+        "market_cagr": kpi["market_cagr"],
         "ptable": ptable,
         "ptable_trend": ptable_trend,
         "price_table_box": price_table_box,
@@ -336,6 +334,8 @@ def get_df(form_dict, is_pivoted=True):
 
 
 def get_kpi(df):
+    kpi = {}
+
     # 按列求和为市场总值的Series
     market_total = df.sum(axis=1)
     # 最后一行（最后一个DATE）就是最新的市场规模
@@ -351,7 +351,11 @@ def get_kpi(df):
     if market_cagr == np.inf or market_cagr == -np.inf:
         market_cagr = "N/A"
 
-    return [market_size, market_gr, market_cagr]
+    return {
+        "market_size": market_size,
+        "market_gr": market_gr,
+        "market_cagr": market_cagr,
+    }
 
 
 def get_ptable(df, label):
@@ -476,7 +480,7 @@ def prepare_chart(
         df_gr = df_abs.pct_change(periods=4)  # 获取同比增长率
         df_gr.dropna(how="all", inplace=True)  # 删除没有同比增长率的行，也就是时间序列数据的最前面几行，他们没有同比
         df_gr.replace([np.inf, -np.inf, np.nan], "-", inplace=True)  # 所有分母为0或其他情况导致的inf和nan都转换为'-'
-        df_gr.columns = ['同比增长率']
+        df_gr.columns = ["同比增长率"]
         chart = echarts_stackbar(df=df_abs, df_gr=df_gr)  # 调用stackbar方法生成Pyecharts图表对象
         return chart.dump_options()  # 用json格式返回Pyecharts图表对象的全局设置
     elif chart_type == "stackarea_abs_trend":
