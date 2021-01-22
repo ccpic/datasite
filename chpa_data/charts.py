@@ -334,7 +334,6 @@ def echarts_stackbar(
     if df_gr is not None:
         df_gr = df_gr.multiply(100).round(2)  # 如果有同比增长率，原始数*100呈现
 
-
     if df.empty is False:
         stackbar = Bar().add_xaxis(df.index.tolist())
         for i, item in enumerate(df.columns):  # 预留的枚举，这个方法以后可以根据输入对象不同从单一柱状图变成堆积柱状图
@@ -353,7 +352,11 @@ def echarts_stackbar(
             #            )
         if df_gr is not None:  # 如果有同比增长率数据则加入次Y轴
             stackbar.extend_axis(
-                yaxis=opts.AxisOpts(name=df_gr.columns.astype('str')[0], type_="value", axislabel_opts=opts.LabelOpts(formatter="{value}%"),)
+                yaxis=opts.AxisOpts(
+                    name=df_gr.columns.astype("str")[0],
+                    type_="value",
+                    axislabel_opts=opts.LabelOpts(formatter="{value}%"),
+                )
             )
         stackbar.set_global_opts(
             legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
@@ -383,7 +386,7 @@ def echarts_stackbar(
                 Line()
                 .add_xaxis(xaxis_data=df_gr.index.tolist())
                 .add_yaxis(
-                    series_name= df_gr.columns.astype('str')[0],
+                    series_name=df_gr.columns.astype("str")[0],
                     yaxis_index=1,
                     y_axis=df_gr.values.tolist(),
                     label_opts=opts.LabelOpts(is_show=False),
@@ -395,7 +398,6 @@ def echarts_stackbar(
             )
     else:
         stackbar = Bar()
-
 
     if df_gr is not None:
         return stackbar.overlap(line)  # 如果有次坐标轴最后要用overlap方法组合
@@ -512,23 +514,47 @@ def pie_radius(df) -> Pie:
         data_pair = [list(z) for z in zip(x_data, y_data)]
         pie = (
             Pie(init_opts=opts.InitOpts())
-                .add(
+            .add(
                 series_name="所在科室",
                 data_pair=data_pair,
                 radius=["50%", "70%"],
                 label_opts=opts.LabelOpts(is_show=False, position="center"),
             )
-                .set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
-                                 toolbox_opts=opts.ToolboxOpts(is_show=True),
-                                 )
-                .set_series_opts(
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="item", formatter="{a} <br/>{b}: {c} ({d}%)"
-                ),
-                label_opts=opts.LabelOpts(is_show=True,
-                                          formatter="{b}: {d}%"),
+            .set_global_opts(legend_opts=opts.LegendOpts(is_show=False), toolbox_opts=opts.ToolboxOpts(is_show=True),)
+            .set_series_opts(
+                tooltip_opts=opts.TooltipOpts(trigger="item", formatter="{a} <br/>{b}: {c} ({d}%)"),
+                label_opts=opts.LabelOpts(is_show=True, formatter="{b}: {d}%"),
             )
         )
     else:
-        pie = (Pie())
+        pie = Pie()
     return pie
+
+
+def echarts_scatter(df):
+    # x = df.iloc[:, 0]
+    # y = df.iloc[:, 1]
+    if df.empty is False:
+        scatter = Scatter(init_opts=opts.InitOpts())
+        for index, row in df.iterrows():
+            x = int(row[0])
+            y = int(row[1])
+            scatter.add_xaxis(xaxis_data=[x])
+            scatter.add_yaxis(
+                series_name=index, y_axis=[y], symbol_size=10, label_opts=opts.LabelOpts(is_show=False),
+            )
+            scatter.set_series_opts()
+        scatter.set_global_opts(
+            xaxis_opts=opts.AxisOpts(type_="value", name="销售", splitline_opts=opts.SplitLineOpts(is_show=True)),
+            yaxis_opts=opts.AxisOpts(
+                name="同比净增长",
+                type_="value",
+                axistick_opts=opts.AxisTickOpts(is_show=True),
+                splitline_opts=opts.SplitLineOpts(is_show=True),
+            ),
+            tooltip_opts=opts.TooltipOpts(is_show=True, trigger="item", formatter="{a} <br/>{b}: {c}"),
+            legend_opts=opts.LegendOpts(is_show=False),
+        )
+    else:
+        scatter = Scatter()
+    return scatter

@@ -90,16 +90,20 @@ def query(request):
     ptable_comm = format_table(
         get_ptable_comm(df_sales=df["销售"], df_sales_comm=df["社区销售"], df_target_comm=df["社区指标"]), "ptable_comm"
     )
+    ptable_comm_monthly = format_table(get_ptable_monthly(df_sales=df["社区销售"]), "ptable_comm_monthly")
 
     # # Pyecharts交互图表
     bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
+    scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
         "ptable": ptable,
         "ptable_monthly": ptable_monthly,
         "ptable_comm": ptable_comm,
+        "ptable_comm_monthly": ptable_comm_monthly,
         "bar_total_monthly_trend": bar_total_monthly_trend,
+        "scatter_sales_abs_diff": scatter_sales_abs_diff,
         # "pie_product": pie_product,
     }
 
@@ -465,6 +469,7 @@ def prepare_chart(
             # df_ach_total.columns = ['指标达成率']
 
             chart = echarts_stackbar(df=df_sales_by_product)  # 调用stackbar方法生成Pyecharts图表对象
+
             return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
         elif chart_type == "pie_product":
             form_dict_by_product = form_dict.copy()
@@ -477,7 +482,14 @@ def prepare_chart(
             # df_count = df['客户姓名'].groupby(df['所在科室']).count()
             # df_count = df_count.reindex(['心内科', '肾内科', '神内科', '内分泌科', '老干科', '其他科室'])
             chart = pie_radius(df_by_product_ytd)
+
             return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
+        elif chart_type == "scatter_sales_abs_diff":
+            metrics = calculate_sales_metric(df_sales, df_target)
+            print(metrics)
+            chart = echarts_scatter(metrics[['销售', '同比净增长']])
+
+            return json.loads(chart.dump_options())
         else:
             return json.dumps(None)
     else:
