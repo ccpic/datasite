@@ -168,6 +168,12 @@
                 $("#ptable_comm_div").html(ret['ptable_comm']);
                 initPTableComm($("#ptable_comm"));
 
+                if (ret['show_limit_results'] === "true"){
+                    $(".ui.orange.basic.label").remove();
+                    $(".ui.basic.label").after('<div class="ui orange basic label">Top200</div>');
+                }
+
+
                 var d = {{ monthly_metric_dict|safe }};
                 for (k in d) {
                     $("#ptable_"+d[k]+"_div").html(ret['ptable_'+d[k]]);
@@ -222,6 +228,7 @@
         }
 
         // 获取输出选项modal的值
+        form_data['toggle_limit_show'] = $('#toggle_limit_show').checkbox('is checked');
         form_data['customized_sql'] = $('#customized_sql').val();
 
         return form_data
@@ -437,7 +444,6 @@
                     },
                 ],
                 "drawCallback": (oSettings) => {
-                    console.log('callback')
                         $('.spark:not(:has(canvas))').each(function () {
                         var row = $(this).parent('td').parent('tr');
                         var numCols = table.DataTable().columns().nodes().length;

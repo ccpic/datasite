@@ -68,6 +68,7 @@ D_METRIC_MONTHLY = {
     # "达成": "ach",
 }
 
+
 def index(request):
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
@@ -75,11 +76,12 @@ def index(request):
         mselect_dict[key]["select"] = value
         mselect_dict[key]["options"] = get_distinct_list(value, DB_TABLE)
 
-    context = {"date": date,
-               "mselect_dict": mselect_dict,
-               "period_dict": D_PERIOD,
-               "monthly_metric_dict": D_METRIC_MONTHLY,
-               }
+    context = {
+        "date": date,
+        "mselect_dict": mselect_dict,
+        "period_dict": D_PERIOD,
+        "monthly_metric_dict": D_METRIC_MONTHLY,
+    }
 
     return render(request, "internal_sales/display.html", context)
 
@@ -99,26 +101,35 @@ def query(request):
     # KPI字典
     kpi = get_kpi(df["销售"], df["带指标销售"], df["指标"])
 
+    # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
+    show_limit_results = form_dict["toggle_limit_show"][0]
+
     # 综合表现指标汇总
-    ptable = format_table(get_ptable(df_sales=df["销售"], df_target=df["指标"]), "ptable")
+    ptable = format_table(get_ptable(df_sales=df["销售"], df_target=df["指标"], show_limit_results=show_limit_results), "ptable")
     ptable_comm = format_table(
-        get_ptable_comm(df_sales=df["销售"], df_sales_comm=df["社区销售"], df_target_comm=df["社区指标"]), "ptable_comm"
+        get_ptable_comm(
+            df_sales=df["销售"], df_sales_comm=df["社区销售"], df_target_comm=df["社区指标"], show_limit_results=show_limit_results
+        ),
+        "ptable_comm",
     )
 
     # 月度表现趋势表格
-    ptable_monthly = get_ptable_monthly(df_sales=df["销售"])
+    ptable_monthly = get_ptable_monthly(df_sales=df["销售"], show_limit_results=show_limit_results)
     ptable_comm_monthly = {}
-    temp = get_ptable_monthly(df_sales=df["社区销售"])
+    temp = get_ptable_monthly(df_sales=df["社区销售"], show_limit_results=show_limit_results)
     for k, v in temp.items():
-        ptable_comm_monthly[k.replace("ptable_monthly", "ptable_comm_monthly")] = v.replace("ptable_monthly", "ptable_comm_monthly")
+        ptable_comm_monthly[k.replace("ptable_monthly", "ptable_comm_monthly")] = v.replace(
+            "ptable_monthly", "ptable_comm_monthly"
+        )
 
-    # # Pyecharts交互图表
+    # Pyecharts交互图表
     bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
     # scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
     # scatter_sales_comm_abs_diff = prepare_chart(df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict)
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
+        "show_limit_results": show_limit_results,
         "ptable": ptable,
         "ptable_comm": ptable_comm,
         "bar_total_monthly_trend": bar_total_monthly_trend,
@@ -148,7 +159,7 @@ def export(request, type):
             value.to_excel(xlwriter, sheet_name=key, index=True)
     elif type == "raw":
         df = get_df(form_dict, is_pivoted=False)  # 原始数
-        df.to_excel(xlwriter,sheet_name='data', index=False)
+        df.to_excel(xlwriter, sheet_name="data", index=False)
 
     xlwriter.save()
     xlwriter.close()
@@ -166,22 +177,30 @@ def export(request, type):
     return response
 
 
-def get_ptable(df_sales, df_target):  # 指标汇总
+def get_ptable(df_sales, df_target, show_limit_results):  # 指标汇总
     if df_sales.empty is False:
         df_combined = calculate_sales_metric(df_sales, df_target)
     else:
         df_combined = pd.DataFrame(columns=["指标汇总"])
 
+    if show_limit_results == "true":
+        df_combined = df_combined.iloc[:200, :]
+
     return df_combined
 
 
-def get_ptable_monthly(df_sales):  # 月度明细
+def get_ptable_monthly(df_sales, show_limit_results):  # 月度明细
     if df_sales.empty is False:
         mask = date_mask(df_sales, "ytd")[0]
         df_sales_abs = df_sales.loc[mask, :].T
+        if show_limit_results == "true":
+            df_sales_abs = df_sales_abs.iloc[:200, :]
         df_sales_abs.columns = df_sales_abs.columns.strftime("%Y-%m")
         df_sales_abs["趋势"] = None  # 表格最右侧预留Sparkline空列
+
         df_sales_diff = df_sales.diff(periods=12).loc[mask, :].T
+        if show_limit_results == "true":
+            df_sales_diff = df_sales_diff.iloc[:200, :]
         df_sales_diff.columns = df_sales_diff.columns.strftime("%Y-%m")
         df_sales_diff["趋势"] = None
         d = {
@@ -190,13 +209,13 @@ def get_ptable_monthly(df_sales):  # 月度明细
         }
     else:
         d = {
-            "ptable_monthly_abs": format_table(pd.DataFrame(columns=["月度明细"]),"ptable_monthly_abs"),
-            "ptable_monthly_diff": format_table(pd.DataFrame(columns=["月度明细"]),"ptable_monthly_diff")
+            "ptable_monthly_abs": format_table(pd.DataFrame(columns=["月度明细"]), "ptable_monthly_abs"),
+            "ptable_monthly_diff": format_table(pd.DataFrame(columns=["月度明细"]), "ptable_monthly_diff"),
         }
     return d
 
 
-def get_ptable_comm(df_sales, df_sales_comm, df_target_comm):  # 社区表现
+def get_ptable_comm(df_sales, df_sales_comm, df_target_comm, show_limit_results):  # 社区表现
     if df_sales.empty is False:
         mask_ytd = date_mask(df_sales, "ytd")[0]  # ytd时间段销售
         df_sales_ytd = df_sales.loc[mask_ytd, :].sum(axis=0)
@@ -221,6 +240,9 @@ def get_ptable_comm(df_sales, df_sales_comm, df_target_comm):  # 社区表现
             df_combined.fillna(
                 {"社区销售": 0, "社区销售贡献份额": 0, "社区同比净增长": 0, "社区销售贡献份额同比变化": 0, "自身社区占比": 0, "社区占比同比变化": 0}, inplace=True
             )
+
+            if show_limit_results == "true":
+                df_combined = df_combined.iloc[:200, :]
         else:
             df_combined = pd.DataFrame(columns=["社区表现"])
 
@@ -422,9 +444,7 @@ def sqlparse(context):
                 "DIMENSION_select",
                 "PERIOD_select",
                 "UNIT_select",
-                "lang",
-                "toggle_bubble_perf",
-                "toggle_treemap_share",
+                "toggle_limit_show",
                 "customized_sql",
             ]:
                 if k[-2:] == "[]":
@@ -545,7 +565,7 @@ def prepare_chart(
             return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
         elif chart_type == "scatter_sales_abs_diff":
             metrics = calculate_sales_metric(df_sales, df_target)
-            chart = echarts_scatter(metrics[['销售', '同比净增长']])
+            chart = echarts_scatter(metrics[["销售", "同比净增长"]])
 
             return json.loads(chart.dump_options())
         else:

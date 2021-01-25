@@ -70,9 +70,6 @@
     <h3 class="ui header">
         <div class="content">
             总体销售趋势
-            <div class="ui purple basic label">
-                MON月度
-            </div>
             <div class="sub header">柱状折线复合图</div>
         </div>
     </h3>
@@ -95,7 +92,7 @@
     <h3 class="ui header">
         <div class="content">
             指标汇总
-            <div class="ui red basic label">
+            <div class="ui red basic label" id="label_metrics">
                 YTD本年迄今
             </div>
             <div class="sub header">数据表格
@@ -247,42 +244,10 @@
     </div>
     <div class="content">
         <div class="ui form">
-            <div class="grouped fields" id="radio_lang">
-                <label for="lang">数据显示偏好</label>
-                <div class="field">
-                    <div class="ui radio checkbox">
-                        <input type="radio" name="lang" value="CN" checked="" tabindex="0" class="hidden">
-                        <label>中文</label>
-                    </div>
-                </div>
-                <div class="field">
-                    <div class="ui radio checkbox">
-                        <input type="radio" name="lang" value="EN" tabindex="0" class="hidden">
-                        <label>英文</label>
-                    </div>
-                </div>
-                <div class="field">
-                    <div class="ui radio checkbox">
-                        <input type="radio" name="lang" value="CE" tabindex="0" class="hidden">
-                        <label>中英文（原始）</label>
-                    </div>
-                </div>
-            </div>
-            <div class="ui hidden divider"></div>
-            <div class="ui hidden divider"></div>
-            <div class="grouped fields">
-                <label for="output">输出高级图表（可能大幅增加查询时长）</label>
-                <div class="field">
-                    <div class="ui toggle checkbox" id="toggle_treemap_share">
-                        <input type="checkbox" name="output">
-                        <label>份额矩形Treemap</label>
-                    </div>
-                </div>
-                <div class="field">
-                    <div class="ui toggle checkbox" id="toggle_bubble_performance">
-                        <input type="checkbox" name="output">
-                        <label>规模 versus 增长 气泡图</label>
-                    </div>
+            <div class="field">
+                <div class="ui toggle checkbox" id="toggle_limit_show">
+                    <input type="checkbox" name="output" checked>
+                    <label>只显示前200的结果</label>
                 </div>
             </div>
             <div class="ui hidden divider"></div>
