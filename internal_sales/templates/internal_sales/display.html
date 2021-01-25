@@ -152,7 +152,7 @@
 <div class="ui tab segment" data-tab="community">
     <h3 class="ui header">
         <div class="content">
-            社区销售表现
+            社区指标汇总
             <div class="ui red basic label">
                 YTD本年迄今
             </div>
@@ -168,6 +168,20 @@
     </div>
     <div class="ui hidden divider"></div>
     <div class="ui container" id='ptable_comm_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+
+    <h3 class="ui header">
+        <div class="content">
+            社区销量 versus 同比净增长
+            <div class="ui red basic label">
+                YTD本年迄今
+            </div>
+            <div class="sub header">散点图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="scatter_sales_comm_abs_diff" style="width:1000px; height:600px;"></div>
     </div>
 </div>
 <div class="ui tab segment" data-tab="trend_summary">

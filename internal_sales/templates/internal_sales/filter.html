@@ -118,6 +118,7 @@
         // Pyecharts图表初始化
         var bar_total_monthly_trend = initChart('bar_total_monthly_trend');
         var scatter_sales_abs_diff = initChart('scatter_sales_abs_diff');
+        var scatter_sales_comm_abs_diff = initChart('scatter_sales_comm_abs_diff');
         {#var pie_product = initChart('pie_product')#}
         {#var stackarea_abs_trend = initChart('stackarea_abs_trend');#}
         {#var stackarea_share_trend = initChart('stackarea_share_trend');#}
@@ -174,6 +175,7 @@
                 // 展示Pyecharts图表 - 总体定义市场趋势图 - 总体月度趋势图
                 updateChart(bar_total_monthly_trend, ret['bar_total_monthly_trend']);
                 updateChart(scatter_sales_abs_diff, ret['scatter_sales_abs_diff']);
+                updateChart(scatter_sales_comm_abs_diff, ret['scatter_sales_comm_abs_diff']);
                 {#updateChart(pie_product, ret['pie_product'])#}
 
             },

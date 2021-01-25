@@ -282,7 +282,7 @@ def echarts_line(df, datatype="ABS"):
             .set_global_opts(
                 # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
                 legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
-                toolbox_opts=opts.ToolboxOpts(is_show=True),
+                # toolbox_opts=opts.ToolboxOpts(is_show=True),
                 tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
                 xaxis_opts=opts.AxisOpts(
                     type_="category",
@@ -360,7 +360,7 @@ def echarts_stackbar(
             )
         stackbar.set_global_opts(
             legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
-            toolbox_opts=opts.ToolboxOpts(is_show=True),
+            # toolbox_opts=opts.ToolboxOpts(is_show=True),
             tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
             xaxis_opts=opts.AxisOpts(
                 type_="category",
@@ -418,7 +418,7 @@ def echarts_stackarea(df, datatype="ABS"):
             .set_global_opts(
                 # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
                 legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
-                toolbox_opts=opts.ToolboxOpts(is_show=True),
+                # toolbox_opts=opts.ToolboxOpts(is_show=True),
                 tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
                 xaxis_opts=opts.AxisOpts(
                     type_="category",
@@ -469,7 +469,7 @@ def echarts_stackarea100(df, datatype="ABS"):
             .set_global_opts(
                 # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
                 legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
-                toolbox_opts=opts.ToolboxOpts(is_show=True),
+                # toolbox_opts=opts.ToolboxOpts(is_show=True),
                 tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
                 xaxis_opts=opts.AxisOpts(
                     type_="category",
@@ -520,7 +520,9 @@ def pie_radius(df) -> Pie:
                 radius=["50%", "70%"],
                 label_opts=opts.LabelOpts(is_show=False, position="center"),
             )
-            .set_global_opts(legend_opts=opts.LegendOpts(is_show=False), toolbox_opts=opts.ToolboxOpts(is_show=True),)
+            .set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
+                             # toolbox_opts=opts.ToolboxOpts(is_show=True),
+                             )
             .set_series_opts(
                 tooltip_opts=opts.TooltipOpts(trigger="item", formatter="{a} <br/>{b}: {c} ({d}%)"),
                 label_opts=opts.LabelOpts(is_show=True, formatter="{b}: {d}%"),
@@ -534,6 +536,8 @@ def pie_radius(df) -> Pie:
 def echarts_scatter(df):
     # x = df.iloc[:, 0]
     # y = df.iloc[:, 1]
+    n = 100 / np.log(df.shape[0])
+
     if df.empty is False:
         scatter = Scatter(init_opts=opts.InitOpts())
         for index, row in df.iterrows():
@@ -541,7 +545,7 @@ def echarts_scatter(df):
             y = int(row[1])
             scatter.add_xaxis(xaxis_data=[x])
             scatter.add_yaxis(
-                series_name=index, y_axis=[y], symbol_size=10, label_opts=opts.LabelOpts(is_show=False),
+                series_name=index, y_axis=[y], symbol_size=n, label_opts=opts.LabelOpts(is_show=False),
             )
             scatter.set_series_opts()
         scatter.set_global_opts(
@@ -553,6 +557,7 @@ def echarts_scatter(df):
                 splitline_opts=opts.SplitLineOpts(is_show=True),
             ),
             tooltip_opts=opts.TooltipOpts(is_show=True, trigger="item", formatter="{a} <br/>{b}: {c}"),
+            # toolbox_opts=opts.ToolboxOpts(is_show=True),
             legend_opts=opts.LegendOpts(is_show=False),
         )
     else:

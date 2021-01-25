@@ -95,6 +95,7 @@ def query(request):
     # # Pyecharts交互图表
     bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
     scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
+    scatter_sales_comm_abs_diff = prepare_chart(df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict)
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
@@ -104,6 +105,7 @@ def query(request):
         "ptable_comm_monthly": ptable_comm_monthly,
         "bar_total_monthly_trend": bar_total_monthly_trend,
         "scatter_sales_abs_diff": scatter_sales_abs_diff,
+        "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
         # "pie_product": pie_product,
     }
 
@@ -245,7 +247,7 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
         if sales_total_tpo.empty is True:
             sales_tpo = 0
         else:
-            sales_tpo = sales_total_tpo.loc[date_mask(df_sales, v)[0]].sum()
+            sales_tpo = sales_total_tpo.loc[date_mask(df_sales_tpo, v)[0]].sum()
         # 按列求和为查询总指标的Series
         target_total = df_target.sum(axis=1)
         if target_total.empty is True:
