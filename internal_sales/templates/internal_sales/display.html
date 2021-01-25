@@ -19,7 +19,7 @@
     <a class="item" data-tab="comm_trend"><i class="signal icon"></i>社区月度明细</a>
 {#    <a class="item" data-tab="trend_summary"><i class="braille icon"></i>趋势表现汇总</a>#}
 {#    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>#}
-{#    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>#}
+    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
 {#    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>#}
 </div>
 <div class="ui tab segment active" data-tab="total">
@@ -114,40 +114,42 @@
     <div class="ui container" id='ptable_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
     </div>
 
-    <h3 class="ui header">
-        <div class="content">
-            销量 versus 同比净增长
-            <div class="ui red basic label">
-                YTD本年迄今
-            </div>
-            <div class="sub header">散点图</div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui container">
-        <div id="scatter_sales_abs_diff" style="width:1000px; height:600px;"></div>
-    </div>
+{#    <h3 class="ui header">#}
+{#        <div class="content">#}
+{#            销量 versus 同比净增长#}
+{#            <div class="ui red basic label">#}
+{#                YTD本年迄今#}
+{#            </div>#}
+{#            <div class="sub header">散点图</div>#}
+{#        </div>#}
+{#    </h3>#}
+{#    <div class="ui divider"></div>#}
+{#    <div class="ui container">#}
+{#        <div id="scatter_sales_abs_diff" style="width:1000px; height:600px;"></div>#}
+{#    </div>#}
 </div>
 <div class="ui tab segment" data-tab="trend">
-    <h3 class="ui header">
-        <div class="content">
-            月度销售明细
-            <div class="ui purple basic label">
-                MON月度
+    {% for k, v in monthly_metric_dict.items %}
+        <h3 class="ui header">
+            <div class="content">
+                {{ k }}明细
+                <div class="ui purple basic label">
+                    MON月度
+                </div>
+                <div class="sub header">数据表格</div>
             </div>
-            <div class="sub header">数据表格</div>
+        </h3>
+        <div class="ui divider"></div>
+        <div class="ui top attached button" tabindex="0"
+             onclick="selectElementContents( document.getElementById('ptable_{{ v }}') );"
+             data-content="复制成功" data-position="bottom center">
+            <i class="copy icon"></i>
+            复制到剪贴板
         </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('ptable_monthly') );"
-         data-content="复制成功" data-position="bottom center">
-        <i class="copy icon"></i>
-        复制到剪贴板
-    </div>
-    <div class="ui hidden divider"></div>
-    <div class="ui container" id='ptable_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
+        <div class="ui hidden divider"></div>
+        <div class="ui container" id="ptable_{{ v }}_div" style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+        </div>
+    {% endfor %}
 </div>
 <div class="ui tab segment" data-tab="community">
     <h3 class="ui header">
@@ -170,104 +172,45 @@
     <div class="ui container" id='ptable_comm_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
     </div>
 
-    <h3 class="ui header">
-        <div class="content">
-            社区销量 versus 同比净增长
-            <div class="ui red basic label">
-                YTD本年迄今
-            </div>
-            <div class="sub header">散点图</div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui container">
-        <div id="scatter_sales_comm_abs_diff" style="width:1000px; height:600px;"></div>
-    </div>
+{#    <h3 class="ui header">#}
+{#        <div class="content">#}
+{#            社区销量 versus 同比净增长#}
+{#            <div class="ui red basic label">#}
+{#                YTD本年迄今#}
+{#            </div>#}
+{#            <div class="sub header">散点图</div>#}
+{#        </div>#}
+{#    </h3>#}
+{#    <div class="ui divider"></div>#}
+{#    <div class="ui container">#}
+{#        <div id="scatter_sales_comm_abs_diff" style="width:1000px; height:600px;"></div>#}
+{#    </div>#}
 </div>
-<div class="ui tab segment" data-tab="trend_summary">
-    <h3 class="ui header">
-        <div class="content">
-            趋势汇总
-            <div class="sub header">数据表格</div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('ptable_trend') );"
-         data-content="复制成功" data-position="bottom center">
-        <i class="copy icon"></i>
-        复制到剪贴板
-    </div>
-    <div class="ui hidden divider"></div>
 
-    <div class="ui container" id='ptable_trend_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
-</div>
 <div class="ui tab segment" data-tab="comm_trend">
-    <h3 class="ui header">
-        <div class="content">
-            月度销售明细
-            <div class="ui purple basic label">
-                MON月度
+    {% for k, v in monthly_metric_dict.items %}
+        <h3 class="ui header">
+            <div class="content">
+                社区{{ k }}明细
+                <div class="ui purple basic label">
+                    MON月度
+                </div>
+                <div class="sub header">数据表格</div>
             </div>
-            <div class="sub header">数据表格</div>
+        </h3>
+        <div class="ui divider"></div>
+        <div class="ui top attached button" tabindex="0"
+             onclick="selectElementContents( document.getElementById('ptable_comm_{{ v }}') );"
+             data-content="复制成功" data-position="bottom center">
+            <i class="copy icon"></i>
+            复制到剪贴板
         </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('ptable_comm_monthly') );"
-         data-content="复制成功" data-position="bottom center">
-        <i class="copy icon"></i>
-        复制到剪贴板
-    </div>
-    <div class="ui hidden divider"></div>
-    <div class="ui container" id='ptable_comm_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
+        <div class="ui hidden divider"></div>
+        <div class="ui container" id="ptable_comm_{{ v }}_div" style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+        </div>
+    {% endfor %}
 </div>
-<div class="ui tab segment" data-tab="price">
-    <h3 class="ui header">
-        <div class="content">
-            价格趋势汇总
-            <div class="ui red basic label">
-                单价/最小制剂单位
-            </div>
-            <div class="sub header">数据表格</div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('price_table_cnt') );"
-         data-content="复制成功" data-position="bottom center">
-        <i class="copy icon"></i>
-        复制到剪贴板
-    </div>
-    <div class="ui hidden divider"></div>
 
-    <div class="ui container" id='price_table_cnt_div'
-         style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
-    <h3 class="ui header">
-        <div class="content">
-            价格趋势汇总
-            <div class="ui red basic label">
-                单价/盒
-            </div>
-            <div class="sub header">数据表格</div>
-        </div>
-    </h3>
-    <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('price_table_box') );"
-         data-content="复制成功" data-position="bottom center">
-        <i class="copy icon"></i>
-        复制到剪贴板
-    </div>
-    <div class="ui hidden divider"></div>
-
-    <div class="ui container" id='price_table_box_div'
-         style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
-</div>
 <div class="ui tab segment" data-tab="export">
     <div class="ui buttons">
         <input class="ui blue button" type='button' id='export_pivot' value="导出整理后时间序列数据"/>
@@ -403,14 +346,14 @@
     $("#export_pivot").click(function(){
         var form_data = getForm();
 
-        var downloadUrl = '{% url 'chpa:export' 'pivoted' %}'+ '?' + $.param(form_data, true);
+        var downloadUrl = '{% url 'internal_sales:export' 'pivoted' %}'+ '?' + $.param(form_data, true);
         window.location.href = downloadUrl;
     });
 
     $("#export_raw").click(function(){
         var form_data = getForm();
 
-        var downloadUrl = '{% url 'chpa:export' 'raw' %}'+ '?' + $.param(form_data, true);
+        var downloadUrl = '{% url 'internal_sales:export' 'raw' %}'+ '?' + $.param(form_data, true);
         window.location.href = downloadUrl;
     })
 </script>

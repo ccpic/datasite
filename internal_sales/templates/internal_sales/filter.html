@@ -117,8 +117,8 @@
 
         // Pyecharts图表初始化
         var bar_total_monthly_trend = initChart('bar_total_monthly_trend');
-        var scatter_sales_abs_diff = initChart('scatter_sales_abs_diff');
-        var scatter_sales_comm_abs_diff = initChart('scatter_sales_comm_abs_diff');
+        {#var scatter_sales_abs_diff = initChart('scatter_sales_abs_diff');#}
+        {#var scatter_sales_comm_abs_diff = initChart('scatter_sales_comm_abs_diff');#}
         {#var pie_product = initChart('pie_product')#}
         {#var stackarea_abs_trend = initChart('stackarea_abs_trend');#}
         {#var stackarea_share_trend = initChart('stackarea_share_trend');#}
@@ -165,17 +165,23 @@
                 // 展示ptable表格
                 $("#ptable_div").html(ret['ptable']);
                 initPTable($("#ptable"));
-                $("#ptable_monthly_div").html(ret['ptable_monthly']);
-                initPTableMonthly($("#ptable_monthly"));
                 $("#ptable_comm_div").html(ret['ptable_comm']);
                 initPTableComm($("#ptable_comm"));
-                $("#ptable_comm_monthly_div").html(ret['ptable_comm_monthly']);
-                initPTableMonthly($("#ptable_comm_monthly"));
+
+                var d = {{ monthly_metric_dict|safe }};
+                for (k in d) {
+                    $("#ptable_"+d[k]+"_div").html(ret['ptable_'+d[k]]);
+                    initPTableMonthly($("#ptable_"+d[k]));
+                    $("#ptable_comm_"+d[k]+"_div").html(ret['ptable_comm_'+d[k]]);
+                    initPTableMonthly($("#ptable_comm_"+d[k]));
+                }
+                {#$("#ptable_comm_monthly_div").html(ret['ptable_comm_monthly']);#}
+                {#initPTableMonthly($("#ptable_comm_monthly"));#}
 
                 // 展示Pyecharts图表 - 总体定义市场趋势图 - 总体月度趋势图
                 updateChart(bar_total_monthly_trend, ret['bar_total_monthly_trend']);
-                updateChart(scatter_sales_abs_diff, ret['scatter_sales_abs_diff']);
-                updateChart(scatter_sales_comm_abs_diff, ret['scatter_sales_comm_abs_diff']);
+                {#updateChart(scatter_sales_abs_diff, ret['scatter_sales_abs_diff']);#}
+                {#updateChart(scatter_sales_comm_abs_diff, ret['scatter_sales_comm_abs_diff']);#}
                 {#updateChart(pie_product, ret['pie_product'])#}
 
             },
@@ -235,8 +241,10 @@
 <script>
     function updateChart(chart, chart_options) {
         chart.clear();
-        chart.setOption(chart_options);
-        chart.hideLoading();
+        if (chart_options !== "null") {
+            chart.setOption(chart_options);
+            chart.hideLoading();
+        }
     }
 </script>
 
@@ -426,7 +434,7 @@
                         "mRender": function (data, type, full) {
                             return '<span class="spark"></span>'
                         }
-                    }
+                    },
                 ],
                 "drawCallback": (oSettings) => {
                     console.log('callback')
@@ -470,95 +478,13 @@
                             } else if (cell === data[2]) {
                                 $(this.node()).css('background-color', 'DarkGoldenRod')
                             }
+
+                            if (cell < 0 ){
+                                $(this.node()).css('color', 'red')
+                            }
                         });
                     });
                 }
-            }
-        );
-    }
-</script>
-<script>
-    function initPTableTrend(table) {
-        table.DataTable(
-            {
-                order: [[5, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
-                pageLength: 25, // 前端分页，初始每页显示25条记录
-                autoWidth: false, // 不自动调整表格宽度
-                oLanguage: { // UI Label本地化
-                    "sLengthMenu": "显示 _MENU_ 项结果",
-                    "sProcessing": "处理中...",
-                    "sZeroRecords": "没有匹配结果",
-                    "sInfo": "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
-                    "sInfoEmpty": "没有数据",
-                    "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
-                    "sInfoPostFix": "",
-                    "sSearch": "搜索:",
-                    "sUrl": "",
-                    "sEmptyTable": "未查询到数据",
-                    "sLoadingRecords": "载入中...",
-                    "sInfoThousands": ",",
-                    "oPaginate": {
-                        "sFirst": "首页",
-                        "sPrevious": "上页",
-                        "sNext": "下页",
-                        "sLast": "末页"
-                    },
-                },
-                columnDefs: [
-                    {
-                        targets: [6, 7, 8, 9, 10],
-                        render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') // 根据一定的色彩方案初始化条形图
-                    },
-                    {
-                        "targets": [11, 12, 13, 14, 15, 16, 17, 18, 19], // 指定第11-19列绝对值变化，份额获取，增长率，这些有可能出现负数
-                        "createdCell": function (td, cellData, rowData, row, col) {
-                            if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
-                                $(td).css('color', 'red')
-                            }
-                        }
-                    },
-                ]
-            }
-        );
-    }
-</script>
-<script>
-    function initPriceTable(table) {
-        table.DataTable(
-            {
-                order: [[1, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
-                pageLength: 25, // 前端分页，初始每页显示25条记录
-                autoWidth: false, // 不自动调整表格宽度
-                oLanguage: { // UI Label本地化
-                    "sLengthMenu": "显示 _MENU_ 项结果",
-                    "sProcessing": "处理中...",
-                    "sZeroRecords": "没有匹配结果",
-                    "sInfo": "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
-                    "sInfoEmpty": "没有数据",
-                    "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
-                    "sInfoPostFix": "",
-                    "sSearch": "搜索:",
-                    "sUrl": "",
-                    "sEmptyTable": "未查询到数据",
-                    "sLoadingRecords": "载入中...",
-                    "sInfoThousands": ",",
-                    "oPaginate": {
-                        "sFirst": "首页",
-                        "sPrevious": "上页",
-                        "sNext": "下页",
-                        "sLast": "末页"
-                    },
-                },
-                columnDefs: [
-                    {
-                        "targets": [6, 7, 8, 9, 10, 11], // 指定第6-11列绝对值变化，份额获取，增长率，这些有可能出现负数
-                        "createdCell": function (td, cellData, rowData, row, col) {
-                            if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
-                                $(td).css('color', 'red')
-                            }
-                        }
-                    },
-                ]
             }
         );
     }

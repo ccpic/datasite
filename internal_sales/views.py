@@ -9,6 +9,11 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
 
+try:
+    from io import BytesIO as IO  # for modern python
+except ImportError:
+    from io import StringIO as IO  # for legacy python
+
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "data"
 date = datetime.datetime(year=2020, month=12, day=1)
@@ -56,6 +61,12 @@ D_PERIOD = {
     "单月MON": "mon",
 }
 
+D_METRIC_MONTHLY = {
+    "月度销售": "monthly_abs",
+    "月度同比净增长": "monthly_diff",
+    # "同比增长率": "gr",
+    # "达成": "ach",
+}
 
 def index(request):
     mselect_dict = {}
@@ -64,7 +75,11 @@ def index(request):
         mselect_dict[key]["select"] = value
         mselect_dict[key]["options"] = get_distinct_list(value, DB_TABLE)
 
-    context = {"date": date, "mselect_dict": mselect_dict, "period_dict": D_PERIOD}
+    context = {"date": date,
+               "mselect_dict": mselect_dict,
+               "period_dict": D_PERIOD,
+               "monthly_metric_dict": D_METRIC_MONTHLY,
+               }
 
     return render(request, "internal_sales/display.html", context)
 
@@ -84,36 +99,71 @@ def query(request):
     # KPI字典
     kpi = get_kpi(df["销售"], df["带指标销售"], df["指标"])
 
-    # 月度表现趋势表格
+    # 综合表现指标汇总
     ptable = format_table(get_ptable(df_sales=df["销售"], df_target=df["指标"]), "ptable")
-    ptable_monthly = format_table(get_ptable_monthly(df_sales=df["销售"]), "ptable_monthly")
     ptable_comm = format_table(
         get_ptable_comm(df_sales=df["销售"], df_sales_comm=df["社区销售"], df_target_comm=df["社区指标"]), "ptable_comm"
     )
-    ptable_comm_monthly = format_table(get_ptable_monthly(df_sales=df["社区销售"]), "ptable_comm_monthly")
+
+    # 月度表现趋势表格
+    ptable_monthly = get_ptable_monthly(df_sales=df["销售"])
+    ptable_comm_monthly = {}
+    temp = get_ptable_monthly(df_sales=df["社区销售"])
+    for k, v in temp.items():
+        ptable_comm_monthly[k.replace("ptable_monthly", "ptable_comm_monthly")] = v.replace("ptable_monthly", "ptable_comm_monthly")
 
     # # Pyecharts交互图表
     bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
-    scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
-    scatter_sales_comm_abs_diff = prepare_chart(df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict)
+    # scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
+    # scatter_sales_comm_abs_diff = prepare_chart(df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict)
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
         "ptable": ptable,
-        "ptable_monthly": ptable_monthly,
         "ptable_comm": ptable_comm,
-        "ptable_comm_monthly": ptable_comm_monthly,
         "bar_total_monthly_trend": bar_total_monthly_trend,
-        "scatter_sales_abs_diff": scatter_sales_abs_diff,
-        "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
+        # "scatter_sales_abs_diff": scatter_sales_abs_diff,
+        # "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
         # "pie_product": pie_product,
     }
 
     context = dict(context, **kpi)
+    context = dict(context, **ptable_monthly)
+    context = dict(context, **ptable_comm_monthly)
 
     return HttpResponse(
         json.dumps(context, ensure_ascii=False), content_type="application/json charset=utf-8",
     )  # 返回结果必须是json格式
+
+
+def export(request, type):
+    form_dict = dict(six.iterlists(request.GET))
+
+    excel_file = IO()
+    xlwriter = pd.ExcelWriter(excel_file, engine="xlsxwriter")
+
+    if type == "pivoted":
+        df = get_df(form_dict)  # 透视后的数据
+        for key, value in df.items():
+            value.to_excel(xlwriter, sheet_name=key, index=True)
+    elif type == "raw":
+        df = get_df(form_dict, is_pivoted=False)  # 原始数
+        df.to_excel(xlwriter,sheet_name='data', index=False)
+
+    xlwriter.save()
+    xlwriter.close()
+
+    excel_file.seek(0)
+
+    # 设置浏览器mime类型
+    response = HttpResponse(
+        excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    # 设置文件名
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # 当前精确时间不会重复，适合用来命名默认导出文件
+    response["Content-Disposition"] = "attachment; filename=" + now + ".xlsx"
+    return response
 
 
 def get_ptable(df_sales, df_target):  # 指标汇总
@@ -128,13 +178,22 @@ def get_ptable(df_sales, df_target):  # 指标汇总
 def get_ptable_monthly(df_sales):  # 月度明细
     if df_sales.empty is False:
         mask = date_mask(df_sales, "ytd")[0]
-        df_sales = df_sales.loc[mask, :]
-        df_sales.index = df_sales.index.strftime("%Y-%m")
-        df_sales = df_sales.T
-        df_sales["趋势"] = None  # 表格最右侧预留Sparkline空列
+        df_sales_abs = df_sales.loc[mask, :].T
+        df_sales_abs.columns = df_sales_abs.columns.strftime("%Y-%m")
+        df_sales_abs["趋势"] = None  # 表格最右侧预留Sparkline空列
+        df_sales_diff = df_sales.diff(periods=12).loc[mask, :].T
+        df_sales_diff.columns = df_sales_diff.columns.strftime("%Y-%m")
+        df_sales_diff["趋势"] = None
+        d = {
+            "ptable_monthly_abs": format_table(df_sales_abs, "ptable_monthly_abs"),
+            "ptable_monthly_diff": format_table(df_sales_diff, "ptable_monthly_diff"),
+        }
     else:
-        df_sales = pd.DataFrame(columns=["月度明细"])
-    return df_sales
+        d = {
+            "ptable_monthly_abs": format_table(pd.DataFrame(columns=["月度明细"]),"ptable_monthly_abs"),
+            "ptable_monthly_diff": format_table(pd.DataFrame(columns=["月度明细"]),"ptable_monthly_diff")
+        }
+    return d
 
 
 def get_ptable_comm(df_sales, df_sales_comm, df_target_comm):  # 社区表现
@@ -275,8 +334,6 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
                 "ach_%s" % v: ach,
             }
         )
-
-    print(kpi)
 
     return kpi
 
@@ -488,7 +545,6 @@ def prepare_chart(
             return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
         elif chart_type == "scatter_sales_abs_diff":
             metrics = calculate_sales_metric(df_sales, df_target)
-            print(metrics)
             chart = echarts_scatter(metrics[['销售', '同比净增长']])
 
             return json.loads(chart.dump_options())
