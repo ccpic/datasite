@@ -111,7 +111,8 @@
     $("#AJAX_get").click(function (event) {
         event.preventDefault(); // 防止表单默认的提交
         var dimmer_dummy = $("#dimmer_dummy"); // 使用一个透明dummy dimmer保证loading文字一直显示在viewport中央
-        $(".ui.dimmer").attr('class', 'ui active dimmer'); // 非透明的dimmer依旧负责遮罩功能，点击筛选按钮后dimmer变成active
+        $("#dimmer").attr('class', 'ui active dimmer');
+        dimmer_dummy.attr('class', 'ui active dimmer'); // 非透明的dimmer依旧负责遮罩功能，点击筛选按钮后dimmer变成active
         dimmer_dummy.children('div').remove(); // 删除初始化文字
         dimmer_dummy.append('<div class="ui text loader">数据加载中……</div>'); // 增加loading效果和文字
 
@@ -137,7 +138,8 @@
             // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
             success: function (ret) {     //成功执行
                 // 去除加载遮罩（去掉active）
-                $(".ui.dimmer").attr('class', 'ui dimmer');
+                dimmer_dummy.attr('class', 'ui dimmer');
+                $("#dimmer").attr('class', 'ui dimmer');
 
                 // 展示kpi
                 var d = {{ period_dict|safe }};
@@ -168,8 +170,8 @@
                 $("#ptable_comm_div").html(ret['ptable_comm']);
                 initPTableComm($("#ptable_comm"));
 
+                $(".ui.orange.basic.label").remove();
                 if (ret['show_limit_results'] === "true"){
-                    $(".ui.orange.basic.label").remove();
                     $(".ui.basic.label").after('<div class="ui orange basic label">Top200</div>');
                 }
 
