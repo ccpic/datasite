@@ -536,7 +536,8 @@ def pie_radius(df) -> Pie:
 def echarts_scatter(df):
     # x = df.iloc[:, 0]
     # y = df.iloc[:, 1]
-    n = 100 / np.log(df.shape[0])
+    # n = 100 / np.log(df.shape[0])  # 动态散点大小
+    n = 10  # 静态散点大小
 
     if df.empty is False:
         scatter = Scatter(init_opts=opts.InitOpts())

@@ -105,10 +105,15 @@ def query(request):
     show_limit_results = form_dict["toggle_limit_show"][0]
 
     # 综合表现指标汇总
-    ptable = format_table(get_ptable(df_sales=df["销售"], df_target=df["指标"], show_limit_results=show_limit_results), "ptable")
+    ptable = format_table(
+        get_ptable(df_sales=df["销售"], df_target=df["指标"], show_limit_results=show_limit_results), "ptable"
+    )
     ptable_comm = format_table(
         get_ptable_comm(
-            df_sales=df["销售"], df_sales_comm=df["社区销售"], df_target_comm=df["社区指标"], show_limit_results=show_limit_results
+            df_sales=df["销售"],
+            df_sales_comm=df["社区销售"],
+            df_target_comm=df["社区指标"],
+            show_limit_results=show_limit_results,
         ),
         "ptable_comm",
     )
@@ -122,19 +127,26 @@ def query(request):
             "ptable_monthly", "ptable_comm_monthly"
         )
 
+    # 月度社区销售占比趋势
+    ptable_comm_ratio_monthly = format_table(
+        get_comm_ratio_monthly(df_sales=df["销售"], df_comm_sales=df["社区销售"], show_limit_results=show_limit_results),
+        "ptable_comm_ratio_monthly",
+    )
+
     # Pyecharts交互图表
     bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
-    # scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
-    # scatter_sales_comm_abs_diff = prepare_chart(df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict)
+    scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
+    scatter_sales_comm_abs_diff = prepare_chart(df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict)
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
         "show_limit_results": show_limit_results,
         "ptable": ptable,
         "ptable_comm": ptable_comm,
+        "ptable_comm_ratio_monthly": ptable_comm_ratio_monthly,
         "bar_total_monthly_trend": bar_total_monthly_trend,
-        # "scatter_sales_abs_diff": scatter_sales_abs_diff,
-        # "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
+        "scatter_sales_abs_diff": scatter_sales_abs_diff,
+        "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
         # "pie_product": pie_product,
     }
 
@@ -187,6 +199,29 @@ def get_ptable(df_sales, df_target, show_limit_results):  # 指标汇总
         df_combined = df_combined.iloc[:200, :]
 
     return df_combined
+
+
+def get_comm_ratio_monthly(df_sales, df_comm_sales, show_limit_results):  # 月度社区占比
+    if df_sales.empty is False:
+        if df_comm_sales.empty is False:
+            mask_sales = date_mask(df_sales, "ytd")[0]
+            mask_comm_sales = date_mask(df_comm_sales, "ytd")[0]
+            df = df_comm_sales.loc[mask_comm_sales, :] / df_sales.loc[mask_sales, :]
+            df.dropna(how="all", axis=1, inplace=True)
+            df.fillna(0, inplace=True)
+            df = df.T
+            df.columns = df.columns.strftime("%Y-%m")
+            df.sort_values(by=df.columns.tolist()[-1], ascending=False, inplace=True)
+
+            if show_limit_results == "true":
+                df = df.iloc[:200, :]
+
+            df["趋势"] = None  # 表格最右侧预留Sparkline空列
+        else:
+            df = pd.DataFrame(columns=["月度社区占比"])
+    else:
+        df = pd.DataFrame(columns=["月度社区占比"])
+    return df
 
 
 def get_ptable_monthly(df_sales, show_limit_results):  # 月度明细
@@ -264,6 +299,13 @@ def calculate_sales_metric(df_sales, df_target):
     df_sales_diff_ytd = df_sales_ytd - df_sales_ytdya  # ytd净增长
     df_sales_share_diff_ytd = df_sales_share_ytd - df_sales_share_ytdya  # ytd份额变化
     df_sales_gr_ytd = df_sales_ytd / df_sales_ytdya - 1  # ytd增长率
+
+    # mask_qtr = date_mask(df_sales, "qtr")[0]
+    # mask_qtrqa = date_mask(df_sales, "qtr")[1]
+    #
+    # df_sales_qtr = df_sales.loc[mask_qtr, :].mean(axis=0)  # 当季平均
+    # df_sales_qtrqa = df_sales.loc[mask_qtrqa, :].mean(axis=0)  # 上季平均
+    # df_sales_gr_qa = df_sales_qtr / df_sales_qtrqa - 1  # 季平均环比
 
     mask_mqt = date_mask(df_sales, "mqt")[0]
     mask_mqtqa = (df_sales.index >= date + relativedelta(months=-5)) & (
@@ -360,10 +402,12 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
     return kpi
 
 
-def format_table(table, id):
-    table_formatted = table.to_html(
+def format_table(df, id):
+    formatters = build_formatters_by_col(df=df, table_id=id)
+
+    table_formatted = df.to_html(
         escape=False,
-        formatters=build_formatters_by_col(table),  # 逐列调整表格内数字格式
+        formatters=formatters,  # 逐列调整表格内数字格式
         classes="ui selectable celled table",  # 指定表格css class为Semantic UI主题
         table_id=id,  # 指定表格id
     )
@@ -380,10 +424,14 @@ def date_mask(df, period):
     elif period == "mon":
         mask = df.index == date
         mask_ya = df.index == date_ya
-
-    # if comm_only is True:
-    #     mask = mask & (df['客户分级'].isin(['旗舰社区', '普通社区']))
-    #     mask_ya = mask_ya & (df['客户分级'].isin(['旗舰社区', '普通社区']))
+    elif period == "qtr":  # 返回当季和环比季度的mask，当季可能不是一个完整季，环比季度是一个完整季
+        month = date.month
+        first_month_in_qtr = (month - 1) // 3 * 3 + 1  # 找到本季度的第一个月
+        date_first_month_in_qtr = date.replace(month=first_month_in_qtr)
+        date_first_month_in_qtrqa = date_first_month_in_qtr + relativedelta(months=-3)
+        date_last_month_in_qtrqa = date_first_month_in_qtr + relativedelta(months=-1)
+        mask = (df.index >= date_first_month_in_qtr) & (df.index <= date)
+        mask_ya = (df.index >= date_first_month_in_qtrqa) & (df.index <= date_last_month_in_qtrqa)
 
     return mask, mask_ya
 
@@ -501,23 +549,28 @@ def search(request, column, kw):
     )  # 返回结果必须是json格式
 
 
-def build_formatters_by_col(df):
+def build_formatters_by_col(df, table_id):
     format_abs = lambda x: "{:,.0f}".format(x)
     format_share = lambda x: "{:.1%}".format(x)
     format_gr = lambda x: "{:+.1%}".format(x)
     format_currency = lambda x: "¥{:,.1f}".format(x)
+
     d = {}
-    for column in df.columns:
-        if "同比增长" in str(column) or "增长率" in str(column) or "CAGR" in str(column) or "同比变化" in str(column):
-            d[column] = format_gr
-        elif "份额" in str(column) or "贡献" in str(column) or "达成" in str(column) or "占比" in str(column):
+    if table_id == "ptable_comm_ratio_monthly":
+        for column in df.columns:
             d[column] = format_share
-        elif "价格" in str(column) or "单价" in str(column):
-            d[column] = format_currency
-        elif "趋势" in str(column):
-            d[column] = None
-        else:
-            d[column] = format_abs
+    else:
+        for column in df.columns:
+            if "同比增长" in str(column) or "增长率" in str(column) or "CAGR" in str(column) or "同比变化" in str(column):
+                d[column] = format_gr
+            elif "份额" in str(column) or "贡献" in str(column) or "达成" in str(column) or "占比" in str(column):
+                d[column] = format_share
+            elif "价格" in str(column) or "单价" in str(column):
+                d[column] = format_currency
+            elif "趋势" in str(column):
+                d[column] = None
+            else:
+                d[column] = format_abs
 
     return d
 
@@ -528,7 +581,8 @@ def prepare_chart(
     chart_type,  # 图表类型字符串，人为设置，根据图表类型不同做不同的Pandas数据处理，及生成不同的Pyechart对象
     form_dict,  # 前端表单字典，用来获得一些变量作为图表的标签如单位
 ):
-    SERIES_LIMIT = 10
+    SERIES_LIMIT = 10  # 折线图等系列限制
+    show_limit_results = form_dict["toggle_limit_show"][0]  # 散点图等是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     # label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
     if df_sales.empty is False:
         if chart_type == "bar_total_monthly_trend":
@@ -565,6 +619,10 @@ def prepare_chart(
             return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
         elif chart_type == "scatter_sales_abs_diff":
             metrics = calculate_sales_metric(df_sales, df_target)
+
+            if show_limit_results == "true":
+                metrics = metrics.iloc[:200, :]
+
             chart = echarts_scatter(metrics[["销售", "同比净增长"]])
 
             return json.loads(chart.dump_options())

@@ -118,8 +118,8 @@
 
         // Pyecharts图表初始化
         var bar_total_monthly_trend = initChart('bar_total_monthly_trend');
-        {#var scatter_sales_abs_diff = initChart('scatter_sales_abs_diff');#}
-        {#var scatter_sales_comm_abs_diff = initChart('scatter_sales_comm_abs_diff');#}
+        var scatter_sales_abs_diff = initChart('scatter_sales_abs_diff');
+        var scatter_sales_comm_abs_diff = initChart('scatter_sales_comm_abs_diff');
         {#var pie_product = initChart('pie_product')#}
         {#var stackarea_abs_trend = initChart('stackarea_abs_trend');#}
         {#var stackarea_share_trend = initChart('stackarea_share_trend');#}
@@ -140,6 +140,11 @@
                 // 去除加载遮罩（去掉active）
                 dimmer_dummy.attr('class', 'ui dimmer');
                 $("#dimmer").attr('class', 'ui dimmer');
+
+                $(".ui.orange.basic.label").remove();
+                if (ret['show_limit_results'] === "true"){
+                    $(".ui.basic.label").after('<div class="ui orange basic label">Top200</div>');
+                }
 
                 // 展示kpi
                 var d = {{ period_dict|safe }};
@@ -170,12 +175,6 @@
                 $("#ptable_comm_div").html(ret['ptable_comm']);
                 initPTableComm($("#ptable_comm"));
 
-                $(".ui.orange.basic.label").remove();
-                if (ret['show_limit_results'] === "true"){
-                    $(".ui.basic.label").after('<div class="ui orange basic label">Top200</div>');
-                }
-
-
                 var d = {{ monthly_metric_dict|safe }};
                 for (k in d) {
                     $("#ptable_"+d[k]+"_div").html(ret['ptable_'+d[k]]);
@@ -183,13 +182,18 @@
                     $("#ptable_comm_"+d[k]+"_div").html(ret['ptable_comm_'+d[k]]);
                     initPTableMonthly($("#ptable_comm_"+d[k]));
                 }
+
+                // 社区月度占比趋势
+                $("#ptable_comm_ratio_monthly_div").html(ret["ptable_comm_ratio_monthly"]);
+                initPTableMonthly($("#ptable_comm_ratio_monthly"));
+
                 {#$("#ptable_comm_monthly_div").html(ret['ptable_comm_monthly']);#}
                 {#initPTableMonthly($("#ptable_comm_monthly"));#}
 
                 // 展示Pyecharts图表 - 总体定义市场趋势图 - 总体月度趋势图
                 updateChart(bar_total_monthly_trend, ret['bar_total_monthly_trend']);
-                {#updateChart(scatter_sales_abs_diff, ret['scatter_sales_abs_diff']);#}
-                {#updateChart(scatter_sales_comm_abs_diff, ret['scatter_sales_comm_abs_diff']);#}
+                updateChart(scatter_sales_abs_diff, ret['scatter_sales_abs_diff']);
+                updateChart(scatter_sales_comm_abs_diff, ret['scatter_sales_comm_abs_diff']);
                 {#updateChart(pie_product, ret['pie_product'])#}
 
             },
