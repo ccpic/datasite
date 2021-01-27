@@ -63,21 +63,21 @@ class RD(models.Model):
         return self.name
 
 
-class RM_NAME(models.Model):
+class RM_POS_NAME(models.Model):
     name = models.CharField(max_length=20)
 
     def __str__(self):
         return self.name
 
 
-class DSM_NAME(models.Model):
+class DSM_POS_NAME(models.Model):
     name = models.CharField(max_length=20)
 
     def __str__(self):
         return self.name
 
 
-class RSP_NAME(models.Model):
+class RSP_POS_NAME(models.Model):
     name = models.CharField(max_length=20)
 
     def __str__(self):

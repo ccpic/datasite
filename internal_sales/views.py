@@ -32,9 +32,9 @@ D_MODEL = {
     "PRODUCT": Product,
     "BU": BU,
     "RD": RD,
-    "RM": RM_NAME,
-    "DSM": DSM_NAME,
-    "RSP": RSP_NAME,
+    "RM": RM_POS_NAME,
+    "DSM": DSM_POS_NAME,
+    "RSP": RSP_POS_NAME,
 }
 
 
@@ -48,9 +48,9 @@ D_MULTI_SELECT = {
     "医院": "HOSPITAL",
     "南北中国": "BU",
     "区域": "RD",
-    "大区经理": "RM_NAME",
-    "地区经理": "DSM_NAME",
-    "代表": "RSP_NAME",
+    "大区经理": "RM_POS_NAME",
+    "地区经理": "DSM_POS_NAME",
+    "代表": "RSP_POS_NAME",
 }
 
 

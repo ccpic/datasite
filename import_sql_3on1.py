@@ -73,7 +73,9 @@ df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
 
 df['HOSPITAL'] = df['HP_ID'] + " " + df['HP_NAME']
 df['STORE'] = df['STORE_ID'] + " " + df['STORE_NAME']
-
+df['RM_POS_NAME'] = df['RM'] + " " + df['RM_NAME']
+df['DSM_POS_NAME'] = df['DSM'] + " " + df['DSM_NAME']
+df['RSP_POS_NAME'] = df['RSP'] + " " + df['RSP_NAME']
 print(df)
 
 print("start importing...")
@@ -108,8 +110,11 @@ df.to_sql(
         "BU": t.NVARCHAR(length=10),
         "RD": t.NVARCHAR(length=10),
         "RM": t.NVARCHAR(length=20),
+        "RM_POS_NAME": t.NVARCHAR(length=40),
         "DSM": t.NVARCHAR(length=20),
+        "DSM_POS_NAME": t.NVARCHAR(length=40),
         "RSP": t.NVARCHAR(length=20),
+        "RSP_POS_NAME": t.NVARCHAR(length=40),
         "PRODUCT_GROUP_RM": t.NVARCHAR(length=10),
         "PRODUCT_GROUP_DSM": t.NVARCHAR(length=10),
         "PRODUCT_GROUP_RSP": t.NVARCHAR(length=10),
