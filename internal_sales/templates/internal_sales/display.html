@@ -16,9 +16,9 @@
     <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
     <a class="item" data-tab="metrics"><i class="trophy icon"></i>指标汇总</a>
     <a class="item" data-tab="trend"><i class="signal icon"></i>月度明细</a>
+    <a class="item" data-tab="productivity"><i class="bolt icon"></i>生产力分析</a>
     <a class="item" data-tab="community"><i class="viadeo icon"></i>社区指标汇总</a>
     <a class="item" data-tab="comm_trend"><i class="signal icon"></i>社区月度明细</a>
-{#    <a class="item" data-tab="trend_summary"><i class="braille icon"></i>趋势表现汇总</a>#}
 {#    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>#}
     <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
 {#    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>#}
@@ -148,6 +148,27 @@
         <div class="ui container" id="ptable_{{ v }}_div" style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
         </div>
     {% endfor %}
+</div>
+<div class="ui tab segment" data-tab="productivity">
+    <h3 class="ui header">
+        <div class="content">
+            开户医院单产趋势
+            <div class="ui purple basic label">
+                MON月度
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable_productivity_monthly') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='ptable_productivity_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
 </div>
 <div class="ui tab segment" data-tab="community">
     <h3 class="ui header">

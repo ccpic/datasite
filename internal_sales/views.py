@@ -133,6 +133,13 @@ def query(request):
         "ptable_comm_ratio_monthly",
     )
 
+    # 生产力趋势
+    ptable_productivity_monthly = format_table(
+        get_productivity(df_sales=df["销售"], df_hp_count=df["开户医院数"], show_limit_results=show_limit_results),
+        "ptable_productivity_monthly",
+    )
+
+
     # Pyecharts交互图表
     bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
     scatter_sales_abs_diff = prepare_chart(df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict)
@@ -144,6 +151,7 @@ def query(request):
         "ptable": ptable,
         "ptable_comm": ptable_comm,
         "ptable_comm_ratio_monthly": ptable_comm_ratio_monthly,
+        "ptable_productivity_monthly": ptable_productivity_monthly,
         "bar_total_monthly_trend": bar_total_monthly_trend,
         "scatter_sales_abs_diff": scatter_sales_abs_diff,
         "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
@@ -189,7 +197,7 @@ def export(request, type):
     return response
 
 
-def get_ptable(df_sales, df_target, show_limit_results):  # 指标汇总
+def get_ptable(df_sales, df_target, show_limit_results):  # 销售指标汇总
     if df_sales.empty is False:
         df_combined = calculate_sales_metric(df_sales, df_target)
     else:
@@ -199,6 +207,29 @@ def get_ptable(df_sales, df_target, show_limit_results):  # 指标汇总
         df_combined = df_combined.iloc[:200, :]
 
     return df_combined
+
+
+def get_productivity(df_sales, df_hp_count, show_limit_results):  # 生产力指标汇总
+    if df_sales.empty is False:
+        if df_sales.empty is False:
+            mask_sales = date_mask(df_sales, "ytd")[0]
+            mask_hp_count = date_mask(df_hp_count, "ytd")[0]
+            df = df_sales.loc[mask_sales, :] / df_hp_count.loc[mask_hp_count, :]
+            df.dropna(how="all", axis=1, inplace=True)
+            df.fillna(0, inplace=True)
+            df = df.T
+            df.columns = df.columns.strftime("%Y-%m")
+            df.sort_values(by=df.columns.tolist()[-1], ascending=False, inplace=True)
+
+            if show_limit_results == "true":
+                df = df.iloc[:200, :]
+
+            df["趋势"] = None  # 表格最右侧预留Sparkline空列
+        else:
+            df = pd.DataFrame(columns=["生产力分析"])
+    else:
+        df = pd.DataFrame(columns=["生产力分析"])
+    return df
 
 
 def get_comm_ratio_monthly(df_sales, df_comm_sales, show_limit_results):  # 月度社区占比
@@ -275,6 +306,7 @@ def get_ptable_comm(df_sales, df_sales_comm, df_target_comm, show_limit_results)
             df_combined.fillna(
                 {"社区销售": 0, "社区销售贡献份额": 0, "社区同比净增长": 0, "社区销售贡献份额同比变化": 0, "自身社区占比": 0, "社区占比同比变化": 0}, inplace=True
             )
+            df_combined.sort_values(by="社区销售", axis=0, ascending=False, inplace=True)
 
             if show_limit_results == "true":
                 df_combined = df_combined.iloc[:200, :]
@@ -341,6 +373,7 @@ def calculate_sales_metric(df_sales, df_target):
 
     df_combined.columns = ["销售", "销售贡献份额", "同比净增长", "销售贡献份额同比变化", "同比增长率", "滚动季环比增长率", "指标", "同期达成"]
     df_combined.fillna({"销售": 0, "销售贡献份额": 0, "同比净增长": 0, "销售贡献份额同比变化": 0}, inplace=True)
+    df_combined.sort_values(by="销售", axis=0, ascending=False, inplace=True)
 
     return df_combined
 
@@ -450,13 +483,14 @@ def get_df(form_dict, is_pivoted=True):
             "带指标销售": pivot(df=df[(df.TAG != "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))], form_dict=form_dict),
             "指标": pivot(df=df[(df.TAG == "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))], form_dict=form_dict),
             "社区指标": pivot(df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))], form_dict=form_dict),
+            "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
         }
 
     else:
         return df
 
 
-def pivot(df, form_dict):
+def pivot(df, form_dict, type="sales"):
     dimension_selected = form_dict["DIMENSION_select"][0]  # 分析维度
     unit_selected = form_dict["UNIT_select"][0]  # 单位（盒数、标准盒数、金额）
     if dimension_selected[0] == "[":
@@ -464,13 +498,23 @@ def pivot(df, form_dict):
     else:
         column = dimension_selected
 
-    pivoted = pd.pivot_table(
-        df,
-        values=unit_selected,  # 数据透视汇总值为AMOUNT字段，一般保持不变
-        index="DATE",  # 数据透视行为DATE字段，一般保持不变
-        columns=column,  # 数据透视列为前端选择的分析维度
-        aggfunc=np.sum,
-    )  # 数据透视汇总方式为求和，一般保持不变
+    if type == "sales":
+        pivoted = pd.pivot_table(
+            df,
+            values=unit_selected,  # 数据透视汇总值为AMOUNT字段，一般保持不变
+            index="DATE",  # 数据透视行为DATE字段，一般保持不变
+            columns=column,  # 数据透视列为前端选择的分析维度
+            aggfunc=np.sum,
+        )  # 数据透视汇总方式为求和，一般保持不变
+    elif type == "count_hp":
+        pivoted = pd.pivot_table(
+            df,
+            values="HOSPITAL",  # 数据透视汇总值为HOSPITAL字段
+            index="DATE",  # 数据透视行为DATE字段，一般保持不变
+            columns=column,  # 数据透视列为前端选择的分析维度
+            aggfunc=pd.Series.nunique,
+        )  # 数据透视汇总方式为计数
+
     if pivoted.empty is False:
         pivoted.sort_values(by=pivoted.index[-1], axis=1, ascending=False, inplace=True)  # 结果按照最后一个DATE表现排序
         pivoted.fillna(0, inplace=True)
