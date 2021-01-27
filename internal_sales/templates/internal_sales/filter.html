@@ -188,8 +188,12 @@
                 initPTableMonthly($("#ptable_comm_ratio_monthly"));
 
                 // 开户医院单产趋势
-                $("#ptable_productivity_monthly_div").html(ret["ptable_productivity_monthly"]);
-                initPTableMonthly($("#ptable_productivity_monthly"));
+                $("#ptable_hppdt_monthly_div").html(ret["ptable_hppdt_monthly"]);
+                initPTableMonthly($("#ptable_hppdt_monthly"));
+
+                // 代表单产趋势
+                $("#ptable_rsppdt_monthly_div").html(ret["ptable_rsppdt_monthly"]);
+                initPTableMonthly($("#ptable_rsppdt_monthly"));
 
                 // 展示Pyecharts图表 - 总体定义市场趋势图 - 总体月度趋势图
                 updateChart(bar_total_monthly_trend, ret['bar_total_monthly_trend']);

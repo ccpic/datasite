@@ -129,16 +129,21 @@ def query(request):
 
     # 月度社区销售占比趋势
     ptable_comm_ratio_monthly = format_table(
-        get_comm_ratio_monthly(df_sales=df["销售"], df_comm_sales=df["社区销售"], show_limit_results=show_limit_results),
+        get_ratio_monthly(df1=df["社区销售"], df2=df["销售"], table_name="社区销售占比趋势", show_limit_results=show_limit_results),
         "ptable_comm_ratio_monthly",
     )
 
-    # 生产力趋势
-    ptable_productivity_monthly = format_table(
-        get_productivity(df_sales=df["销售"], df_hp_count=df["开户医院数"], show_limit_results=show_limit_results),
-        "ptable_productivity_monthly",
+    # 开户医院单产趋势
+    ptable_hppdt_monthly = format_table(
+        get_ratio_monthly(df1=df["销售"], df2=df["开户医院数"], table_name="开户医院单产趋势", show_limit_results=show_limit_results),
+        "ptable_hppdt_monthly",
     )
 
+    # 代表单产趋势
+    ptable_rsppdt_monthly = format_table(
+        get_ratio_monthly(df1=df["销售"], df2=df["代表数"], table_name="代表单产趋势", show_limit_results=show_limit_results),
+        "ptable_rsppdt_monthly",
+    )
 
     # Pyecharts交互图表
     bar_total_monthly_trend = prepare_chart(df["销售"], df["指标"], "bar_total_monthly_trend", form_dict)
@@ -151,7 +156,8 @@ def query(request):
         "ptable": ptable,
         "ptable_comm": ptable_comm,
         "ptable_comm_ratio_monthly": ptable_comm_ratio_monthly,
-        "ptable_productivity_monthly": ptable_productivity_monthly,
+        "ptable_hppdt_monthly": ptable_hppdt_monthly,
+        "ptable_rsppdt_monthly": ptable_rsppdt_monthly,
         "bar_total_monthly_trend": bar_total_monthly_trend,
         "scatter_sales_abs_diff": scatter_sales_abs_diff,
         "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
@@ -209,12 +215,12 @@ def get_ptable(df_sales, df_target, show_limit_results):  # 销售指标汇总
     return df_combined
 
 
-def get_productivity(df_sales, df_hp_count, show_limit_results):  # 生产力指标汇总
-    if df_sales.empty is False:
-        if df_sales.empty is False:
-            mask_sales = date_mask(df_sales, "ytd")[0]
-            mask_hp_count = date_mask(df_hp_count, "ytd")[0]
-            df = df_sales.loc[mask_sales, :] / df_hp_count.loc[mask_hp_count, :]
+def get_ratio_monthly(df1, df2, table_name, show_limit_results): # 用以计算医院单产，代表单产，社区占比等ratio指标
+    if df1.empty is False:
+        if df2.empty is False:
+            mask1 = date_mask(df1, "ytd")[0]
+            mask2 = date_mask(df2, "ytd")[0]
+            df = df1.loc[mask1, :] / df2.loc[mask2, :]
             df.dropna(how="all", axis=1, inplace=True)
             df.fillna(0, inplace=True)
             df = df.T
@@ -226,32 +232,9 @@ def get_productivity(df_sales, df_hp_count, show_limit_results):  # 生产力指
 
             df["趋势"] = None  # 表格最右侧预留Sparkline空列
         else:
-            df = pd.DataFrame(columns=["生产力分析"])
+            df = pd.DataFrame(columns=[table_name])
     else:
-        df = pd.DataFrame(columns=["生产力分析"])
-    return df
-
-
-def get_comm_ratio_monthly(df_sales, df_comm_sales, show_limit_results):  # 月度社区占比
-    if df_sales.empty is False:
-        if df_comm_sales.empty is False:
-            mask_sales = date_mask(df_sales, "ytd")[0]
-            mask_comm_sales = date_mask(df_comm_sales, "ytd")[0]
-            df = df_comm_sales.loc[mask_comm_sales, :] / df_sales.loc[mask_sales, :]
-            df.dropna(how="all", axis=1, inplace=True)
-            df.fillna(0, inplace=True)
-            df = df.T
-            df.columns = df.columns.strftime("%Y-%m")
-            df.sort_values(by=df.columns.tolist()[-1], ascending=False, inplace=True)
-
-            if show_limit_results == "true":
-                df = df.iloc[:200, :]
-
-            df["趋势"] = None  # 表格最右侧预留Sparkline空列
-        else:
-            df = pd.DataFrame(columns=["月度社区占比"])
-    else:
-        df = pd.DataFrame(columns=["月度社区占比"])
+        df = pd.DataFrame(columns=[table_name])
     return df
 
 
@@ -484,6 +467,7 @@ def get_df(form_dict, is_pivoted=True):
             "指标": pivot(df=df[(df.TAG == "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))], form_dict=form_dict),
             "社区指标": pivot(df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))], form_dict=form_dict),
             "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
+            "代表数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_rsp"),
         }
 
     else:
@@ -509,7 +493,15 @@ def pivot(df, form_dict, type="sales"):
     elif type == "count_hp":
         pivoted = pd.pivot_table(
             df,
-            values="HOSPITAL",  # 数据透视汇总值为HOSPITAL字段
+            values="HP_ID",  # 数据透视汇总值为HOSPITAL字段
+            index="DATE",  # 数据透视行为DATE字段，一般保持不变
+            columns=column,  # 数据透视列为前端选择的分析维度
+            aggfunc=pd.Series.nunique,
+        )  # 数据透视汇总方式为计数
+    elif type == "count_rsp":
+        pivoted = pd.pivot_table(
+            df,
+            values="RSP_ID",  # 数据透视汇总值为RSP字段
             index="DATE",  # 数据透视行为DATE字段，一般保持不变
             columns=column,  # 数据透视列为前端选择的分析维度
             aggfunc=pd.Series.nunique,
