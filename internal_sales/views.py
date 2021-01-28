@@ -1,4 +1,5 @@
 from django.shortcuts import render, HttpResponse
+from django.contrib.auth.decorators import login_required
 from sqlalchemy import create_engine
 import pandas as pd
 import json
@@ -68,7 +69,7 @@ D_METRIC_MONTHLY = {
     # "达成": "ach",
 }
 
-
+@login_required
 def index(request):
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
@@ -93,7 +94,7 @@ def get_distinct_list(column, db_table):
     l = df.values.flatten().tolist()
     return l
 
-
+@login_required
 def query(request):
     form_dict = dict(six.iterlists(request.GET))
     df = get_df(form_dict)
@@ -172,7 +173,7 @@ def query(request):
         json.dumps(context, ensure_ascii=False), content_type="application/json charset=utf-8",
     )  # 返回结果必须是json格式
 
-
+@login_required
 def export(request, type):
     form_dict = dict(six.iterlists(request.GET))
 
@@ -552,7 +553,7 @@ def sql_extent(sql, field_name, selected, operator=" AND "):
             sql = sql + operator + field_name + " in (" + statement + ")"
     return sql
 
-
+@login_required
 def search(request, column, kw):
     # sql = "SELECT DISTINCT TOP 20 %s FROM %s WHERE %s like '%%%s%%'" % (column, DB_TABLE, column, kw) # 返回不重复的前20个结果
     try:

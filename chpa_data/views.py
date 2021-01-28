@@ -79,7 +79,7 @@ D_TRANS = {
 }
 
 
-# @login_required
+@login_required
 def index(request):
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
@@ -90,7 +90,7 @@ def index(request):
     return render(request, "chpa_data/display.html", context)
 
 
-# @login_required
+@login_required
 @cache_page(60 * 60 * 24 * 90)
 def query(request):
     print(request.GET)
@@ -165,7 +165,7 @@ def query(request):
     )  # 返回结果必须是json格式
 
 
-# @login_required
+@login_required
 @cache_page(60 * 60 * 24 * 90)
 def search(request, column, kw):
     # sql = "SELECT DISTINCT TOP 20 %s FROM %s WHERE %s like '%%%s%%'" % (column, DB_TABLE, column, kw) # 返回不重复的前20个结果
@@ -199,7 +199,7 @@ def search(request, column, kw):
     )  # 返回结果必须是json格式
 
 
-# @login_required
+@login_required
 def export(request, type):
     form_dict = dict(six.iterlists(request.GET))
 

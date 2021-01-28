@@ -1,4 +1,5 @@
 from .models import Tender, Volume, Bid, Company
+from django.contrib.auth.decorators import login_required
 from .serializers import TenderSerializer
 from rest_framework import viewsets
 from django.shortcuts import render, HttpResponse
@@ -47,6 +48,7 @@ HOT_KWS = [
 ]
 
 
+@login_required
 def index(request):
     tenders = Tender.objects.all()
     paginator = Paginator(tenders, DISPLAY_LENGTH)
@@ -69,6 +71,7 @@ def index(request):
     return render(request, "vbp/tenders.html", context)
 
 
+@login_required
 def analysis(request):
     tenders = Tender.objects.all()
 
@@ -76,6 +79,7 @@ def analysis(request):
     return render(request, "vbp/analysis.html", context)
 
 
+@login_required
 def bid_detail(request, bid_id):
     bid = Bid.objects.get(pk=bid_id)
 
@@ -83,6 +87,7 @@ def bid_detail(request, bid_id):
     return render(request, "vbp/bid_detail.html", context)
 
 
+@login_required
 def tender_detail(request, tender_id):
     tender = Tender.objects.get(pk=tender_id)
 
@@ -90,6 +95,7 @@ def tender_detail(request, tender_id):
     return render(request, "vbp/tender_detail.html", context)
 
 
+@login_required
 def company_detail(request, record_id):
     company = Company.objects.get(pk=record_id)
 
@@ -97,6 +103,7 @@ def company_detail(request, record_id):
     return render(request, "vbp/bid_detail.html", context)
 
 
+@login_required
 def search(request):
     print(request.GET)
     kw = request.GET.get("kw")
@@ -135,6 +142,7 @@ def search(request):
     return render(request, "vbp/tenders.html", context)
 
 
+@login_required
 def export(request, mode, tender_ids=None):
     if tender_ids is None:
         tender_objs = Tender.objects.all()
