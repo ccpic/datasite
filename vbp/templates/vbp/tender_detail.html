@@ -221,7 +221,7 @@
         var d = {};
         var splitList = [];
         i = 0;
-        {% for bid in tender.winners %}
+        {% for bid in tender.winners|order_by_std_price:False %}
             d['{{ bid }}'] = i;
 
             var split_options = {
@@ -296,7 +296,7 @@
         // 销售量份额饼图
         var pieVolumeData = [];
         legendData = [];
-        {% for bid in tender.winners %}
+        {% for bid in tender.winners|order_by_std_price:False %}
             bidValue = '{{ bid.std_volume_win }}';
             bidValue = Number(bidValue).toFixed(1);
             bidData = {
@@ -363,7 +363,7 @@
         // 份额versus价格散点图
         var scatter = echarts.init(document.getElementById('scatter'));
         var scatterData = []; nameData = [];
-        {% for bid in tender.winners %}
+        {% for bid in tender.winners|order_by_std_price:False %}
             bidValue = '{{ bid.std_volume_win }}';
             bidValue = Number(bidValue).toFixed(1);
             bidPrice = '{{ bid.std_price }}';
@@ -423,7 +423,7 @@
         // 销售额份额饼图
         var pieValueData = [];
         legendData = [];
-        {% for bid in tender.winners %}
+        {% for bid in tender.winners|order_by_std_price:False %}
             bidValue = '{{ bid.value_win }}';
             bidValue = Number(bidValue).toFixed(1);
             bidData = {

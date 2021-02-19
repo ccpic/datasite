@@ -31,9 +31,9 @@ def zero_to_empty(value):
         return value
 
 @register.filter(name="order_by_std_price")
-def order_by_std_price(qs):
+def order_by_std_price(qs, reverse=True):
     
-    return sorted(qs, key=lambda a: a.std_price, reverse=True)
+    return sorted(qs, key=lambda a: a.std_price, reverse=reverse)
 
 
 @register.filter(name="objs_id_to_string")
