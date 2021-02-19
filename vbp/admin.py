@@ -25,8 +25,10 @@ class TenderAdmin(admin.ModelAdmin):
 class BidAdmin(admin.ModelAdmin):
     search_fields = ['tender__vol', 'tender__target', 'bidder__full_name']
 
+class VolumeAdmin(admin.ModelAdmin):
+    search_fields = ['tender__vol', 'tender__target']
+
 admin.site.register(Tender, TenderAdmin)
 admin.site.register(Bid, BidAdmin)
-admin.site.register([Company,
-                     Volume
-                     ])
+admin.site.register(Volume, VolumeAdmin)
+admin.site.register([Company])

@@ -99,6 +99,33 @@ D_MAIN_SPEC = {
     "依托考昔口服常释剂型": {"30mg": 0.5, "60mg": 1, "90mg": 1.5, "120mg": 2},
     "头孢克洛口服常释剂型": {"0.25g": 1, "0.5g": 2},
     "克拉霉素口服常释剂型": {"250mg": 1, "500mg": 2},
+    "埃索美拉唑（艾司奥美拉唑）口服常释剂型": {"20mg": 1, "40mg": 2},
+    "氨磺必利口服常释剂型": {"0.2g": 1, "0.1g": 0.5, "50mg": 0.25},
+    "氨溴索注射剂": {"2ml:15mg": 1, "4ml:30mg": 2, "1ml:7.5mg": 0.5},
+    "吡嗪酰胺口服常释剂型": {"0.25g": 1, "0.5g": 2},
+    "布洛芬口服常释剂型": {"0.1g": 1, "0.2g": 2},
+    "布洛芬注射液": {"4ml:0.4g": 1, "8ml:0.8g": 2},
+    "度洛西汀口服常释剂型": {"20mg": 1, "30mg": 1.5, "60mg": 3},
+    "多索茶碱注射剂": {"10ml:0.1g": 1, "20ml:0.2g": 2},
+    "恩格列净口服常释剂型": {"10mg": 1, "25mg": 2.5},
+    "格列齐特缓释控释剂型": {"30mg": 1, "60mg": 2},
+    "加巴喷丁口服常释剂型": {"0.1g": 1, "0.3g": 3, "0.4g": 4},
+    "卡格列净口服常释剂型": {"0.1g": 1, "0.3g": 3},
+    "喹硫平缓释控释剂型": {"50mg": 0.25, "200mg": 1, "300mg": 1.5},
+    "那格列奈口服常释剂型": {"60mg": 0.5, "120mg": 1},
+    "帕瑞昔布注射剂": {"20mg": 0.5, "40mg": 1},
+    "培哚普利口服常释剂型": {"4mg": 1, "8mg": 2},
+    "硼替佐米注射剂": {"1mg": 1 / 3.5, "3.5mg": 1},
+    "普拉克索缓释控释剂型": {"0.375mg": 1, "0.75mg": 2},
+    "普拉克索口服常释剂型": {"0.25mg": 1, "1mg": 4},
+    "普瑞巴林口服常释剂型": {"75mg": 1, "150mg": 2},
+    "瑞格列奈口服常释剂型": {"0.5mg": 0.5, "1mg": 1, "2mg": 2},
+    "替米沙坦口服常释剂型": {"40mg": 1, "80mg": 2},
+    "替莫唑胺口服常释剂型": {"100mg": 1, "50mg": 0.5, "20mg": 0.2, "5mg": 0.05},
+    "伏立康唑口服常释剂型": {"50mg": 1, "200mg": 4},
+    "特比萘芬口服常释剂型": {"0.125g": 1, "0.25g": 2},
+    "左氧氟沙星口服常释剂型": {"0.25g": 0.5, "0.5g": 1},
+    "玻璃酸钠滴眼剂": {"5ml:5mg (0.1%)": 1, "10ml:10mg (0.1%)": 2, "0.4ml:1.2mg (0.3%)": 0.24},
 }
 
 
@@ -136,6 +163,13 @@ class Tender(models.Model):
             "头孢地尼口服常释剂型",
             "头孢克洛口服常释剂型",
             "克拉霉素口服常释剂型",
+            "伏立康唑口服常释剂型",
+            "诺氟沙星口服常释剂型",
+            "特比萘芬口服常释剂型",
+            "头孢丙烯口服常释剂型",
+            "左氧氟沙星口服常释剂型",
+            "玻璃酸钠滴眼剂",
+            "注射用比伐芦定",
         ]:
             if self.winner_num == 1:
                 pct = 0.4
@@ -157,7 +191,12 @@ class Tender(models.Model):
         return pct
 
     def get_specs(self):  # 所有相关报量里出现的规格
-        return self.region_volume.all().order_by("spec").values_list("spec", flat=True).distinct()
+        return (
+            self.region_volume.all()
+            .order_by("spec")
+            .values_list("spec", flat=True)
+            .distinct()
+        )
 
     @property
     def main_spec(self):  # 区分主规格，字典里折算index为1的是主规格
@@ -186,7 +225,8 @@ class Tender(models.Model):
                 qs = self.region_volume.all().filter(spec=spec)
                 if qs.exists():
                     volume += (
-                        qs.aggregate(Sum("amount_reported"))["amount_reported__sum"] * D_MAIN_SPEC[self.target][spec]
+                        qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
+                        * D_MAIN_SPEC[self.target][spec]
                     )
                 else:
                     volume += 0
@@ -240,6 +280,25 @@ class Tender(models.Model):
                     return 2
                 elif self.winner_num >= 4:
                     return 3
+        elif "第四轮" in self.vol:  # 第四轮集采规则
+            if self.target in [
+                "氨溴索注射剂",
+                "丙泊酚中/长链脂肪乳注射剂",
+                "布洛芬注射液",
+                "多索茶碱注射剂",
+                "帕瑞昔布注射剂",
+                "泮托拉唑注射剂",
+                "硼替佐米注射剂",
+                "注射用比伐芦定",
+            ]:
+                return 1
+            else:
+                if self.winner_num <= 2:  # 1-2家中标，标期1年
+                    return 1
+                elif self.winner_num == 3:
+                    return 2
+                elif self.winner_num >= 4:
+                    return 3
         else:
             return None
 
@@ -265,7 +324,12 @@ class Tender(models.Model):
 
     @property
     def regions(self):
-        return self.region_volume.all().order_by("region").values_list("region", flat=True).distinct()
+        return (
+            self.region_volume.all()
+            .order_by("region")
+            .values_list("region", flat=True)
+            .distinct()
+        )
 
     def winners(self):
         winner_ids = [bid.id for bid in self.bids.all() if bid.is_winner()]
@@ -294,9 +358,14 @@ class Company(models.Model):
 
 
 class Bid(models.Model):
-    tender = models.ForeignKey(Tender, on_delete=models.CASCADE, verbose_name="所属记录", related_name="bids")
-    bidder = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name="竞标厂商", related_name="bids")
+    tender = models.ForeignKey(
+        Tender, on_delete=models.CASCADE, verbose_name="所属记录", related_name="bids"
+    )
+    bidder = models.ForeignKey(
+        Company, on_delete=models.CASCADE, verbose_name="竞标厂商", related_name="bids"
+    )
     origin = models.BooleanField(verbose_name="是否该标的原研")
+    bid_spec = models.CharField(max_length=30, verbose_name="报价规格")
     bid_price = models.FloatField(verbose_name="报价")
     original_price = models.FloatField(verbose_name="集采前最低价", blank=True, null=True)
 
@@ -308,6 +377,20 @@ class Bid(models.Model):
 
     def __str__(self):
         return "%s %s %s" % (self.tender.__str__(), self.bidder, self.bid_price)
+
+    @property
+    def sorted_bid_set(self):
+        return sorted(self.objects.all(), key=lambda a: a.std_price)
+
+    @property
+    def std_price(self):  # 根据竞标价规格折算标准价格，简单版，没考虑差比价公式）
+        if self.tender.specs_num == 1:
+            return self.bid_price
+        else:
+            if self.bid_spec == self.tender.main_spec:
+                return self.bid_price
+            else:
+                return self.bid_price / D_MAIN_SPEC[self.tender.target][self.bid_spec]
 
     def is_winner(self):  # 该bid是否中标
         qs = self.region_volume.all()
@@ -344,7 +427,12 @@ class Bid(models.Model):
             return None
 
     def regions_win(self):
-        return self.region_volume.all().order_by("region").values_list("region", flat=True).distinct()
+        return (
+            self.region_volume.all()
+            .order_by("region")
+            .values_list("region", flat=True)
+            .distinct()
+        )
 
     def std_volume_win(self, spec=None, region=None):
         if spec is not None and region is not None:
@@ -365,7 +453,9 @@ class Bid(models.Model):
             if self.tender.specs_num == 1:
                 qs = self.region_volume.filter(region=region)
                 if qs.exists():
-                    volume = qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
+                    volume = qs.aggregate(Sum("amount_reported"))[
+                        "amount_reported__sum"
+                    ]
                     volume = volume * self.tender.proc_percentage
                 else:
                     volume = 0
@@ -385,7 +475,9 @@ class Bid(models.Model):
             if self.tender.specs_num == 1:
                 qs = self.region_volume.all()
                 if qs.exists():
-                    volume = qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
+                    volume = qs.aggregate(Sum("amount_reported"))[
+                        "amount_reported__sum"
+                    ]
                     volume = volume * self.tender.proc_percentage
                 else:
                     volume = 0
@@ -411,24 +503,39 @@ class Bid(models.Model):
             bid_num = self.tender.bids.exclude(pk=self.pk).count()
             bid_allowed_num = self.tender.bidder_num
             if bid_num >= bid_allowed_num:
-                raise ValidationError("同一记录下竞标数量%s家已达到标的允许的%s家" % (bid_num, bid_allowed_num))
+                raise ValidationError(
+                    "同一记录下竞标数量%s家已达到标的允许的%s家" % (bid_num, bid_allowed_num)
+                )
         except ObjectDoesNotExist:
             pass
 
         try:
-            if self.tender.bids.filter(origin=True).exclude(pk=self.pk).count() > 0 and self.origin is True:  # 只能有1家原研
+            if (
+                self.tender.bids.filter(origin=True).exclude(pk=self.pk).count() > 0
+                and self.origin is True
+            ):  # 只能有1家原研
                 raise ValidationError("同一记录下最多只能有1家原研")
         except ObjectDoesNotExist:
             pass
 
 
 class Volume(models.Model):
-    tender = models.ForeignKey(Tender, on_delete=models.CASCADE, verbose_name="标的", related_name="region_volume",)
+    tender = models.ForeignKey(
+        Tender,
+        on_delete=models.CASCADE,
+        verbose_name="标的",
+        related_name="region_volume",
+    )
     region = models.CharField(max_length=10, choices=REGION_CHOICES, verbose_name="区域")
     spec = models.CharField(max_length=30, verbose_name="规格")
     amount_reported = models.FloatField(verbose_name="合同量")
     winner = models.ForeignKey(
-        Bid, on_delete=models.CASCADE, verbose_name="中标供应商", blank=True, null=True, related_name="region_volume",
+        Bid,
+        on_delete=models.CASCADE,
+        verbose_name="中标供应商",
+        blank=True,
+        null=True,
+        related_name="region_volume",
     )
 
     class Meta:
@@ -437,7 +544,12 @@ class Volume(models.Model):
         ordering = ["tender", "region", "spec"]
 
     def __str__(self):
-        return "%s %s %s %s" % (self.tender.target, self.region, self.spec, self.amount_reported,)
+        return "%s %s %s %s" % (
+            self.tender.target,
+            self.region,
+            self.spec,
+            self.amount_reported,
+        )
 
     def amount_contract(self):
         return self.amount_reported * self.tender.proc_percentage

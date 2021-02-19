@@ -100,7 +100,7 @@
                             <td style="width: 100px">{{ tender.tender_begin|date:'Y年m月' }}</td>
                             <td style="width: 50px">{{ tender.tender_period }}年</td>
                             <td style="width: 100px">&yen{{ tender.ceiling_price }}</td>
-                            <td style="width: 25%">
+                            <td style="width: 30%">
                                 {% if tender.bids.all %}
                                     <div class="ui divided selection list">
                                         {% for bid in tender.bids.all %}
@@ -119,11 +119,14 @@
                                                     <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated label">
                                                         &yen{{ bid.bid_price|fix_decimal:2 }}
                                                     </div>
-                                                    {% if bid.original_price %}
+                                                    <div class="ui horizontal left floated label">
+                                                        {{ bid.bid_spec }}
+                                                    </div>
+                                                    {% comment %} {% if bid.original_price %}
                                                         <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated basic label">
                                                             {{ bid.price_cut|percentage }}
                                                         </div>
-                                                    {% endif %}
+                                                    {% endif %} {% endcomment %}
                                                     <div class="middle aligned content">
                                                         {{ bid.bidder.abbr_name }}
                                                         {% if bid.origin %}<i class="star icon"></i>{% endif %}

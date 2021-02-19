@@ -69,7 +69,7 @@
                                     <td style="width: 30%">
                                         {% if tender.bids.all %}
                                             <div class="ui divided selection list">
-                                                {% for bid in tender.bids.all %}
+                                                {% for bid in tender.bids.all|order_by_std_price %}
                                                     {% if bid.bid_price == 99999 %}
                                                         <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
                                                             <div class="ui red horizontal left floated label">
@@ -85,11 +85,14 @@
                                                             <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
                                                                 &yen{{ bid.bid_price|fix_decimal:2 }}
                                                             </div>
-                                                            {% if bid.original_price %}
+                                                            <div class="ui horizontal left floated label">
+                                                                {{ bid.bid_spec }}
+                                                            </div>
+                                                            {% comment %} {% if bid.original_price %}
                                                                 <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
                                                                     {{ bid.price_cut|percentage }}
                                                                 </div>
-                                                            {% endif %}
+                                                            {% endif %} {% endcomment %}
                                                             <div class="middle aligned content">
                                                                 {{ bid.bidder.abbr_name }}
                                                                 {% if bid.origin %}<i class="star icon"></i>{% endif %}
@@ -363,7 +366,7 @@
         {% for bid in tender.winners %}
             bidValue = '{{ bid.std_volume_win }}';
             bidValue = Number(bidValue).toFixed(1);
-            bidPrice = '{{ bid.bid_price }}';
+            bidPrice = '{{ bid.std_price }}';
             bidPrice = Number(bidPrice).toFixed(2);
             bidData = [bidValue, bidPrice];
             scatterData.push(bidData);

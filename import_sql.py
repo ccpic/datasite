@@ -10,63 +10,109 @@ import sqlalchemy.types as t
 from sqlalchemy import create_engine
 
 
-pd.set_option('display.max_columns', 5000)
-pd.set_option('display.width', 5000)
+pd.set_option("display.max_columns", 5000)
+pd.set_option("display.width", 5000)
 
-engine = create_engine('mssql+pymssql://(local)/CHPA_1806')
+engine = create_engine("mssql+pymssql://(local)/CHPA_1806")
 
-df = pd.read_excel(open('data.xlsx', 'rb'), sheet_name='全国')  #从Excel读取数
-print('Finished data reading...')
-df.set_index(['TC I', 'TC II', 'TC III', 'TC IV', 'MOLECULE', 'PRODUCT', 'PACKAGE',	'CORPORATION', 'MANUF_TYPE', 'FORMULATION', 'STRENGTH'], inplace=True)
+df = pd.read_excel(open("data.xlsx", "rb"), sheet_name="全国")  # 从Excel读取数
+print("Finished data reading...")
+df.set_index(
+    [
+        "TC I",
+        "TC II",
+        "TC III",
+        "TC IV",
+        "MOLECULE",
+        "PRODUCT",
+        "PACKAGE",
+        "CORPORATION",
+        "MANUF_TYPE",
+        "FORMULATION",
+        "STRENGTH",
+    ],
+    inplace=True,
+)
 df = df.stack().reset_index()
 
-new=df['level_11'].str.split('_', expand=True)
-df['UNIT'] = new[0]
-df['PERIOD'] = new[1]
-df['DATE'] = new[2]
-df['DATE'] = (pd.to_numeric(df['DATE'].str[-2:], errors='coerce').fillna(0).astype(np.int64)+2000)*10000+pd.to_numeric(df['DATE'].str[:-2], errors='coerce').fillna(0).astype(np.int64)*100+1
-df['DATE'] = pd.to_datetime(df['DATE'], format="%Y%m%d")
-df['MOLECULE_TC'] = df['MOLECULE'] + ' （'+ df['TC IV'].str[:4] + '）'
-df['PRODUCT_CORP'] = df['PRODUCT'].str[:-3] + ' （'+ df['CORPORATION'] + '）'
+new = df["level_11"].str.split("_", expand=True)
+df["UNIT"] = new[0]
+df["PERIOD"] = new[1]
+df["DATE"] = new[2]
+df["DATE"] = (
+    (
+        pd.to_numeric(df["DATE"].str[-2:], errors="coerce").fillna(0).astype(np.int64)
+        + 2000
+    )
+    * 10000
+    + pd.to_numeric(df["DATE"].str[:-2], errors="coerce").fillna(0).astype(np.int64)
+    * 100
+    + 1
+)
+df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
+df["MOLECULE_TC"] = df["MOLECULE"] + " （" + df["TC IV"].str[:4] + "）"
+df["PRODUCT_CORP"] = df["PRODUCT"].str[:-3] + " （" + df["CORPORATION"] + "）"
 
-df.drop('level_11', axis=1, inplace=True)
-df.columns = ['TC I', 'TC II', 'TC III',	'TC IV', 'MOLECULE',	'PRODUCT',	'PACKAGE',	'CORPORATION', 'MANUF_TYPE',
-              'FORMULATION', 'STRENGTH', 'AMOUNT', 'UNIT', 'PERIOD', 'DATE', 'MOLECULE_TC', 'PRODUCT_CORP']
+df.drop("level_11", axis=1, inplace=True)
+df.columns = [
+    "TC I",
+    "TC II",
+    "TC III",
+    "TC IV",
+    "MOLECULE",
+    "PRODUCT",
+    "PACKAGE",
+    "CORPORATION",
+    "MANUF_TYPE",
+    "FORMULATION",
+    "STRENGTH",
+    "AMOUNT",
+    "UNIT",
+    "PERIOD",
+    "DATE",
+    "MOLECULE_TC",
+    "PRODUCT_CORP",
+]
 
-df_volume = df[df['UNIT'] == 'Volume']
-df_volume.loc[:, 'UNIT'] = 'Volume (Counting Unit)'
-df_volume.loc[:, 'TEMP']=  df_volume.loc[:, 'PACKAGE'].str.split().str[-1]
+df_volume = df[df["UNIT"] == "Volume"]
+df_volume.loc[:, "UNIT"] = "Volume (Counting Unit)"
+df_volume.loc[:, "TEMP"] = df_volume.loc[:, "PACKAGE"].str.split().str[-1]
 
-df1 = df_volume[df_volume['TEMP'].str.isnumeric()]
-df2 = df_volume[df_volume['TEMP'].str.isnumeric() == False]
-df1['TEMP'] = df1['TEMP'].apply(np.int64)
-df1['AMOUNT'] = df1['AMOUNT'] * df1['TEMP']
-df_volume = pd.concat([df1,df2])
-df_volume.drop('TEMP', axis=1, inplace=True)
+df1 = df_volume[df_volume["TEMP"].str.isnumeric()]
+df2 = df_volume[df_volume["TEMP"].str.isnumeric() == False]
+df1["TEMP"] = df1["TEMP"].apply(np.int64)
+df1["AMOUNT"] = df1["AMOUNT"] * df1["TEMP"]
+df_volume = pd.concat([df1, df2])
+df_volume.drop("TEMP", axis=1, inplace=True)
 df_combined = pd.concat([df, df_volume])
 print(df_combined)
 
-print('start importing...')
-df_combined.to_sql('data', con=engine, if_exists='replace', index=False,
-          dtype={'DATE': t.DateTime(),
-                 'AMOUNT': t.FLOAT(),
-                 'TC I': t.NVARCHAR(length=200),
-                 'TC II': t.NVARCHAR(length=200),
-                 'TC III': t.NVARCHAR(length=200),
-                 'TC IV': t.NVARCHAR(length=200),
-                 'MOLECULE': t.NVARCHAR(length=200),
-                 'PRODUCT': t.NVARCHAR(length=200),
-                 'PACKAGE': t.NVARCHAR(length=200),
-                 'CORPORATION': t.NVARCHAR(length=200),
-                 'MANUF_TYPE': t.NVARCHAR(length=20),
-                 'FORMULATION': t.NVARCHAR(length=50),
-                 'STRENGTH': t.NVARCHAR(length=20),
-                 'UNIT': t.NVARCHAR(length=25),
-                 'PERIOD': t.NVARCHAR(length=3),
-                 'MOLECULE_TC': t.NVARCHAR(length=255),
-                 'PRODUCT_CORP': t.NVARCHAR(length=255),
-                 }
-          )
+print("start importing...")
+df_combined.to_sql(
+    "data",
+    con=engine,
+    if_exists="replace",
+    index=False,
+    dtype={
+        "DATE": t.DateTime(),
+        "AMOUNT": t.FLOAT(),
+        "TC I": t.NVARCHAR(length=200),
+        "TC II": t.NVARCHAR(length=200),
+        "TC III": t.NVARCHAR(length=200),
+        "TC IV": t.NVARCHAR(length=200),
+        "MOLECULE": t.NVARCHAR(length=200),
+        "PRODUCT": t.NVARCHAR(length=200),
+        "PACKAGE": t.NVARCHAR(length=200),
+        "CORPORATION": t.NVARCHAR(length=200),
+        "MANUF_TYPE": t.NVARCHAR(length=20),
+        "FORMULATION": t.NVARCHAR(length=50),
+        "STRENGTH": t.NVARCHAR(length=20),
+        "UNIT": t.NVARCHAR(length=25),
+        "PERIOD": t.NVARCHAR(length=3),
+        "MOLECULE_TC": t.NVARCHAR(length=255),
+        "PRODUCT_CORP": t.NVARCHAR(length=255),
+    },
+)
 
 
 # #预处理和导入城市数据

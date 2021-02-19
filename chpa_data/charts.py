@@ -33,7 +33,9 @@ def treemap(sizes, diff, labels, x=0, y=0, width=1, height=1, title=None):
         norm = mpl.colors.Normalize(vmin=min_diff, vmax=max_diff)
     else:
         cmap = mpl.cm.bwr_r
-        norm = mpl.colors.TwoSlopeNorm(vmin=min_diff, vcenter=0, vmax=max_diff)  # 强制0为中点的正太分布渐变色
+        norm = mpl.colors.TwoSlopeNorm(
+            vmin=min_diff, vcenter=0, vmax=max_diff
+        )  # 强制0为中点的正太分布渐变色
 
     colors = [cmap(norm(value)) for value in diff]
 
@@ -56,11 +58,18 @@ def treemap(sizes, diff, labels, x=0, y=0, width=1, height=1, title=None):
     # 根据数据循环创建矩形并添加标签
     for i, r in enumerate(rects_data):
         rect = patches.Rectangle(
-            (r["x"], r["y"]), r["dx"], r["dy"], linewidth=2, edgecolor="#222222", facecolor=colors[i]
+            (r["x"], r["y"]),
+            r["dx"],
+            r["dy"],
+            linewidth=2,
+            edgecolor="#222222",
+            facecolor=colors[i],
         )  # 创建四边形
         ax.add_patch(rect)  # Add patch到轴
         # 动态添加标签并设置标签字体大小
-        if r["dx"] > 0.02 * (width * height) or r["dx"] * r["dy"] > 0.01 * (width * height):
+        if r["dx"] > 0.02 * (width * height) or r["dx"] * r["dy"] > 0.01 * (
+            width * height
+        ):
             plt.text(
                 r["x"] + r["dx"] / 2,  # rect的水平中心
                 r["y"] + r["dy"] / 2,  # rect的垂直中心
@@ -181,7 +190,9 @@ def mpl_bubble(
             )
             for i in range(len(labels[:label_limit]))
         ]
-        adjust_text(texts, force_text=0.5, arrowprops=dict(arrowstyle="->", color="black"))
+        adjust_text(
+            texts, force_text=0.5, arrowprops=dict(arrowstyle="->", color="black")
+        )
 
     # 添加分隔线（均值，中位数，0等）
     if y_avg_line is True:
@@ -247,11 +258,21 @@ def mpl_bubble(
         y2 = poly1d_fn(x2)
 
         # CI计算和绘图
-        ci = t * s_err * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+        ci = (
+            t
+            * s_err
+            * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+        )
         ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", edgecolor="", alpha=0.5)
 
         # Pi计算和绘图
-        pi = t * s_err * np.sqrt(1 + 1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+        pi = (
+            t
+            * s_err
+            * np.sqrt(
+                1 + 1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2)
+            )
+        )
         ax.fill_between(x2, y2 + pi, y2 - pi, color="None", linestyle="--")
         ax.plot(x2, y2 - pi, "--", color="0.5", label="95% Prediction Limits")
         ax.plot(x2, y2 + pi, "--", color="0.5")
@@ -281,14 +302,19 @@ def echarts_line(df, datatype="ABS"):
             .add_xaxis(df.index.strftime("%Y-%m").tolist())
             .set_global_opts(
                 # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
-                legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
+                legend_opts=opts.LegendOpts(
+                    pos_top="5%", pos_left="10%", pos_right="60%"
+                ),
                 # toolbox_opts=opts.ToolboxOpts(is_show=True),
-                tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis", axis_pointer_type="cross",
+                ),
                 xaxis_opts=opts.AxisOpts(
                     type_="category",
                     boundary_gap=False,
                     splitline_opts=opts.SplitLineOpts(
-                        is_show=True, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                     ),
                 ),
                 yaxis_opts=opts.AxisOpts(
@@ -296,7 +322,8 @@ def echarts_line(df, datatype="ABS"):
                     axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
                     # axistick_opts=opts.AxisTickOpts(is_show=True),
                     splitline_opts=opts.SplitLineOpts(
-                        is_show=True, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                     ),
                 ),
             )
@@ -309,7 +336,9 @@ def echarts_line(df, datatype="ABS"):
                 symbol_size=8,
                 label_opts=opts.LabelOpts(is_show=False),
                 linestyle_opts=opts.LineStyleOpts(width=3),
-                itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color="", border_color0="white"),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    border_width=1, border_color="", border_color0="white"
+                ),
             )
     else:
         line = Line()
@@ -338,7 +367,11 @@ def echarts_stackbar(
         stackbar = Bar().add_xaxis(df.index.tolist())
         for i, item in enumerate(df.columns):  # 预留的枚举，这个方法以后可以根据输入对象不同从单一柱状图变成堆积柱状图
             stackbar.add_yaxis(
-                item, df[item].values.tolist(), stack="总量", label_opts=opts.LabelOpts(is_show=False), z_level=1
+                item,
+                df[item].values.tolist(),
+                stack="总量",
+                label_opts=opts.LabelOpts(is_show=False),
+                z_level=1,
             )
             # .add_yaxis(series_name=df.index[-5].strftime("%Y-%m"),
             #            yaxis_data=df_ya.values.tolist(),
@@ -367,7 +400,8 @@ def echarts_stackbar(
                 boundary_gap=True,
                 axislabel_opts=opts.LabelOpts(rotate=90),  # x轴标签方向rotate有时能解决拥挤显示不全的问题
                 splitline_opts=opts.SplitLineOpts(
-                    is_show=False, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    is_show=False,
+                    linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                 ),
             ),
             yaxis_opts=opts.AxisOpts(
@@ -377,7 +411,8 @@ def echarts_stackbar(
                 axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
                 # axistick_opts=opts.AxisTickOpts(is_show=True),
                 splitline_opts=opts.SplitLineOpts(
-                    is_show=True, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                    is_show=True,
+                    linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                 ),
             ),
         )
@@ -392,7 +427,9 @@ def echarts_stackbar(
                     label_opts=opts.LabelOpts(is_show=False),
                     linestyle_opts=opts.LineStyleOpts(width=3),
                     symbol_size=8,
-                    itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color="", border_color0="white"),
+                    itemstyle_opts=opts.ItemStyleOpts(
+                        border_width=1, border_color="", border_color0="white"
+                    ),
                     z_level=2,
                 )
             )
@@ -417,14 +454,19 @@ def echarts_stackarea(df, datatype="ABS"):
             .add_xaxis(df.index.strftime("%Y-%m").tolist())
             .set_global_opts(
                 # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
-                legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
+                legend_opts=opts.LegendOpts(
+                    pos_top="5%", pos_left="10%", pos_right="60%"
+                ),
                 # toolbox_opts=opts.ToolboxOpts(is_show=True),
-                tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis", axis_pointer_type="cross",
+                ),
                 xaxis_opts=opts.AxisOpts(
                     type_="category",
                     boundary_gap=False,
                     splitline_opts=opts.SplitLineOpts(
-                        is_show=True, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                     ),
                 ),
                 yaxis_opts=opts.AxisOpts(
@@ -433,7 +475,8 @@ def echarts_stackarea(df, datatype="ABS"):
                     axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
                     # axistick_opts=opts.AxisTickOpts(is_show=True),
                     splitline_opts=opts.SplitLineOpts(
-                        is_show=True, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                     ),
                 ),
             )
@@ -447,7 +490,9 @@ def echarts_stackarea(df, datatype="ABS"):
                 # symbol_size=8,
                 label_opts=opts.LabelOpts(is_show=False),
                 linestyle_opts=opts.LineStyleOpts(width=3),
-                itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color="", border_color0="white"),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    border_width=1, border_color="", border_color0="white"
+                ),
             )
 
     else:
@@ -468,14 +513,19 @@ def echarts_stackarea100(df, datatype="ABS"):
             .add_xaxis(df.index.strftime("%Y-%m").tolist())
             .set_global_opts(
                 # title_opts=opts.TitleOpts(title='Trend', pos_left='center'),
-                legend_opts=opts.LegendOpts(pos_top="5%", pos_left="10%", pos_right="60%"),
+                legend_opts=opts.LegendOpts(
+                    pos_top="5%", pos_left="10%", pos_right="60%"
+                ),
                 # toolbox_opts=opts.ToolboxOpts(is_show=True),
-                tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis", axis_pointer_type="cross",
+                ),
                 xaxis_opts=opts.AxisOpts(
                     type_="category",
                     boundary_gap=False,
                     splitline_opts=opts.SplitLineOpts(
-                        is_show=True, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                     ),
                 ),
                 yaxis_opts=opts.AxisOpts(
@@ -484,7 +534,8 @@ def echarts_stackarea100(df, datatype="ABS"):
                     axislabel_opts=opts.LabelOpts(formatter=axislabel_format),
                     # axistick_opts=opts.AxisTickOpts(is_show=True),
                     splitline_opts=opts.SplitLineOpts(
-                        is_show=True, linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
+                        is_show=True,
+                        linestyle_opts=opts.LineStyleOpts(type_="dotted", opacity=0.5,),
                     ),
                 ),
             )
@@ -498,7 +549,9 @@ def echarts_stackarea100(df, datatype="ABS"):
                 # symbol_size=8,
                 label_opts=opts.LabelOpts(is_show=False),
                 linestyle_opts=opts.LineStyleOpts(width=3),
-                itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color="", border_color0="white"),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    border_width=1, border_color="", border_color0="white"
+                ),
             )
 
     else:
@@ -520,11 +573,14 @@ def pie_radius(df) -> Pie:
                 radius=["50%", "70%"],
                 label_opts=opts.LabelOpts(is_show=False, position="center"),
             )
-            .set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
-                             # toolbox_opts=opts.ToolboxOpts(is_show=True),
-                             )
+            .set_global_opts(
+                legend_opts=opts.LegendOpts(is_show=False),
+                # toolbox_opts=opts.ToolboxOpts(is_show=True),
+            )
             .set_series_opts(
-                tooltip_opts=opts.TooltipOpts(trigger="item", formatter="{a} <br/>{b}: {c} ({d}%)"),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="item", formatter="{a} <br/>{b}: {c} ({d}%)"
+                ),
                 label_opts=opts.LabelOpts(is_show=True, formatter="{b}: {d}%"),
             )
         )
@@ -546,18 +602,27 @@ def echarts_scatter(df):
             y = int(row[1])
             scatter.add_xaxis(xaxis_data=[x])
             scatter.add_yaxis(
-                series_name=index, y_axis=[y], symbol_size=n, label_opts=opts.LabelOpts(is_show=False),
+                series_name=index,
+                y_axis=[y],
+                symbol_size=n,
+                label_opts=opts.LabelOpts(is_show=False),
             )
             scatter.set_series_opts()
         scatter.set_global_opts(
-            xaxis_opts=opts.AxisOpts(type_="value", name="销售", splitline_opts=opts.SplitLineOpts(is_show=True)),
+            xaxis_opts=opts.AxisOpts(
+                type_="value",
+                name="销售",
+                splitline_opts=opts.SplitLineOpts(is_show=True),
+            ),
             yaxis_opts=opts.AxisOpts(
                 name="同比净增长",
                 type_="value",
                 axistick_opts=opts.AxisTickOpts(is_show=True),
                 splitline_opts=opts.SplitLineOpts(is_show=True),
             ),
-            tooltip_opts=opts.TooltipOpts(is_show=True, trigger="item", formatter="{a} <br/>{b}: {c}"),
+            tooltip_opts=opts.TooltipOpts(
+                is_show=True, trigger="item", formatter="{a} <br/>{b}: {c}"
+            ),
             # toolbox_opts=opts.ToolboxOpts(is_show=True),
             legend_opts=opts.LegendOpts(is_show=False),
         )
