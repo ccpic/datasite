@@ -97,7 +97,7 @@
                             <td style="width: 100px">
                                 {{ tender.total_value_contract|fix_decimal:0 }}万
                             </td>
-                            <td style="width: 100px">{{ tender.tender_begin|date:'Y年m月' }}</td>
+                            <td style="width: 70px">{{ tender.tender_begin|date:'Y年m月' }}</td>
                             <td style="width: 50px">{{ tender.tender_period }}年</td>
                             <td style="width: 100px">&yen{{ tender.ceiling_price }}</td>
                             <td style="width: 30%">
@@ -116,17 +116,17 @@
                                                 </a>
                                             {% else %}
                                                 <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
-                                                    <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated label">
-                                                        &yen{{ bid.bid_price|fix_decimal:2 }}
-                                                    </div>
                                                     <div class="ui horizontal left floated label">
                                                         {{ bid.bid_spec }}
                                                     </div>
-                                                    {% comment %} {% if bid.original_price %}
+                                                    <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated label">
+                                                        &yen{{ bid.bid_price|fix_decimal:2 }}
+                                                    </div>
+                                                    {% if bid.original_price %}
                                                         <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated basic label">
                                                             {{ bid.price_cut|percentage }}
                                                         </div>
-                                                    {% endif %} {% endcomment %}
+                                                    {% endif %}
                                                     <div class="middle aligned content">
                                                         {{ bid.bidder.abbr_name }}
                                                         {% if bid.origin %}<i class="star icon"></i>{% endif %}
