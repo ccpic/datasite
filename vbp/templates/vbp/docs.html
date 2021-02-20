@@ -1,0 +1,52 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}带量采购数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+        <H2 class="ui dividing header">
+        <a href="{% url 'vbp:index' %}">带量采购</a>官方文件存档
+        </H2>
+        <span>文件来自上海阳光医药采购网http://www.smpaa.cn/</span>
+        <div class="ui piled segments">
+            {% regroup docs by vol as vol_list %}
+
+            {% for vol in vol_list %}
+                <div class="ui segment">
+                    <a class="ui blue ribbon label">{{ vol.grouper }}</a>
+                    <div class="ui list">
+                        {% for doc in vol.list %}
+                        <div class="item">
+                            <i class="file pdf outline icon"></i>
+                            <div class="content">
+                                <a href="{{ doc.file.url }}">{{ doc.title}}</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor%}
+        </div>
+
+    </div>
+
+    <div class="ui hidden divider"></div>
+
+    
+{% endblock body %}
+
+
+
+
+

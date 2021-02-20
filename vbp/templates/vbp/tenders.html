@@ -27,6 +27,7 @@
                     常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %}
 
                 </form>
+                <div class="ui bottom right attached label"><a href="{% url 'vbp:docs' %}">查看官方文件</a></div>
             </div>
             {% if tenders %}
                 <div class="ui dividing header">
@@ -103,7 +104,7 @@
                             <td style="width: 30%">
                                 {% if tender.bids.all %}
                                     <div class="ui divided selection list">
-                                        {% for bid in tender.bids.all %}
+                                        {% for bid in tender.bids.all|order_by_std_price %}
                                             {% if bid.bid_price == 99999 %}
                                                 <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
                                                     <div class="ui red horizontal left floated label">

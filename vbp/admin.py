@@ -31,4 +31,4 @@ class VolumeAdmin(admin.ModelAdmin):
 admin.site.register(Tender, TenderAdmin)
 admin.site.register(Bid, BidAdmin)
 admin.site.register(Volume, VolumeAdmin)
-admin.site.register([Company])
+admin.site.register([Company, Doc])

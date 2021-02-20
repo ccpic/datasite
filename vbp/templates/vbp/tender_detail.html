@@ -387,12 +387,12 @@
             },
             yAxis: {
                 scale: true,
-                name: '竞标价',
+                name: '竞标价（折算后）',
             },
             tooltip: {
                 trigger: 'item',
                 formatter: function (params) {
-                    return nameData[params.dataIndex] + '<br> 获取合同量：' + params.data[0] + '万<br> 竞标价：' + params.data[1] + '元';
+                    return nameData[params.dataIndex] + '<br> 获取合同量：' + params.data[0] + '万<br> 竞标价（折算后）：' + params.data[1] + '元';
                 },
             },
             series: [{

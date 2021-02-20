@@ -16,7 +16,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include,path
-
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('chpa/', include('chpa_data.urls')),
@@ -27,3 +28,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
+
+# 配置url 当我们访问 settings.MEDIA_URL中的路径时，static会通过document_root去寻找对应的文件
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

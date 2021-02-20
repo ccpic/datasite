@@ -13,7 +13,8 @@ urlpatterns = [
     path(r'tenders/<int:tender_id>', views.tender_detail, name='tender_detail'),
     path(r'companies/<int:company_id>', views.company_detail, name='company_detail'),
     path(r'search', views.search, name='search'),
-    path(r'analysis', views.analysis, name='analysis'),
+    path(r'analysis', views.analysis, name='analysis'), 
+    path(r'docs', views.docs, name='docs'), # 集采官方文档展示页面
     path(r'export/<str:mode>/', views.export, name='export'),   # 导出全部
     path(r'export/<str:mode>/<str:tender_ids>', views.export, name='export')   # 导出指定记录
     # path('', include(router.urls)),

@@ -161,3 +161,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
 }
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'upload/')
+MEDIA_URL = '/upload/' #这个是在浏览器上访问该上传文件的url的前缀

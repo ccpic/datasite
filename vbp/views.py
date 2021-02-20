@@ -1,4 +1,4 @@
-from .models import Tender, Volume, Bid, Company
+from .models import Tender, Volume, Bid, Company, Doc
 from django.contrib.auth.decorators import login_required
 from .serializers import TenderSerializer
 from rest_framework import viewsets
@@ -79,6 +79,14 @@ def analysis(request):
 
     context = {"tenders": tenders}
     return render(request, "vbp/analysis.html", context)
+
+
+@login_required
+def docs(request):
+    docs = Doc.objects.all()
+
+    context = {"docs": docs}
+    return render(request, "vbp/docs.html", context)
 
 
 @login_required

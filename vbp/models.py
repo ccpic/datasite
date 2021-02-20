@@ -562,3 +562,19 @@ class Volume(models.Model):
 #         raise ValidationError("竞标数%s家超过标的允许的%s家" % (bid_num, bid_allowed_num))
 #
 # m2m_changed.connect(bids_changed, sender=Record.bid.through)
+
+
+class Doc(models.Model):
+    title = models.CharField(max_length=50, verbose_name="文件名")
+    vol = models.CharField(max_length=30, verbose_name="批次")
+    file = models.FileField(upload_to='doc_files/%Y/%m/%d/', verbose_name="PDF文件")
+
+    class Meta:
+        verbose_name = "官方文件"
+        verbose_name_plural = "官方文件"
+
+    def __str__(self):
+        return "%s %s" % (
+            self.vol,
+            self.title
+        )
