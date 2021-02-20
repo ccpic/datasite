@@ -33,7 +33,7 @@ def import_tender():
         l.append(
             Tender(
                 target=tender[1],
-                vol="第四轮44品种",
+                vol="第四轮45品种",
                 tender_begin=tender_begin,
                 ceiling_price=tender[9],
             )
