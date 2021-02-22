@@ -164,7 +164,9 @@
         }
 
         function getCellValue(row, index) {
-            return $(row).children('td').eq(index).text();
+            var a = $(row).children('td').eq(index).text();
+            var x = (a == "+nan%" || a === 'nan%' || a === '-nan%' || a === 'inf%' || a === '+inf%' || a === '-inf%') ? 0 : a.replace(/%/, "")
+            return parseFloat(x)
         }
     </script>
     <script>
