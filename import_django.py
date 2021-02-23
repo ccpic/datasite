@@ -63,7 +63,7 @@ def import_volume():
 
 
 def import_bid():
-    df = pd.read_excel("vbp.xlsx", sheet_name="第四轮集采", header=1)
+    df = pd.read_excel("vbp.xlsx", sheet_name="第四轮集采", header=0)
     df.fillna("-", inplace=True)
     print(df)
 
