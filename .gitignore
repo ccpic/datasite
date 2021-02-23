@@ -130,7 +130,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.idea/dataSources/
+# Data
+.csv
+.xlsx
+.xls
+
 data.pkl
 internal_sales/migrations/0001_initial.py
 internal_sales/migrations/0002_auto_20210114_1146.py
@@ -150,5 +154,3 @@ vbp/migrations/0007_auto_20200824_1013.py
 三合一销售报表/三合一表十二月初版.xlsx
 三合一销售报表/三合一表十二月终版.xlsx
 internal_sales/migrations/0006_auto_20210127_1447.py
-vbp_amount.xlsx
-vbp.xlsx
