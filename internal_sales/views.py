@@ -17,7 +17,7 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "data"
-date = datetime.datetime(year=2020, month=12, day=1)
+date = datetime.datetime(year=2021, month=1, day=1)
 date_ya = date.replace(year=date.year - 1)  # 同比月份
 date_year_begin = date.replace(month=1)  # 本年度开头
 date_ya_begin = date_ya.replace(month=1)  # 去年开头
@@ -219,8 +219,8 @@ def get_ptable(df_sales, df_target, show_limit_results):  # 销售指标汇总
 def get_ratio_monthly(df1, df2, table_name, show_limit_results): # 用以计算医院单产，代表单产，社区占比等ratio指标
     if df1.empty is False:
         if df2.empty is False:
-            mask1 = date_mask(df1, "ytd")[0]
-            mask2 = date_mask(df2, "ytd")[0]
+            mask1 = date_mask(df1, "mat")[0]
+            mask2 = date_mask(df2, "mat")[0]
             df = df1.loc[mask1, :] / df2.loc[mask2, :]
             df.dropna(how="all", axis=1, inplace=True)
             df.fillna(0, inplace=True)
@@ -241,7 +241,7 @@ def get_ratio_monthly(df1, df2, table_name, show_limit_results): # 用以计算�
 
 def get_ptable_monthly(df_sales, show_limit_results):  # 月度明细
     if df_sales.empty is False:
-        mask = date_mask(df_sales, "ytd")[0]
+        mask = date_mask(df_sales, "mat")[0]
         df_sales_abs = df_sales.loc[mask, :].T
         if show_limit_results == "true":
             df_sales_abs = df_sales_abs.iloc[:200, :]
@@ -435,6 +435,9 @@ def date_mask(df, period):
     if period == "ytd":
         mask = (df.index >= date_year_begin) & (df.index <= date)
         mask_ya = (df.index >= date_ya_begin) & (df.index <= date_ya)
+    elif period == "mat":
+        mask = (df.index >= date + relativedelta(months=-11)) & (df.index <= date)
+        mask_ya = (df.index >= date_ya + relativedelta(months=-11)) & (df.index <= date_ya)
     elif period == "mqt":
         mask = (df.index >= date + relativedelta(months=-2)) & (df.index <= date)
         mask_ya = (df.index >= date_ya + relativedelta(months=-2)) & (df.index <= date_ya)
