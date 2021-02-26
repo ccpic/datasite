@@ -21,7 +21,7 @@ date = datetime.datetime(year=2021, month=1, day=1)
 date_ya = date.replace(year=date.year - 1)  # 同比月份
 date_year_begin = date.replace(month=1)  # 本年度开头
 date_ya_begin = date_ya.replace(month=1)  # 去年开头
-PRODUCTS_HAVE_TARGET = ["信立坦", "泰加宁", "欣复泰"]  # 有指标的产品
+PRODUCTS_HAVE_TARGET = ["信立坦", "欣复泰"]  # 有指标的产品
 
 # 该字典为数据库字段名和Django Model的关联
 D_MODEL = {
