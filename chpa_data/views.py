@@ -514,7 +514,7 @@ def prepare_chart(
             y_fmt="{:,.0f}",  # y轴格式
             y_avg_line=True,  # 添加y轴分隔线
             y_avg_value=0,  # y轴分隔线为y=0
-            label_limit=30,  # 只显示前30个项目的标签
+            label_limit=10,  # 只显示前30个项目的标签
         )
         return chart
     elif chart_type == "treemap_share":
