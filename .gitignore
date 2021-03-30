@@ -5,6 +5,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
 # C extensions
 *.so
 
@@ -131,27 +132,10 @@ dmypy.json
 .pyre/
 
 # Data
-.csv
-.xlsx
-.xls
+*.csv
+*.xlsx
+*.xls
+*.pkl
 
-data.pkl
-internal_sales/migrations/0001_initial.py
-internal_sales/migrations/0002_auto_20210114_1146.py
-internal_sales/migrations/0003_product.py
-internal_sales/migrations/0004_bu_dsm_name_rd_rm_name_rsp_name.py
-internal_sales/migrations/0005_level.py
-result.csv
-vbp/migrations/0001_initial.py
-vbp/migrations/0002_remove_tender_bidder_num.py
-vbp/migrations/0003_auto_20200728_1408.py
-vbp/migrations/0004_auto_20200731_1149.py
-vbp/migrations/0005_auto_20200731_1401.py
-vbp/migrations/0006_auto_20200821_1441.py
-vbp/migrations/0007_auto_20200824_1013.py
-"\344\270\211\345\220\210\344\270\200\351\224\200\345\224\256\346\212\245\350\241\250/~$\344\270\211\345\220\210\344\270\200\350\241\250\345\215\201\344\272\214\346\234\210\345\210\235\347\211\210.xlsx"
-"\344\270\211\345\220\210\344\270\200\351\224\200\345\224\256\346\212\245\350\241\250/"
-三合一销售报表/
-vbp_amount.xlsx
-vbp.xlsx
-internal_sales/migrations/0006_auto_20210127_1447.py
+# Migration
+migrations

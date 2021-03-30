@@ -15,7 +15,7 @@ pd.set_option("display.width", 5000)
 
 engine = create_engine("mssql+pymssql://(local)/Internal_sales")
 
-df = pd.read_excel(open("三合一销售报表/三合一表一月终版.xlsx", "rb"), sheet_name="三合一表_导出版")  # 从Excel读取数
+df = pd.read_excel(open("三合一销售报表/三合一表二月终版.xlsx", "rb"), sheet_name="三合一表_导出版")  # 从Excel读取数
 print("Finished data reading...")
 
 df.columns = [
@@ -56,7 +56,7 @@ df.columns = [
     "RSP_ID",
     "RSP_NAME",
     "RSP_NOTE",
-    "PRODUCT_GROUP",
+    # "PRODUCT_GROUP", # 2021年2月终版时OA原始数据文件删除了此字段
     "GPO",
 ]
 
@@ -127,7 +127,7 @@ df.to_sql(
         "RSP_ID": t.NVARCHAR(length=20),
         "RSP_NAME": t.NVARCHAR(length=20),
         "RSP_NOTE": t.NVARCHAR(length=20),
-        "PRODUCT_GROUP": t.NVARCHAR(length=10),
+        # "PRODUCT_GROUP": t.NVARCHAR(length=10), # 2021年2月终版时OA原始数据文件删除了此字段
         "GPO": t.NVARCHAR(length=20),
     },
 )
