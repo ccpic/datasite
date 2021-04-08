@@ -1,0 +1,68 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}带量采购数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    <div id="pusher" class="pusher" style="padding-top:50px">
+        {% if drug %}
+        <div class="ui huge breadcrumb">
+            <a href="{% url "rdpac:index" %}" class="section">首页</a>
+            <i class="right angle icon divider"></i>
+            <a href="{% url "rdpac:drug_detail" drug.pk %}" class="section">{{ drug.product_name_cn }}</a>
+        </div>
+    </div>
+    <div class="ui celled grid">
+        <div class="row">
+            <div class="ui hidden divider"></div>
+            <div class="sixteen wide column">
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="eight wide column">
+                <table class="ui blue table">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>NetSales</th>
+                            <th>GR(y-1)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td>{{ sale.year }}</td>
+                            <td>{{ sale.netsales_value|floatformat:"0" |intcomma }}</td>
+                            {% if sale.annual_gr %}
+                            <td>{{ sale.annual_gr|percentage:0 }}</td>
+                            {% else %}
+                            <td>n/a</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="eight wide column">
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</div>
+<div class="ui hidden divider"></div>
+
+
+{% endblock body %}

@@ -1,0 +1,120 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %} {% load humanize %} {% load tags %}
+{% block title %}RDPAC数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+  <div id="pusher" class="pusher" style="padding-top: 50px">
+    <div class="ui inverted segment">
+      <form method="get" action="{% url 'vbp:search' %}" class="ui inverted fluid form">
+        {% csrf_token %}
+        <div class="field">
+          <div class="ui action input">
+            <input type="search" name="kw" placeholder="请输入关键字进行搜索——如：批次/标的通用名/竞标公司名" required />
+            <button type="submit" class="ui blue submit button">搜索</button>
+          </div>
+        </div>
+        常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %}
+      </form>
+      <div class="ui bottom right attached label">
+        <a href="{% url 'vbp:docs' %}">查看官方文件</a>
+      </div>
+    </div>
+  </div>
+  <div class="ui hidden divider"></div>
+  <div class="ui grid">
+    <div class="eight wide column">
+      <table class="ui red table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Company</th>
+            <th>Country</th>
+            <th>Sales</th>
+            <th>Sales GR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for company in companies_ranked %}
+          <tr>
+            <td>{{ forloop.counter0|add:1 }}</td>
+            <td>
+              {{ company.name_en }} {{ company.name_cn }}
+            </td>
+            <td>
+              <i class="{{ company.country_code }} flag"></i>
+            </td>
+            <td>
+              {{ company.annual_netsales|intword }}
+            </td>
+            <td>
+              {% if company.latest_netsales_gr %}
+              {{ company.latest_netsales_gr|percentage:0 }}
+              {% else %}
+              new
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="eight wide column">
+      <table class="ui blue table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Drug</th>
+            <th>Company</th>
+            <th>Sales</th>
+            <th>Sales GR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sales in sales_ranked %}
+          <tr>
+            <td>{{ forloop.counter0|add:1 }}</td>
+            <td>
+              <a href="{% url 'rdpac:drug_detail' sales.drug.pk %}">{{ sales.drug.product_name_en }}
+                {{ sales.drug.product_name_cn }}</a>
+            </td>
+            <td>
+              {{ sales.company.name_cn }}
+            </td>
+            <td>
+              {{ sales.drug.annual_netsales|intword }}
+            </td>
+            <td>
+              {% if sales.drug.latest_netsales_gr %}
+              {{ sales.drug.latest_netsales_gr|percentage:0 }}
+              {% else %}
+              new
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="ui hidden divider"></div>
+<style>
+  .quick.link {
+    color: #e9e9e9;
+    cursor: pointer;
+  }
+
+  .quick.link:hover {
+    color: #0d71bb;
+    cursor: pointer;
+  }
+</style>
+{% endblock body %}

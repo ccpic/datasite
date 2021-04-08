@@ -23,6 +23,7 @@ urlpatterns = [
     path('chpa/', include('chpa_data.urls')),
     path('price_calc/', include('price_calc.urls')),
     path('vbp/', include('vbp.urls')),
+    path('rdpac/', include('rdpac.urls')),
     path('forecast/', include('forecast.urls')),
     path('internal_sales/', include('internal_sales.urls')),
     path('admin/', admin.site.urls),

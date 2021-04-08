@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'vbp',
     'forecast',
     'internal_sales',
+    'rdpac',
 ]
 
 MIDDLEWARE = [
