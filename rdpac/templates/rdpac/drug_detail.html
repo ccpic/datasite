@@ -174,11 +174,14 @@
             data: years,
             axisPointer: {
                 type: 'shadow'
-            }
+            },
         }],
         yAxis: [{
                 type: 'value',
                 name: '￥',
+                    splitLine: {
+                    show: false
+                },
                 axisLabel: {
                     formatter: function (value) {
                         return value.toLocaleString()
@@ -196,6 +199,14 @@
                         return toPercent(value)
                     }
                 },
+                axisPointer: {
+                    label: {
+                        // 文本标签文字的格式化器
+                        formatter: function (params) {
+                            return toPercent(params.value)
+                        }
+                    },
+                },
             }
         ],
         series: [{
@@ -288,7 +299,16 @@
             data: years,
             axisPointer: {
                 type: 'shadow'
-            }
+            },
+            axisPointer: {
+                link: {xAxisIndex: 'all'},
+                label: {
+                    // 文本标签文字的格式化器
+                    formatter: function (params) {
+                        return params.value
+                    }
+                },
+            },
         }],
         yAxis: [{
                 type: 'value',
@@ -300,6 +320,9 @@
                     return (value.min - 0.01 * (value.min)).toFixed(2);
                 },
                 minInterval: 1,
+                splitLine: {
+                    show: false
+                },
                 axisLabel: {
                     formatter: function (value) {
                         return toPercent(value)
