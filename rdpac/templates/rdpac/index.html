@@ -46,7 +46,14 @@
           <tr>
             <td>{{ forloop.counter0|add:1 }}</td>
             <td>
-              {{ company.name_en }} {{ company.name_cn }}
+              <div class="item">
+                <div class="middle aligned content">
+                  <div class="header">{{ company.name_cn }}</div>
+                  <div class="meta">
+                    <span class="molecule_en">{{ company.name_en }}</span>
+                  </div>
+                </div>
+              </div>
             </td>
             <td>
               <i class="{{ company.country_code }} flag"></i>
@@ -54,7 +61,7 @@
             <td>
               {{ company.annual_netsales|intword }}
             </td>
-            <td>
+            <td class="gr">
               {% if company.latest_netsales_gr %}
               {{ company.latest_netsales_gr|percentage:0 }}
               {% else %}
@@ -82,16 +89,31 @@
           <tr>
             <td>{{ forloop.counter0|add:1 }}</td>
             <td>
-              <a href="{% url 'rdpac:drug_detail' sales.drug.pk %}">{{ sales.drug.product_name_en }}
-                {{ sales.drug.product_name_cn }}</a>
+              <div class="item">
+                <div class="middle aligned content">
+                  <div class="header">
+                    <a href="{% url 'rdpac:drug_detail' sales.drug.pk %}">{{ sales.drug.molecule_cn }}</a>
+                  </div>
+                  <div class="meta">
+                    <span class="molecule_en">{{ sales.drug.molecule_en }}</span>
+                  </div>
+                </div>
+              </div>
             </td>
             <td>
-              {{ sales.company.name_cn }}
+              <div class="item">
+                <div class="middle aligned content">
+                  <div class="header">{{ sales.company.name_cn }}</div>
+                  <div class="meta">
+                    <span class="molecule_en">{{ sales.company.name_en }}</span>
+                  </div>
+                </div>
+              </div>
             </td>
             <td>
               {{ sales.drug.annual_netsales|intword }}
             </td>
-            <td>
+            <td class="gr">
               {% if sales.drug.latest_netsales_gr %}
               {{ sales.drug.latest_netsales_gr|percentage:0 }}
               {% else %}
@@ -116,5 +138,19 @@
     color: #0d71bb;
     cursor: pointer;
   }
+
+  .green {
+    color: green;
+  }
+
+  .red {
+    color: red;
+  }
 </style>
+<script>
+  $(document).ready(function () {
+    $('.gr:contains("-")').css('color', 'red');
+    $('.gr:not(:contains("-"))').css('color', 'green');
+  });
+</script>
 {% endblock body %}

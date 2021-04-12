@@ -115,7 +115,7 @@ class Sales(models.Model):
         return date
 
     @property
-    def annual_gr(self): # 年增长率
+    def annual_gr(self):  # 年增长率
         try:
             return (
                 self.netsales_value
@@ -125,6 +125,28 @@ class Sales(models.Model):
         except:
             return None
 
+    @property
+    def annual_uplift(self):  # 年净增长
+        try:
+            return (
+                self.netsales_value
+                - self.drug.sales.get(drug=self.drug, year=self.year - 1).netsales_value
+            )
+        except:
+            return None
+
+    @property
+    def annual_contrib(self):  # 年贡献率（占公司）
+        qs = self.company.sales.filter(year=self.year)
+        if qs.exists():
+            netsales_company = qs.aggregate(Sum("netsales_value"))[
+                "netsales_value__sum"
+            ]
+        try:
+            return self.netsales_value / netsales_company
+        except:
+            return None
+        
     def __str__(self):
         return "%s %s %s %s" % (self.company, self.drug, self.year, self.netsales_value)
 
