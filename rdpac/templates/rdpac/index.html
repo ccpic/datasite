@@ -35,7 +35,7 @@
         <thead>
           <tr>
             <th>Rank</th>
-            <th>Company</th>
+            <th colspan="2">Company</th>
             <th>Country</th>
             <th>Sales</th>
             <th>Sales GR</th>
@@ -45,6 +45,7 @@
           {% for company in companies_ranked %}
           <tr>
             <td>{{ forloop.counter0|add:1 }}</td>
+            <td><img src="{{ company.logo.url }}" height="30" /></td>
             <td>
               <div class="item">
                 <div class="middle aligned content">
@@ -55,9 +56,7 @@
                 </div>
               </div>
             </td>
-            <td>
-              <i class="{{ company.country_code }} flag"></i>
-            </td>
+            <td><i class="{{ company.country_code }} flag"></i></td>
             <td>
               {{ company.annual_netsales|intword }}
             </td>

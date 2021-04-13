@@ -13,7 +13,9 @@ class Company(models.Model):
     country_code = models.CharField(
         max_length=30, verbose_name="国家代码"
     )  # 填写2位小写英文国家代码以便后续前端匹配旗帜， 如us, uk
-
+    logo = models.ImageField(upload_to='logos/', verbose_name="公司Logo")
+    
+    
     class Meta:
         verbose_name = "MNC"
         ordering = ["name_en"]
@@ -142,11 +144,8 @@ class Sales(models.Model):
             netsales_company = qs.aggregate(Sum("netsales_value"))[
                 "netsales_value__sum"
             ]
-        try:
-            return self.netsales_value / netsales_company
-        except:
-            return None
-        
+        return self.netsales_value / netsales_company
+
     def __str__(self):
         return "%s %s %s %s" % (self.company, self.drug, self.year, self.netsales_value)
 
