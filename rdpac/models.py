@@ -1,8 +1,9 @@
 from django.db import models
 import datetime
-from django.db.models import Avg, Count, Min, Sum
+from django.db.models import Avg, Count, Min, Sum, F
 
 CURRENT_YEAR = 2020
+YEARS = [r for r in range(2013, CURRENT_YEAR + 1)]
 YEAR_CHOICES = [(r, r) for r in range(2013, CURRENT_YEAR + 1)]
 
 
@@ -13,9 +14,8 @@ class Company(models.Model):
     country_code = models.CharField(
         max_length=30, verbose_name="国家代码"
     )  # 填写2位小写英文国家代码以便后续前端匹配旗帜， 如us, uk
-    logo = models.ImageField(upload_to='logos/', verbose_name="公司Logo")
-    
-    
+    logo = models.ImageField(upload_to="logos/", verbose_name="公司Logo")
+
     class Meta:
         verbose_name = "MNC"
         ordering = ["name_en"]
@@ -24,26 +24,28 @@ class Company(models.Model):
         return "%s %s" % (self.name_en, self.name_cn)
 
     @property
-    def annual_netsales(self, years=[CURRENT_YEAR]):
-        qs = self.sales.filter(year__in=years)
+    def sales_by_year(self):
+        qs = self.sales.all()
         if qs.exists():
-            netsales = qs.aggregate(Sum("netsales_value"))["netsales_value__sum"]
-            return netsales
+            return qs.values("year").order_by("year").annotate(Sum(F("netsales_value")))
 
     @property
-    def latest_netsales_gr(self):
-        qs = self.sales.filter(year=CURRENT_YEAR)
-        if qs.exists():
-            netsales = qs.aggregate(Sum("netsales_value"))["netsales_value__sum"]
+    def latest_annual_netsales(self):
+        qs = self.sales_by_year.filter(year=CURRENT_YEAR)
+        if len(qs) == 1:
+            return qs.first()['netsales_value__sum']
         else:
-            netsales = 0
-
-        qs = self.sales.filter(year=CURRENT_YEAR - 1)
-        if qs.exists():
-            netsales_ya = qs.aggregate(Sum("netsales_value"))["netsales_value__sum"]
+            return 0
+        
+    @property
+    def latest_annual_netsales_gr(self):
+        netsales = self.latest_annual_netsales
+        qs_ya = self.sales_by_year.filter(year=CURRENT_YEAR - 1)
+        if len(qs_ya) == 1:
+            netsales_ya =  qs_ya.first()['netsales_value__sum']
         else:
             netsales_ya = 0
-
+        
         try:
             return netsales / netsales_ya - 1
         except ZeroDivisionError:
@@ -68,26 +70,28 @@ class Drug(models.Model):
         return "%s %s" % (self.molecule_en, self.molecule_cn)
 
     @property
-    def annual_netsales(self, years=[CURRENT_YEAR]):
-        qs = self.sales.filter(year__in=years)
+    def sales_by_year(self):
+        qs = self.sales.all()
         if qs.exists():
-            netsales = qs.aggregate(Sum("netsales_value"))["netsales_value__sum"]
-            return netsales
+            return qs.values("year").order_by("year").annotate(Sum(F("netsales_value")))
 
     @property
-    def latest_netsales_gr(self):
-        qs = self.sales.filter(year=CURRENT_YEAR)
-        if qs.exists():
-            netsales = qs.aggregate(Sum("netsales_value"))["netsales_value__sum"]
+    def latest_annual_netsales(self):
+        qs = self.sales_by_year.filter(year=CURRENT_YEAR)
+        if len(qs) == 1:
+            return qs.first()['netsales_value__sum']
         else:
-            netsales = 0
-
-        qs = self.sales.filter(year=CURRENT_YEAR - 1)
-        if qs.exists():
-            netsales_ya = qs.aggregate(Sum("netsales_value"))["netsales_value__sum"]
+            return 0
+        
+    @property
+    def latest_annual_netsales_gr(self):
+        netsales = self.latest_annual_netsales
+        qs_ya = self.sales_by_year.filter(year=CURRENT_YEAR - 1)
+        if len(qs_ya) == 1:
+            netsales_ya =  qs_ya.first()['netsales_value__sum']
         else:
             netsales_ya = 0
-
+        
         try:
             return netsales / netsales_ya - 1
         except ZeroDivisionError:

@@ -1,0 +1,342 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}RDPAC数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    <div id="pusher" class="pusher" style="padding-top:50px">
+        {% if company %}
+        <div class="ui huge breadcrumb">
+            <a href="{% url "rdpac:index" %}" class="section">首页</a>
+            <i class="right angle icon divider"></i>
+            <a href="{% url "rdpac:company_detail" company.pk %}" class="section">{{ company.name_cn }}</a>
+        </div>
+    </div>
+    <div class="ui celled grid">
+        <div class="row">
+            <div class="ui blue ribbon label">基本信息</div>
+            <div class="ui hidden divider"></div>
+            <div class="sixteen wide column">
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="ui red ribbon label">数据表格</div>
+            <div class="sixteen wide column">
+                <table class="ui red table">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>NetSales</th>
+                            <th>NetSales Uplift</th>
+                            <th>GR(y-1)</th>
+                            <th>Contrib % to Company</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales_by_year %}
+                        <tr>
+                            <td>{{ sale.year }}</td>
+                            <td>{{ sale.netsales_value|floatformat:"0" |intcomma }}</td>
+
+                            {% if sale.annual_uplift %}
+                            <td>{{ sale.annual_uplift|floatformat:"0" |intcomma }}</td>
+                            {% else %}
+                            <td>n/a</td>
+                            {% endif %}
+
+                            {% if sale.annual_gr %}
+                            <td>{{ sale.annual_gr|percentage:0 }}</td>
+                            {% else %}
+                            <td>n/a</td>
+                            {% endif %}
+
+                            {% if sale.annual_contrib %}
+                            <td>{{ sale.annual_contrib|percentage:0 }}</td>
+                            {% else %}
+                            <td>n/a</td>
+                            {% endif %}
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="sixteen wide column">
+                <div class="ui horizontal segments">
+                    <div class="ui purple segment" style="width: 50%">
+                        <div class="ui purple ribbon label">销售趋势</div>
+                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                        <div id="annual_performance" style="height:400px; width:100%"></div>
+                    </div>
+                    <div class="ui orange segment" style="width: 50%">
+                        <div class="ui orange ribbon label">贡献占比</div>
+                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                        <div id="annual_contrib" style="height:400px; width:100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</div>
+<div class="ui hidden divider"></div>
+<script>
+    function toPercent(str) {
+        if (isNaN(str) === false) {
+            var strP = Number(str * 100).toFixed(1);
+            strP += "%";
+        } else {
+            strP = str;
+        }
+        return strP;
+    }
+</script>
+
+<script>
+    var years = [],
+        netsales = [],
+        annual_gr = [];
+    {% for sale in sales %}
+        years.push({{ sale.year }})
+        netsales.push({{ sale.netsales_value|floatformat:"0" }})
+        {% if sale.annual_gr %}
+            annual_gr.push({{ sale.annual_gr }})
+        {% else %}
+            annual_gr.push(null)
+        {% endif %}
+    {% endfor %}
+    console.log(years, netsales, annual_gr)
+
+    var chartAnnualPerformance = echarts.init(document.getElementById('annual_performance'));
+    option = {
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'cross',
+                crossStyle: {
+                    color: '#999'
+                }
+            },
+            formatter: function (params) {
+                let html = params[0].name + "<br>";
+                for (let i = 0; i < params.length; i++) {
+                    html += params[i].marker
+                    if (params[i].seriesName == "年度增长率") {
+                        html += params[i].seriesName + ": " + toPercent(params[i].value) + "<br>";
+                    } else {
+                        html += params[i].seriesName + ": " + params[i].value.toLocaleString() + "<br>";
+                    }
+                }
+                return html;
+            }
+        },
+        toolbox: {
+            feature: {
+                dataView: {
+                    show: true,
+                    readOnly: false
+                },
+                magicType: {
+                    show: true,
+                    type: ['line', 'bar']
+                },
+                restore: {
+                    show: true
+                },
+                saveAsImage: {
+                    show: true
+                }
+            }
+        },
+        grid: {
+            left: 100
+        },
+        legend: {
+            data: ['年度纯销销售额', '年度增长率'],
+            y: 'bottom',
+        },
+        xAxis: [{
+            type: 'category',
+            data: years,
+            axisPointer: {
+                type: 'shadow'
+            },
+        }],
+        yAxis: [{
+                type: 'value',
+                name: '￥',
+                    splitLine: {
+                    show: false
+                },
+                axisLabel: {
+                    formatter: function (value) {
+                        return value.toLocaleString()
+                    }
+                },
+            },
+            {
+                type: 'value',
+                name: '%',
+                splitLine: {
+                    show: false
+                },
+                axisLabel: {
+                    formatter: function (value) {
+                        return toPercent(value)
+                    }
+                },
+                axisPointer: {
+                    label: {
+                        // 文本标签文字的格式化器
+                        formatter: function (params) {
+                            return toPercent(params.value)
+                        }
+                    },
+                },
+            }
+        ],
+        series: [{
+                name: '年度纯销销售额',
+                type: 'bar',
+                data: netsales
+            },
+            {
+                name: '年度增长率',
+                type: 'line',
+                yAxisIndex: 1,
+                data: annual_gr,
+            }
+        ]
+    };
+    chartAnnualPerformance.setOption(option);
+</script>
+<script>
+    var years = [],
+        annual_contrib = [];
+    {% for sale in sales %}
+        years.push({{ sale.year }})
+        {% if sale.annual_contrib %}
+            annual_contrib.push({{ sale.annual_contrib }})
+        {% else %}
+            annual_contrib.push(null)
+        {% endif %}
+    {% endfor %}
+    console.log(years, annual_contrib)
+
+    var chartAnnualContrib = echarts.init(document.getElementById('annual_contrib'));
+    option = {
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'cross',
+                crossStyle: {
+                    color: '#999'
+                }
+            },
+            formatter: function (params) {
+                let html = params[0].name + "<br>";
+                for (let i = 0; i < params.length; i++) {
+                    html += params[i].marker
+                    if (params[i].seriesName == "产品贡献份额（企业整体销售）") {
+                        html += params[i].seriesName + ": " + toPercent(params[i].value) + "<br>";
+                    } else {
+                        html += params[i].seriesName + ": " + params[i].value.toLocaleString() + "<br>";
+                    }
+                }
+                return html;
+            }
+        },
+        toolbox: {
+            feature: {
+                dataView: {
+                    show: true,
+                    readOnly: false
+                },
+                magicType: {
+                    show: true,
+                    type: ['line', 'bar']
+                },
+                restore: {
+                    show: true
+                },
+                saveAsImage: {
+                    show: true
+                }
+            }
+        },
+        grid: {
+            left: 100
+        },
+        legend: {
+            data: ['产品贡献份额（企业整体销售）'],
+            y: 'bottom',
+        },
+        label: {
+            show: true,
+            position: 'top',
+            color: "black",
+            fontSize: 12,
+            formatter: function (data) {
+                return toPercent(data.value)
+            }
+        },
+        xAxis: [{
+            type: 'category',
+            data: years,
+            axisPointer: {
+                type: 'shadow'
+            },
+            axisPointer: {
+                link: {xAxisIndex: 'all'},
+                label: {
+                    // 文本标签文字的格式化器
+                    formatter: function (params) {
+                        return params.value
+                    }
+                },
+            },
+        }],
+        yAxis: [{
+                type: 'value',
+                name: '%',
+                max: function (value) {
+                    return (value.max + 0.01 * (value.min)).toFixed(2);
+                },
+                min: function (value) {
+                    return (value.min - 0.01 * (value.min)).toFixed(2);
+                },
+                minInterval: 1,
+                splitLine: {
+                    show: false
+                },
+                axisLabel: {
+                    formatter: function (value) {
+                        return toPercent(value)
+                    }
+                },
+            }
+        ],
+        series: [{
+                name: '产品贡献份额（企业整体销售）',
+                type: 'line',
+                data: annual_contrib
+            },
+        ]
+    };
+    chartAnnualContrib.setOption(option);
+</script>
+{% endblock body %}

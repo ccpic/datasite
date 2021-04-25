@@ -49,7 +49,7 @@
             <td>
               <div class="item">
                 <div class="middle aligned content">
-                  <div class="header">{{ company.name_cn }}</div>
+                  <div class="header"><a href="{% url 'rdpac:company_detail' company.pk %}">{{ company.name_cn }}</a></div>
                   <div class="meta">
                     <span class="molecule_en">{{ company.name_en }}</span>
                   </div>
@@ -58,11 +58,11 @@
             </td>
             <td><i class="{{ company.country_code }} flag"></i></td>
             <td>
-              {{ company.annual_netsales|intword }}
+              {{ company.latest_annual_netsales|intword }}
             </td>
             <td class="gr">
-              {% if company.latest_netsales_gr %}
-              {{ company.latest_netsales_gr|percentage:0 }}
+              {% if company.latest_annual_netsales_gr %}
+              {{ company.latest_annual_netsales_gr|percentage:0 }}
               {% else %}
               new
               {% endif %}
@@ -110,11 +110,11 @@
               </div>
             </td>
             <td>
-              {{ sales.drug.annual_netsales|intword }}
+              {{ sales.drug.latest_annual_netsales|intword }}
             </td>
             <td class="gr">
-              {% if sales.drug.latest_netsales_gr %}
-              {{ sales.drug.latest_netsales_gr|percentage:0 }}
+              {% if sales.drug.latest_annual_netsales_gr %}
+              {{ sales.drug.latest_annual_netsales_gr|percentage:0 }}
               {% else %}
               new
               {% endif %}
