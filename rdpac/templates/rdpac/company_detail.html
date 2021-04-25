@@ -40,14 +40,14 @@
                             <th>NetSales</th>
                             <th>NetSales Uplift</th>
                             <th>GR(y-1)</th>
-                            <th>Contrib % to Company</th>
+                            <th>Company % in RDPAC</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for sale in sales_by_year %}
+                        {% for sale in company.performance_matrix %}
                         <tr>
                             <td>{{ sale.year }}</td>
-                            <td>{{ sale.netsales_value|floatformat:"0" |intcomma }}</td>
+                            <td>{{ sale.netsales_value__sum|floatformat:"0" |intcomma }}</td>
 
                             {% if sale.annual_uplift %}
                             <td>{{ sale.annual_uplift|floatformat:"0" |intcomma }}</td>
@@ -61,8 +61,8 @@
                             <td>n/a</td>
                             {% endif %}
 
-                            {% if sale.annual_contrib %}
-                            <td>{{ sale.annual_contrib|percentage:0 }}</td>
+                            {% if sale.company_share %}
+                            <td>{{ sale.company_share|percentage:0 }}</td>
                             {% else %}
                             <td>n/a</td>
                             {% endif %}
@@ -82,9 +82,9 @@
                         <div id="annual_performance" style="height:400px; width:100%"></div>
                     </div>
                     <div class="ui orange segment" style="width: 50%">
-                        <div class="ui orange ribbon label">贡献占比</div>
+                        <div class="ui orange ribbon label">企业份额</div>
                         <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                        <div id="annual_contrib" style="height:400px; width:100%"></div>
+                        <div id="company_share" style="height:400px; width:100%"></div>
                     </div>
                 </div>
             </div>
@@ -110,9 +110,9 @@
     var years = [],
         netsales = [],
         annual_gr = [];
-    {% for sale in sales %}
+    {% for sale in company.performance_matrix %}
         years.push({{ sale.year }})
-        netsales.push({{ sale.netsales_value|floatformat:"0" }})
+        netsales.push({{ sale.netsales_value__sum|floatformat:"0" }})
         {% if sale.annual_gr %}
             annual_gr.push({{ sale.annual_gr }})
         {% else %}
@@ -226,18 +226,18 @@
 </script>
 <script>
     var years = [],
-        annual_contrib = [];
-    {% for sale in sales %}
+        company_share = [];
+    {% for sale in company.performance_matrix %}
         years.push({{ sale.year }})
-        {% if sale.annual_contrib %}
-            annual_contrib.push({{ sale.annual_contrib }})
+        {% if sale.company_share %}
+            company_share.push({{ sale.company_share }})
         {% else %}
-            annual_contrib.push(null)
+            company_share.push(null)
         {% endif %}
     {% endfor %}
-    console.log(years, annual_contrib)
+    console.log(years, company_share)
 
-    var chartAnnualContrib = echarts.init(document.getElementById('annual_contrib'));
+    var chartAnnualContrib = echarts.init(document.getElementById('company_share'));
     option = {
         tooltip: {
             trigger: 'axis',
@@ -251,7 +251,7 @@
                 let html = params[0].name + "<br>";
                 for (let i = 0; i < params.length; i++) {
                     html += params[i].marker
-                    if (params[i].seriesName == "产品贡献份额（企业整体销售）") {
+                    if (params[i].seriesName == "公司销售份额（占RDPAC整体）") {
                         html += params[i].seriesName + ": " + toPercent(params[i].value) + "<br>";
                     } else {
                         html += params[i].seriesName + ": " + params[i].value.toLocaleString() + "<br>";
@@ -282,7 +282,7 @@
             left: 100
         },
         legend: {
-            data: ['产品贡献份额（企业整体销售）'],
+            data: ['公司销售份额（占RDPAC整体）'],
             y: 'bottom',
         },
         label: {
@@ -331,9 +331,9 @@
             }
         ],
         series: [{
-                name: '产品贡献份额（企业整体销售）',
+                name: '公司销售份额（占RDPAC整体）',
                 type: 'line',
-                data: annual_contrib
+                data: company_share
             },
         ]
     };

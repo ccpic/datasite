@@ -1,10 +1,17 @@
 from django.db import models
 import datetime
 from django.db.models import Avg, Count, Min, Sum, F
+import pandas as pd
 
 CURRENT_YEAR = 2020
 YEARS = [r for r in range(2013, CURRENT_YEAR + 1)]
 YEAR_CHOICES = [(r, r) for r in range(2013, CURRENT_YEAR + 1)]
+
+
+def get_sales_by_year(lst, target_year):
+    for item in lst:
+        if item["year"] == target_year:
+            return item["netsales_value__sum"]
 
 
 class Company(models.Model):
@@ -24,6 +31,44 @@ class Company(models.Model):
         return "%s %s" % (self.name_en, self.name_cn)
 
     @property
+    def performance_matrix(self):
+        qs = self.sales.all()
+        if qs.exists():
+            result = list(
+                qs.values("year").order_by("year").annotate(Sum(F("netsales_value")))
+            )
+        qs_all = Sales.objects.all()
+        result_all = list(
+            qs_all.values("year").order_by("year").annotate(Sum(F("netsales_value")))
+        )
+
+        for item in result:
+            try:
+                item["annual_uplift"] = item["netsales_value__sum"] - get_sales_by_year(
+                    result, item["year"] - 1
+                )
+            except:
+                item["annual_uplift"] = None
+
+            try:
+                item["annual_gr"] = (
+                    item["netsales_value__sum"]
+                    / get_sales_by_year(result, item["year"] - 1)
+                    - 1
+                )
+            except:
+                item["annual_gr"] = None
+
+            try:
+                item["company_share"] = item["netsales_value__sum"] / get_sales_by_year(
+                    result_all, item["year"]
+                )
+            except:
+                item["company_share"] = None
+
+        return result
+
+    @property
     def sales_by_year(self):
         qs = self.sales.all()
         if qs.exists():
@@ -33,19 +78,19 @@ class Company(models.Model):
     def latest_annual_netsales(self):
         qs = self.sales_by_year.filter(year=CURRENT_YEAR)
         if len(qs) == 1:
-            return qs.first()['netsales_value__sum']
+            return qs.first()["netsales_value__sum"]
         else:
             return 0
-        
+
     @property
     def latest_annual_netsales_gr(self):
         netsales = self.latest_annual_netsales
         qs_ya = self.sales_by_year.filter(year=CURRENT_YEAR - 1)
         if len(qs_ya) == 1:
-            netsales_ya =  qs_ya.first()['netsales_value__sum']
+            netsales_ya = qs_ya.first()["netsales_value__sum"]
         else:
             netsales_ya = 0
-        
+
         try:
             return netsales / netsales_ya - 1
         except ZeroDivisionError:
@@ -79,19 +124,19 @@ class Drug(models.Model):
     def latest_annual_netsales(self):
         qs = self.sales_by_year.filter(year=CURRENT_YEAR)
         if len(qs) == 1:
-            return qs.first()['netsales_value__sum']
+            return qs.first()["netsales_value__sum"]
         else:
             return 0
-        
+
     @property
     def latest_annual_netsales_gr(self):
         netsales = self.latest_annual_netsales
         qs_ya = self.sales_by_year.filter(year=CURRENT_YEAR - 1)
         if len(qs_ya) == 1:
-            netsales_ya =  qs_ya.first()['netsales_value__sum']
+            netsales_ya = qs_ya.first()["netsales_value__sum"]
         else:
             netsales_ya = 0
-        
+
         try:
             return netsales / netsales_ya - 1
         except ZeroDivisionError:
