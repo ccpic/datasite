@@ -15,8 +15,8 @@ def get_sales_by_year(lst, target_year):
 
 
 class Company(models.Model):
-    name_en = models.CharField(max_length=20, verbose_name="英文名", unique=True)
-    name_cn = models.CharField(max_length=20, verbose_name="中文名", unique=True)
+    name_en = models.CharField(max_length=30, verbose_name="英文名", unique=True)
+    name_cn = models.CharField(max_length=10, verbose_name="中文名", unique=True)
     abbr = models.CharField(max_length=4, verbose_name="名称缩写", unique=True)
     country_code = models.CharField(
         max_length=30, verbose_name="国家代码"
@@ -76,35 +76,37 @@ class Company(models.Model):
 
     @property
     def latest_annual_netsales(self):
-        qs = self.sales_by_year.filter(year=CURRENT_YEAR)
-        if len(qs) == 1:
-            return qs.first()["netsales_value__sum"]
-        else:
-            return 0
+        if self.sales_by_year is not None:
+            qs = self.sales_by_year.filter(year=CURRENT_YEAR)
+            if len(qs) == 1:
+                return qs.first()["netsales_value__sum"]
+            else:
+                return 0
 
     @property
     def latest_annual_netsales_gr(self):
-        netsales = self.latest_annual_netsales
-        qs_ya = self.sales_by_year.filter(year=CURRENT_YEAR - 1)
-        if len(qs_ya) == 1:
-            netsales_ya = qs_ya.first()["netsales_value__sum"]
-        else:
-            netsales_ya = 0
+        if self.sales_by_year is not None:
+            netsales = self.latest_annual_netsales
+            qs_ya = self.sales_by_year.filter(year=CURRENT_YEAR - 1)
+            if len(qs_ya) == 1:
+                netsales_ya = qs_ya.first()["netsales_value__sum"]
+            else:
+                netsales_ya = 0
 
-        try:
-            return netsales / netsales_ya - 1
-        except ZeroDivisionError:
-            return None
+            try:
+                return netsales / netsales_ya - 1
+            except ZeroDivisionError:
+                return None
 
 
 class Drug(models.Model):
-    molecule_en = models.CharField(max_length=30, verbose_name="英文通用名")
-    molecule_cn = models.CharField(max_length=30, verbose_name="中文通用名")
+    molecule_en = models.CharField(max_length=100, verbose_name="英文通用名")
+    molecule_cn = models.CharField(max_length=50, verbose_name="中文通用名")
     product_name_en = models.CharField(
         max_length=30, verbose_name="英文产品名", unique=True, blank=True
     )
     product_name_cn = models.CharField(
-        max_length=30, verbose_name="中文产品名", unique=True, blank=True
+        max_length=30, verbose_name="中文产品名", blank=True
     )
 
     class Meta:
@@ -112,7 +114,7 @@ class Drug(models.Model):
         ordering = ["molecule_en"]
 
     def __str__(self):
-        return "%s %s" % (self.molecule_en, self.molecule_cn)
+        return "%s %s (%s %s)" % (self.product_name_en, self.product_name_cn, self.molecule_en, self.molecule_cn)
 
     @property
     def performance_matrix(self):

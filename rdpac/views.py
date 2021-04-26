@@ -11,9 +11,12 @@ import json
 @login_required
 def index(request):
     companies = Company.objects.all()
-    companies_ranked = sorted(
-        companies, key=lambda x: x.latest_annual_netsales, reverse=True
-    )  # 按最新年份销售由高到低排序
+    try:
+        companies_ranked = sorted(
+            companies, key=lambda x: x.latest_annual_netsales, reverse=True
+        )  # 按最新年份销售由高到低排序
+    except:
+        companies_ranked = None
     sales_ranked = Sales.objects.filter(year=CURRENT_YEAR).order_by("-netsales_value")
     # drugs_ranked = sorted(drugs, key=lambda x: x.annual_netsales, reverse=True) # 按最新年份销售由高到低排序
     context = {
@@ -81,7 +84,7 @@ def search(request, kw):
     sr_ids = [drug.id for drug in drug_result]
     drug_result2 = Drug.objects.filter(id__in=sr_ids)
 
-    objs = list(company_result2)+list(drug_result2)
+    objs = list(company_result2) + list(drug_result2)
     try:
         data = serializers.serialize("json", objs, ensure_ascii=False)
         res = {

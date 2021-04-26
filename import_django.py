@@ -13,6 +13,7 @@ django.setup()
 
 from chpa_data.views import *
 from vbp.models import *
+from rdpac.models import *
 
 engine = create_engine("mssql+pymssql://(local)/CHPA_1806")
 table = "data"
@@ -95,7 +96,7 @@ def import_bid():
                         tender=tender,
                         bidder=company,
                         origin=D_BOOLEAN[origin],
-                        bid_spec = spec,
+                        bid_spec=spec,
                         bid_price=bid_price,
                     )
                 else:
@@ -103,7 +104,7 @@ def import_bid():
                         tender=tender,
                         bidder=company,
                         origin=D_BOOLEAN[origin],
-                        bid_spec = spec,
+                        bid_spec=spec,
                         bid_price=bid_price,
                         original_price=original_price,
                     )
@@ -143,18 +144,63 @@ def update_tender():
     tenders = Tender.objects.all()
     tender_begin = datetime.datetime.strptime("01-11-2020", "%d-%m-%Y")
     for tender in tenders:
-        if tender.vol == '第三轮56品种':
+        if tender.vol == "第三轮56品种":
             tender.tender_begin = tender_begin
             tender.save()
             print(tender_begin)
 
 
+"""以下部分为rdpac导入模块"""
+
+
+def import_company():
+    df = pd.read_excel("rdpac.xlsx", sheet_name="summary", header=0)
+    df = df.drop_duplicates("Company Name_CN")
+    # pivoted = pd.pivot_table(df, index='药品通用名', values='最高限价', aggfunc=np.mean)
+    # d = pivoted.to_dict()['最高限价']
+
+    l = []
+    for company in df.values:
+        print(company)
+        l.append(
+            Company(
+                name_cn=company[1],
+                name_en=company[2],
+                abbr=company[0],
+                country_code=company[3],
+            )
+        )
+
+    Company.objects.all().delete()
+    Company.objects.bulk_create(l)
+
+
+def import_drug():
+    df = pd.read_excel("rdpac.xlsx", sheet_name="summary", header=0)
+    df = df.drop_duplicates("Product Name-RDPAC")
+    
+    l = []
+    for drug in df.values:
+        print(drug)
+        l.append(
+            Drug(
+                molecule_cn=drug[6],
+                molecule_en=drug[7],
+                product_name_cn=drug[5],
+                product_name_en=drug[4],
+            )
+        )
+        
+    Drug.objects.all().delete()
+    Drug.objects.bulk_create(l)
 
 
 if __name__ == "__main__":
-    importModel(D_MODEL)
+    # importModel(D_MODEL)
     # import_tender()
     # import_volume()
     # import_bid()
     # update_tender()
+    import_company()
+    import_drug()
     print("Done!", time.process_time())
