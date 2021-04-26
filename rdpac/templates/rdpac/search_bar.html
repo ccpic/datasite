@@ -1,0 +1,86 @@
+<div class="ui inverted segment">
+    <form class="ui inverted fluid form">
+        {% csrf_token %}
+        <div class="field">
+            <div class="ui fluid search">
+                <input class="prompt" type="text" placeholder="输入关键字同时搜索公司/药品">
+                <div class="results"></div>
+            </div>
+        </div>
+        {% comment %} 常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %} {% endcomment %}
+    </form>
+</div>
+
+<style>
+    .ui.search>.results .result .image {
+        float: right;
+        overflow: hidden;
+        background: 0 0;
+        width: auto;
+        height: 3em;
+        border-radius: .25em;
+    }
+</style>
+
+<script>
+    var url = "{% url 'rdpac:search' 'QUERYPLACEHOLDER' %}".replace(
+        'QUERYPLACEHOLDER', '{query}'
+    )
+    $('.ui.fluid.search').search({
+        type: 'category',
+        apiSettings: {
+            onResponse: function (searchResponse) {
+                var
+                    response = {
+                        results: {}
+                    };
+                console.log(searchResponse)
+                // translate API response to work with search
+                $.each(JSON.parse(searchResponse.data), function (index, item) {
+                    var
+                        maxResults = 8
+                    company_url = "{% url 'rdpac:company' %}";
+                    drug_url = "{% url 'rdpac:drug' %}";;
+                    if (index >= maxResults) {
+                        return false;
+                    }
+                    // create new categories
+                    if (response.results["企业"] === undefined) {
+                        response.results["企业"] = {
+                            name: "企业",
+                            results: []
+                        };
+                    }
+                    if (response.results["药品"] === undefined) {
+                        response.results["药品"] = {
+                            name: "药品",
+                            results: []
+                        };
+                    }
+
+                    // add result to categories
+                    if (item.model === "rdpac.company") {
+                        response.results["企业"].results.push({
+                            title: item.fields.name_cn,
+                            description: item.fields.name_en,
+                            image: {{ MEDIA_URL}} + item.fields.logo,
+                            url: company_url + item.pk,
+                            pk: item.pk
+                        });
+                    } else if (item.model === "rdpac.drug") {
+                        response.results["药品"].results.push({
+                            title: item.fields.product_name_cn + " " + item.fields
+                                .product_name_en,
+                            description: item.fields.molecule_cn + " " + item.fields
+                                .molecule_en,
+                            url: drug_url + item.pk,
+                            pk: item.pk
+                        });
+                    }
+                });
+                return response;
+            },
+            url: url
+        },
+    });
+</script>

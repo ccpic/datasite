@@ -15,6 +15,7 @@
 
 <div class="ui container">
     <div id="pusher" class="pusher" style="padding-top:50px">
+        {% include 'rdpac/search_bar.html' %}
         {% if drug %}
         <div class="ui huge breadcrumb">
             <a href="{% url "rdpac:index" %}" class="section">首页</a>
