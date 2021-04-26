@@ -15,101 +15,103 @@
     {% include 'rdpac/search_bar.html' %}
   </div>
   <div class="ui hidden divider"></div>
-  <div class="ui grid">
-    <div class="eight wide column">
-      <table class="ui red table">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th colspan="2">Company</th>
-            <th>Country</th>
-            <th>Sales</th>
-            <th>Sales GR</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for company in companies_ranked %}
-          <tr>
-            <td>{{ forloop.counter0|add:1 }}</td>
-            <td><img src="{{ company.logo.url }}" height="30" /></td>
-            <td>
-              <div class="item">
-                <div class="middle aligned content">
-                  <div class="header"><a href="{% url 'rdpac:company_detail' company.pk %}">{{ company.name_cn }}</a></div>
-                  <div class="meta">
-                    <span class="molecule_en">{{ company.name_en }}</span>
-                  </div>
+  <div class="ui top attached tabular menu">
+    <a class="active item" data-tab="company_rank">{{ CURRENT_YEAR }} Top10 MNCs</a>
+    <a class="item" data-tab="drug_rank">{{ CURRENT_YEAR }} Top10 Drugs</a>
+  </div>
+  <div class="ui bottom attached active tab segment" data-tab="company_rank">
+    <table class="ui red table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th colspan="2">Company</th>
+          <th>Country</th>
+          <th>Sales</th>
+          <th>Sales GR</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for company in companies_ranked %}
+        <tr>
+          <td>{{ forloop.counter0|add:1 }}</td>
+          <td><img src="{{ company.logo.url }}" height="30" /></td>
+          <td>
+            <div class="item">
+              <div class="middle aligned content">
+                <div class="header"><a href="{% url 'rdpac:company_detail' company.pk %}">{{ company.name_cn }}</a></div>
+                <div class="meta">
+                  <span class="molecule_en">{{ company.name_en }}</span>
                 </div>
               </div>
-            </td>
-            <td><i class="{{ company.country_code }} flag"></i></td>
-            <td>
-              {{ company.latest_annual_netsales|intword }}
-            </td>
-            <td class="gr">
-              {% if company.latest_annual_netsales_gr %}
-              {{ company.latest_annual_netsales_gr|percentage:0 }}
-              {% else %}
-              new
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="eight wide column">
-      <table class="ui blue table">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Drug</th>
-            <th>Company</th>
-            <th>Sales</th>
-            <th>Sales GR</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for sales in sales_ranked %}
-          <tr>
-            <td>{{ forloop.counter0|add:1 }}</td>
-            <td>
-              <div class="item">
-                <div class="middle aligned content">
-                  <div class="header">
-                    <a href="{% url 'rdpac:drug_detail' sales.drug.pk %}">{{ sales.drug.molecule_cn }}</a>
-                  </div>
-                  <div class="meta">
-                    <span class="molecule_en">{{ sales.drug.molecule_en }}</span>
-                  </div>
+            </div>
+          </td>
+          <td><i class="{{ company.country_code }} flag"></i></td>
+          <td>
+            {{ company.latest_annual_netsales|intword }}
+          </td>
+          <td class="gr">
+            {% if company.latest_annual_netsales_gr %}
+            {{ company.latest_annual_netsales_gr|percentage:0 }}
+            {% else %}
+            new
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="ui bottom attached tab segment" data-tab="drug_rank">
+    <table class="ui blue table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Drug</th>
+          <th>Company</th>
+          <th>Sales</th>
+          <th>Sales GR</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sales in sales_ranked %}
+        <tr>
+          <td>{{ forloop.counter0|add:1 }}</td>
+          <td>
+            <div class="item">
+              <div class="middle aligned content">
+                <div class="header">
+                  <a href="{% url 'rdpac:drug_detail' sales.drug.pk %}">{{ sales.drug.molecule_cn }}</a>
+                </div>
+                <div class="meta">
+                  <span class="molecule_en">{{ sales.drug.molecule_en }}</span>
                 </div>
               </div>
-            </td>
-            <td>
-              <div class="item">
-                <div class="middle aligned content">
-                  <div class="header">{{ sales.company.name_cn }}</div>
-                  <div class="meta">
-                    <span class="molecule_en">{{ sales.company.name_en }}</span>
-                  </div>
+            </div>
+          </td>
+          <td>
+            <div class="item">
+              <div class="middle aligned content">
+                <div class="header">{{ sales.company.name_cn }}</div>
+                <div class="meta">
+                  <span class="molecule_en">{{ sales.company.name_en }}</span>
                 </div>
               </div>
-            </td>
-            <td>
-              {{ sales.drug.latest_annual_netsales|intword }}
-            </td>
-            <td class="gr">
-              {% if sales.drug.latest_annual_netsales_gr %}
-              {{ sales.drug.latest_annual_netsales_gr|percentage:0 }}
-              {% else %}
-              new
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+            </div>
+          </td>
+          <td>
+            {{ sales.drug.latest_annual_netsales|intword }}
+          </td>
+          <td class="gr">
+            {% if sales.drug.latest_annual_netsales_gr %}
+            {{ sales.drug.latest_annual_netsales_gr|percentage:0 }}
+            {% else %}
+            new
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 <div class="ui hidden divider"></div>
@@ -135,6 +137,9 @@
 
 <script>
   $(document).ready(function () {
+    $('.menu .item')
+      .tab()
+    ;
     $('.gr:contains("-")').css('color', 'red');
     $('.gr:not(:contains("-"))').css('color', 'green');
   });

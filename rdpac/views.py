@@ -19,6 +19,7 @@ def index(request):
     context = {
         "companies_ranked": companies_ranked,
         "sales_ranked": sales_ranked,
+        "CURRENT_YEAR": CURRENT_YEAR,
     }
     return render(request, "rdpac/index.html", context)
 
