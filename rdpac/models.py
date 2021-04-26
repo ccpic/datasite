@@ -115,6 +115,44 @@ class Drug(models.Model):
         return "%s %s" % (self.molecule_en, self.molecule_cn)
 
     @property
+    def performance_matrix(self):
+        qs = self.sales.all()
+        if qs.exists():
+            result = list(
+                qs.values("year").order_by("year").annotate(Sum(F("netsales_value")))
+            )
+        qs_all = Sales.objects.all()
+        result_all = list(
+            qs_all.values("year").order_by("year").annotate(Sum(F("netsales_value")))
+        )
+
+        for item in result:
+            try:
+                item["annual_uplift"] = item["netsales_value__sum"] - get_sales_by_year(
+                    result, item["year"] - 1
+                )
+            except:
+                item["annual_uplift"] = None
+
+            try:
+                item["annual_gr"] = (
+                    item["netsales_value__sum"]
+                    / get_sales_by_year(result, item["year"] - 1)
+                    - 1
+                )
+            except:
+                item["annual_gr"] = None
+
+            try:
+                item["company_share"] = item["netsales_value__sum"] / get_sales_by_year(
+                    result_all, item["year"]
+                )
+            except:
+                item["company_share"] = None
+
+        return result
+
+    @property
     def sales_by_year(self):
         qs = self.sales.all()
         if qs.exists():
