@@ -41,32 +41,32 @@ class Company(models.Model):
         result_all = list(
             qs_all.values("year").order_by("year").annotate(Sum(F("netsales_value")))
         )
+        if qs.exists():
+            for item in result:
+                try:
+                    item["annual_uplift"] = item["netsales_value__sum"] - get_sales_by_year(
+                        result, item["year"] - 1
+                    )
+                except:
+                    item["annual_uplift"] = None
 
-        for item in result:
-            try:
-                item["annual_uplift"] = item["netsales_value__sum"] - get_sales_by_year(
-                    result, item["year"] - 1
-                )
-            except:
-                item["annual_uplift"] = None
+                try:
+                    item["annual_gr"] = (
+                        item["netsales_value__sum"]
+                        / get_sales_by_year(result, item["year"] - 1)
+                        - 1
+                    )
+                except:
+                    item["annual_gr"] = None
 
-            try:
-                item["annual_gr"] = (
-                    item["netsales_value__sum"]
-                    / get_sales_by_year(result, item["year"] - 1)
-                    - 1
-                )
-            except:
-                item["annual_gr"] = None
+                try:
+                    item["company_share"] = item["netsales_value__sum"] / get_sales_by_year(
+                        result_all, item["year"]
+                    )
+                except:
+                    item["company_share"] = None
 
-            try:
-                item["company_share"] = item["netsales_value__sum"] / get_sales_by_year(
-                    result_all, item["year"]
-                )
-            except:
-                item["company_share"] = None
-
-        return result
+            return result
 
     @property
     def sales_by_year(self):
