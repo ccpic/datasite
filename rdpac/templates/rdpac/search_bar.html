@@ -39,8 +39,8 @@
                 $.each(JSON.parse(searchResponse.data), function (index, item) {
                     var
                         maxResults = 8
-                    company_url = "{% url 'rdpac:company' %}";
-                    drug_url = "{% url 'rdpac:drug' %}";;
+                        company_url = "{% url 'rdpac:company' %}";
+                        drug_url = "{% url 'rdpac:drug' %}";
                     if (index >= maxResults) {
                         return false;
                     }
