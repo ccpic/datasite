@@ -21,7 +21,7 @@ class Company(models.Model):
     country_code = models.CharField(
         max_length=30, verbose_name="国家代码"
     )  # 填写2位小写英文国家代码以便后续前端匹配旗帜， 如us, uk
-    logo = models.ImageField(upload_to="logos/", verbose_name="公司Logo")
+    logo = models.ImageField(upload_to="logos/", default="logos/default.png" , verbose_name="公司Logo")
 
     class Meta:
         verbose_name = "MNC"
