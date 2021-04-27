@@ -54,7 +54,6 @@ def company_detail(request, company_id):
         
     context = {
         "company": company,
-        "sales": sales,
     }
     return render(request, "rdpac/company_detail.html", context)
 

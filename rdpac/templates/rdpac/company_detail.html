@@ -33,7 +33,7 @@
             <div class="row">
                 <div class="sixteen wide column">
                     <div class="ui red ribbon label">销售数据</div>
-                    <table class="ui red table">
+                    <table class="ui red selectable table">
                         <thead>
                             <tr>
                                 <th>Year</th>
@@ -93,8 +93,63 @@
         <div class="ui bottom attached tab segment" data-tab="company_products">
             <div class="row">
                 <div class="sixteen wide column">
-                    <div class="ui red ribbon label">产品表现</div>
-                    {{ company.drugs }}
+                    <div class="ui blue ribbon label">产品表现</div>
+                    <table class="ui blue selectable table">
+                        <thead>
+                            <tr>
+                                <th rowspan=2>Molecule</th>
+                                <th rowspan=2>Product</th>
+                                <th colspan=8>年度销售额（百万元）</th>
+                            </tr>
+                            <tr>
+                                {% for i in 8|times%}
+                                    <th>{{ i|add:2012 }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for drug_sale in company.drugs %}
+                            <tr>
+                                <td width=10%>
+                                    <div class="item">
+                                        <div class="middle aligned content">
+                                            <div class="header">
+                                            <a href="{% url 'rdpac:drug_detail' drug_sale.drug_id %}">{{ drug_sale.molecule_cn }}</a>
+                                            </div>
+                                            <div class="meta">
+                                                <span class="molecule_en">{{ drug_sale.molecule_en|truncatechars:20 }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td width=10%>
+                                    <div class="item">
+                                        <div class="middle aligned content">
+                                            <div class="header">
+                                            {% if drug_sale.product_name_cn %}
+                                            {{ drug_sale.product_name_cn }}
+                                            {% else %}
+                                            暂无中文商品名
+                                            {% endif %}
+                                            </div>
+                                            <div class="meta">
+                                            <span class="product_name_en">{{ drug_sale.product_name_en|truncatechars:20 }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td align="right">{{ drug_sale.2013|change_unit }}</td>
+                                <td align="right">{{ drug_sale.2014|change_unit }}</td>
+                                <td align="right">{{ drug_sale.2015|change_unit }}</td>
+                                <td align="right">{{ drug_sale.2016|change_unit }}</td>
+                                <td align="right">{{ drug_sale.2017|change_unit }}</td>
+                                <td align="right">{{ drug_sale.2018|change_unit }}</td>
+                                <td align="right">{{ drug_sale.2019|change_unit }}</td>
+                                <td align="right">{{ drug_sale.2020|change_unit }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

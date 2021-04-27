@@ -30,9 +30,10 @@ def zero_to_empty(value):
     except:
         return value
 
+
 @register.filter(name="order_by_std_price")
 def order_by_std_price(qs, reverse=True):
-    
+
     return sorted(qs, key=lambda a: a.std_price, reverse=reverse)
 
 
@@ -44,10 +45,10 @@ def objs_id_to_string(objs):
     return "|".join(arr)
 
 
-@register.filter(name='times')
+@register.filter(name="times")
 def times(number):
     try:
-        return range(1, number+1)
+        return range(1, number + 1)
     except:
         return []
 
@@ -102,3 +103,18 @@ def qs_by_competition(tenders, bidder_num, winner_num):
     tender_ids = [tender.id for tender in qs if tender.winners().count() == winner_num]
     qs = tenders.filter(id__in=tender_ids)
     return qs
+
+
+@register.filter(name="change_unit")
+def change_unit(value):
+    try:
+        value = value / 1000000
+        if value == 0:
+            format_str = ""
+        elif value < 1:
+            format_str = "{0:,.2f}"
+        else:
+            format_str = "{0:,.0f}"
+        return format_str.format(value)
+    except:
+        return ""

@@ -2,6 +2,7 @@ from django.db import models
 import datetime
 from django.db.models import Avg, Count, Min, Sum, F
 import pandas as pd
+from django_pivot.pivot import pivot
 
 CURRENT_YEAR = 2020
 YEARS = [r for r in range(2013, CURRENT_YEAR + 1)]
@@ -21,7 +22,9 @@ class Company(models.Model):
     country_code = models.CharField(
         max_length=30, verbose_name="国家代码"
     )  # 填写2位小写英文国家代码以便后续前端匹配旗帜， 如us, uk
-    logo = models.ImageField(upload_to="logos/", default="logos/default.png" , verbose_name="公司Logo")
+    logo = models.ImageField(
+        upload_to="logos/", default="logos/default.png", verbose_name="公司Logo"
+    )
 
     class Meta:
         verbose_name = "MNC"
@@ -44,9 +47,9 @@ class Company(models.Model):
         if qs.exists():
             for item in result:
                 try:
-                    item["annual_uplift"] = item["netsales_value__sum"] - get_sales_by_year(
-                        result, item["year"] - 1
-                    )
+                    item["annual_uplift"] = item[
+                        "netsales_value__sum"
+                    ] - get_sales_by_year(result, item["year"] - 1)
                 except:
                     item["annual_uplift"] = None
 
@@ -60,9 +63,9 @@ class Company(models.Model):
                     item["annual_gr"] = None
 
                 try:
-                    item["company_share"] = item["netsales_value__sum"] / get_sales_by_year(
-                        result_all, item["year"]
-                    )
+                    item["company_share"] = item[
+                        "netsales_value__sum"
+                    ] / get_sales_by_year(result_all, item["year"])
                 except:
                     item["company_share"] = None
 
@@ -70,10 +73,27 @@ class Company(models.Model):
 
     @property
     def drugs(self):
-        qs = self.sales.all()
-        products = list(qs.values_list('drug', 'year', 'netsales_value'))
-        return products
-        
+        qs = self.sales.all().order_by("drug_id")
+        data = list(
+            pivot(queryset=qs, rows="drug_id", column="year", data="netsales_value").order_by("-2020")
+        )
+
+        for drug_sale in data:
+            drug_sale["molecule_en"] = Drug.objects.get(
+                pk=drug_sale["drug_id"]
+            ).molecule_en
+            drug_sale["molecule_cn"] = Drug.objects.get(
+                pk=drug_sale["drug_id"]
+            ).molecule_cn
+            drug_sale["product_name_en"] = Drug.objects.get(
+                pk=drug_sale["drug_id"]
+            ).product_name_en
+            drug_sale["product_name_cn"] = Drug.objects.get(
+                pk=drug_sale["drug_id"]
+            ).product_name_cn
+
+        return data
+
     @property
     def sales_by_year(self):
         qs = self.sales.all()
@@ -111,16 +131,19 @@ class Drug(models.Model):
     product_name_en = models.CharField(
         max_length=30, verbose_name="英文产品名", unique=True, blank=True
     )
-    product_name_cn = models.CharField(
-        max_length=30, verbose_name="中文产品名", blank=True
-    )
+    product_name_cn = models.CharField(max_length=30, verbose_name="中文产品名", blank=True)
 
     class Meta:
         verbose_name = "药物"
         ordering = ["molecule_en"]
 
     def __str__(self):
-        return "%s %s (%s %s)" % (self.product_name_en, self.product_name_cn, self.molecule_en, self.molecule_cn)
+        return "%s %s (%s %s)" % (
+            self.product_name_en,
+            self.product_name_cn,
+            self.molecule_en,
+            self.molecule_cn,
+        )
 
     @property
     def performance_matrix(self):
