@@ -26,15 +26,15 @@
           <th>Rank</th>
           <th colspan="2">Company</th>
           <th>Country</th>
-          <th>Sales</th>
-          <th>Sales GR</th>
+          <th>{{ CURRENT_YEAR }} Sales</th>
+          <th>{{ CURRENT_YEAR }} Sales GR</th>
         </tr>
       </thead>
       <tbody>
         {% for company in companies_ranked %}
         <tr>
           <td>{{ forloop.counter0|add:1 }}</td>
-          <td><img src="{{ company.logo.url }}" height="30" /></td>
+          <td><a href="{% url 'rdpac:company_detail' company.pk %}"><img src="{{ company.logo.url }}" /></a></td>
           <td>
             <div class="item">
               <div class="middle aligned content">
@@ -46,8 +46,8 @@
             </div>
           </td>
           <td><i class="{{ company.country_code }} flag"></i></td>
-          <td>
-            {{ company.latest_annual_netsales|intword }}
+          <td align="right">
+            {{ company.latest_annual_netsales|floatformat:"0"|intcomma }}
           </td>
           <td class="gr">
             {% if company.latest_annual_netsales_gr %}
@@ -66,10 +66,11 @@
       <thead>
         <tr>
           <th>Rank</th>
-          <th>Drug</th>
-          <th>Company</th>
-          <th>Sales</th>
-          <th>Sales GR</th>
+          <th>Molecule</th>
+          <th>Product</th>
+          <th colspan="2">Company</th>
+          <th>{{ CURRENT_YEAR }} Sales</th>
+          <th>{{ CURRENT_YEAR }} Sales GR</th>
         </tr>
       </thead>
       <tbody>
@@ -83,7 +84,7 @@
                   <a href="{% url 'rdpac:drug_detail' sales.drug.pk %}">{{ sales.drug.molecule_cn }}</a>
                 </div>
                 <div class="meta">
-                  <span class="molecule_en">{{ sales.drug.molecule_en }}</span>
+                  <span class="molecule_en">{{ sales.drug.molecule_en|truncatechars:20 }}</span>
                 </div>
               </div>
             </div>
@@ -91,15 +92,32 @@
           <td>
             <div class="item">
               <div class="middle aligned content">
-                <div class="header">{{ sales.company.name_cn }}</div>
+                <div class="header">
+                  {% if sales.drug.product_name_cn %}
+                  {{ sales.drug.product_name_cn }}
+                  {% else %}
+                  暂无中文商品名
+                  {% endif %}
+                </div>
+                <div class="meta">
+                  <span class="product_name_en">{{ sales.drug.product_name_en|truncatechars:20 }}</span>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td><a href="{% url 'rdpac:company_detail' sales.company.pk %}"><img src="{{ sales.company.logo.url }}" /></a></td>
+          <td>
+            <div class="item">
+              <div class="middle aligned content">
+                <div class="header"><a href="{% url 'rdpac:company_detail' sales.company.pk %}">{{  sales.company.name_cn }}</a></div>
                 <div class="meta">
                   <span class="molecule_en">{{ sales.company.name_en }}</span>
                 </div>
               </div>
             </div>
           </td>
-          <td>
-            {{ sales.drug.latest_annual_netsales|intword }}
+          <td align="right">
+            {{ sales.drug.latest_annual_netsales|floatformat:"0"|intcomma }}
           </td>
           <td class="gr">
             {% if sales.drug.latest_annual_netsales_gr %}
@@ -134,7 +152,14 @@
     color: red;
   }
 </style>
-
+<style>
+img{
+    max-height:30px;
+    max-width:100px;
+    height:auto;
+    width:auto;
+}
+</style>
 <script>
   $(document).ready(function () {
     $('.menu .item')

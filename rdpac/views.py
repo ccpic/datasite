@@ -7,17 +7,17 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core import serializers
 import json
 
-
 @login_required
 def index(request):
+    TOP_N = 10
     companies = Company.objects.all()
     try:
         companies_ranked = sorted(
             companies, key=lambda x: x.latest_annual_netsales, reverse=True
-        )  # 按最新年份销售由高到低排序
+        )[:TOP_N]  # 按最新年份销售由高到低排序
     except:
         companies_ranked = None
-    sales_ranked = Sales.objects.filter(year=CURRENT_YEAR).order_by("-netsales_value")
+    sales_ranked = Sales.objects.filter(year=CURRENT_YEAR).order_by("-netsales_value")[:TOP_N] 
     # drugs_ranked = sorted(drugs, key=lambda x: x.annual_netsales, reverse=True) # 按最新年份销售由高到低排序
     context = {
         "companies_ranked": companies_ranked,
@@ -51,7 +51,7 @@ def drug(request):
 @login_required
 def company_detail(request, company_id):
     company = Company.objects.get(pk=company_id)
-    sales = company.sales.all()
+        
     context = {
         "company": company,
         "sales": sales,
@@ -101,28 +101,4 @@ def search(request, kw):
         json.dumps(res, ensure_ascii=False),
         content_type="application/json charset=utf-8",
     )
-    # elif request.method == "GET":
-    #     DISPLAY_LENGTH = 25
-    #     HOT_KWS = ["诺欣妥"]
-    #     paginator = Paginator(
-    #         search_result2, DISPLAY_LENGTH
-    #     )  #  为了克服pagination bug这里的参数时search_result2
-    #     page = request.GET.get("page")
-
-    #     try:
-    #         rows = paginator.page(page)
-    #     except PageNotAnInteger:
-    #         rows = paginator.page(1)
-    #     except EmptyPage:
-    #         rows = paginator.page(paginator.num_pages)
-
-    #     context = {
-    #         "tenders": rows,
-    #         "num_pages": paginator.num_pages,
-    #         "record_n": paginator.count,
-    #         "display_length": DISPLAY_LENGTH,
-    #         "kw": kw,
-    #         "hot_kws": HOT_KWS,
-    #     }
-
-    #     return render(request, "vbp/tenders.html", context)
+    

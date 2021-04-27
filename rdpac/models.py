@@ -69,6 +69,12 @@ class Company(models.Model):
             return result
 
     @property
+    def drugs(self):
+        qs = self.sales.all()
+        products = list(qs.values_list('drug', 'year', 'netsales_value'))
+        return products
+        
+    @property
     def sales_by_year(self):
         qs = self.sales.all()
         if qs.exists():
@@ -233,7 +239,10 @@ class Sales(models.Model):
             netsales_company = qs.aggregate(Sum("netsales_value"))[
                 "netsales_value__sum"
             ]
-        return self.netsales_value / netsales_company
+        try:
+            return self.netsales_value / netsales_company
+        except:
+            return None
 
     def __str__(self):
         return "%s %s %s %s" % (self.company, self.drug, self.year, self.netsales_value)

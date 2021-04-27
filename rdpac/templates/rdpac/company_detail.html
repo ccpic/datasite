@@ -16,82 +16,88 @@
 <div class="ui container">
     <div id="pusher" class="pusher" style="padding-top:50px">
         {% include 'rdpac/search_bar.html' %}
-        <div class="ui hidden divider"></div>
-        {% if company %}
+    </div>
+    <div class="ui hidden divider"></div>
+    {% if company %}
         <div class="ui huge breadcrumb">
             <a href="{% url "rdpac:index" %}" class="section">首页</a>
             <i class="right angle icon divider"></i>
-            <a href="{% url "rdpac:company_detail" company.pk %}" class="section">{{ company.name_cn }}</a>
+            <a href="{% url "rdpac:company_detail" company.pk %}" class="section">{{ company.name_cn }} {{ company.name_en }}</a>
         </div>
-    </div>
-    <div class="ui celled grid">
-        <div class="row">
-            <div class="ui blue ribbon label">基本信息</div>
-            <div class="ui hidden divider"></div>
-            <div class="sixteen wide column">
+        <div class="ui divider"></div>
+        <div class="ui top attached tabular menu">
+        <a class="active item" data-tab="company_performance">公司表现</a>
+        <a class="item" data-tab="company_products">产品表现</a>
+        </div>
+        <div class="ui bottom attached active tab segment" data-tab="company_performance">
+            <div class="row">
+                <div class="sixteen wide column">
+                    <div class="ui red ribbon label">销售数据</div>
+                    <table class="ui red table">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>NetSales</th>
+                                <th>NetSales Uplift</th>
+                                <th>GR(y-1)</th>
+                                <th>Company % in RDPAC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in company.performance_matrix %}
+                            <tr>
+                                <td>{{ sale.year }}</td>
+                                <td>{{ sale.netsales_value__sum|floatformat:"0" |intcomma }}</td>
 
+                                {% if sale.annual_uplift %}
+                                <td>{{ sale.annual_uplift|floatformat:"0" |intcomma }}</td>
+                                {% else %}
+                                <td>n/a</td>
+                                {% endif %}
+
+                                {% if sale.annual_gr %}
+                                <td class="gr">{{ sale.annual_gr|percentage:0 }}</td>
+                                {% else %}
+                                <td>n/a</td>
+                                {% endif %}
+
+                                {% if sale.company_share %}
+                                <td>{{ sale.company_share|percentage:0 }}</td>
+                                {% else %}
+                                <td>n/a</td>
+                                {% endif %}
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="ui red ribbon label">数据表格</div>
-            <div class="sixteen wide column">
-                <table class="ui red table">
-                    <thead>
-                        <tr>
-                            <th>Year</th>
-                            <th>NetSales</th>
-                            <th>NetSales Uplift</th>
-                            <th>GR(y-1)</th>
-                            <th>Company % in RDPAC</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sale in company.performance_matrix %}
-                        <tr>
-                            <td>{{ sale.year }}</td>
-                            <td>{{ sale.netsales_value__sum|floatformat:"0" |intcomma }}</td>
-
-                            {% if sale.annual_uplift %}
-                            <td>{{ sale.annual_uplift|floatformat:"0" |intcomma }}</td>
-                            {% else %}
-                            <td>n/a</td>
-                            {% endif %}
-
-                            {% if sale.annual_gr %}
-                            <td>{{ sale.annual_gr|percentage:0 }}</td>
-                            {% else %}
-                            <td>n/a</td>
-                            {% endif %}
-
-                            {% if sale.company_share %}
-                            <td>{{ sale.company_share|percentage:0 }}</td>
-                            {% else %}
-                            <td>n/a</td>
-                            {% endif %}
-
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="row">
-            <div class="sixteen wide column">
-                <div class="ui horizontal segments">
-                    <div class="ui purple segment" style="width: 50%">
-                        <div class="ui purple ribbon label">销售趋势</div>
-                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                        <div id="annual_performance" style="height:400px; width:100%"></div>
-                    </div>
-                    <div class="ui orange segment" style="width: 50%">
-                        <div class="ui orange ribbon label">企业份额</div>
-                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                        <div id="company_share" style="height:400px; width:100%"></div>
+            <div class="row">
+                <div class="sixteen wide column">
+                    <div class="ui horizontal segments">
+                        <div class="ui purple segment" style="width: 50%">
+                            <div class="ui purple ribbon label">销售趋势</div>
+                            <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                            <div id="annual_performance" style="height:400px; width:100%"></div>
+                        </div>
+                        <div class="ui orange segment" style="width: 50%">
+                            <div class="ui orange ribbon label">企业份额</div>
+                            <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                            <div id="company_share" style="height:400px; width:100%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+        <div class="ui bottom attached tab segment" data-tab="company_products">
+            <div class="row">
+                <div class="sixteen wide column">
+                    <div class="ui red ribbon label">产品表现</div>
+                    {{ company.drugs }}
+                </div>
+            </div>
+        </div>
     {% endif %}
 </div>
 </div>
@@ -316,10 +322,10 @@
                 type: 'value',
                 name: '%',
                 max: function (value) {
-                    return (value.max + 0.01 * (value.min)).toFixed(2);
+                    return (value.max + 0.1 * (value.min)).toFixed(2);
                 },
                 min: function (value) {
-                    return (value.min - 0.01 * (value.min)).toFixed(2);
+                    return (value.min - 0.1 * (value.min)).toFixed(2);
                 },
                 minInterval: 1,
                 splitLine: {
@@ -340,5 +346,14 @@
         ]
     };
     chartAnnualContrib.setOption(option);
+</script>
+<script>
+  $(document).ready(function () {
+    $('.menu .item')
+      .tab()
+    ;
+    $('.gr:contains("-")').css('color', 'red');
+    $('.gr:not(:contains("-"))').css('color', 'green');
+  });
 </script>
 {% endblock body %}
