@@ -146,6 +146,12 @@ class Drug(models.Model):
         )
 
     @property
+    def company(self):
+        qs = self.sales.all()
+        if qs.exists():
+            return qs.last().company
+    
+    @property
     def performance_matrix(self):
         qs = self.sales.all()
         if qs.exists():
