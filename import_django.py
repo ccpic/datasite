@@ -180,6 +180,7 @@ def import_company():
 
 def import_drug():
     df = pd.read_excel("rdpac.xlsx", sheet_name="summary", header=0)
+    df.fillna("", inplace=True)
     df = df.drop_duplicates("Product Name-RDPAC")
 
     l = []
@@ -283,7 +284,7 @@ if __name__ == "__main__":
     # import_bid()
     # update_tender()
     # import_company()
-    # import_drug()
+    import_drug()
     import_sales()
     print("Done!", time.process_time())
     # print(Drug.objects.get(pk=2248).product_name_cn)
