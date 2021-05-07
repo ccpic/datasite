@@ -34,16 +34,75 @@
 
         <div class="ui celled grid">
             <div class="row">
-                <div class="ui blue ribbon label">基本信息</div>
                 <div class="ui hidden divider"></div>
                 <div class="sixteen wide column">
-
+                    <div class="ui blue ribbon label">基本信息</div>
+                    <div class="ui equal width center aligned celled grid">
+                        <div class="row">
+                            <div class="eight wide column">
+                                <div class="ui top left attached label">Product Name</div>
+                                <div class="item">
+                                    <div class="middle aligned content">
+                                        <div class="header">
+                                        {% if drug.product_name_cn %}
+                                        {{ drug.product_name_cn }}
+                                        {% else %}
+                                        暂无中文商品名
+                                        {% endif %}
+                                        </div>
+                                        <div class="meta">
+                                        {{ drug.product_name_en }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="eight wide column">
+                                <div class="ui top left attached label">Molecule</div>
+                                <div class="item">
+                                    <div class="middle aligned content">
+                                        <div class="header">
+                                        {{ drug.molecule_cn }}
+                                        </div>
+                                        <div class="meta">
+                                        {{ drug.molecule_en }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="eight wide column">
+                                <div class="ui top left attached label">Company (Current)</div>
+                                <div>
+                                    <a href="{% url 'rdpac:company_detail' drug.company.pk %}"><img src="{{ drug.company.logo.url }}" /></a>
+                                </div>
+                            </div>
+                            <div class="eight wide column">
+                                <div class="ui top left attached label">Therapy Class</div>
+                                <ul class="ui list">
+                                    <li>
+                                        {{ drug.tc_iii.tc_ii.tc_i }}
+                                        <ul>
+                                            <li>
+                                                {{ drug.tc_iii.tc_ii }}
+                                                <ul>
+                                                    <li>
+                                                        {{ drug.tc_iii }}
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="row">
                 <div class="sixteen wide column">
                     <div class="ui red ribbon label">数据表格</div>
-                    <table class="ui red table">
+                    <table class="ui red selectable table">
                         <thead>
                             <tr>
                                 <th>Year</th>
@@ -104,6 +163,19 @@
 </div>
 </div>
 <div class="ui hidden divider"></div>
+
+<style>
+img{
+    max-height:60px;
+    max-width:200px;
+    height:auto;
+    width:auto;
+    vertical-align: middle;
+    margin: auto;
+    display: block;
+}
+</style>
+
 <script>
     function toPercent(str) {
         if (isNaN(str) === false) {
