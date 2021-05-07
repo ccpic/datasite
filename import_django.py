@@ -186,12 +186,14 @@ def import_drug():
     l = []
     for drug in df.values:
         print(drug)
+        tc_iii = TC_III.objects.get(code=drug[9])
         l.append(
             Drug(
                 molecule_cn=drug[6],
                 molecule_en=drug[7],
                 product_name_cn=drug[5],
                 product_name_en=drug[4],
+                tc_iii=tc_iii,
             )
         )
 
@@ -224,7 +226,56 @@ def import_tc():
     sql = "SELECT DISTINCT [TC I], [TC II], [TC III] FROM " + table
     df = pd.read_sql(sql=sql, con=engine)
     df.dropna(inplace=True)
-    print(df)
+    tc_i = df["TC I"].unique()
+
+    l = []
+    for desc in tc_i:
+        print(desc[0], desc[1:].split("|")[0], desc[1:].split("|")[1])
+
+        l.append(
+            TC_I(
+                code=desc[0],
+                name_en=desc[1:].split("|")[0],
+                name_cn=desc[1:].split("|")[1],
+            )
+        )
+
+    TC_I.objects.all().delete()
+    TC_I.objects.bulk_create(l)
+
+    tc_ii = df["TC II"].unique()
+    l = []
+    for desc in tc_ii:
+        print(desc[:3], desc[3:].split("|")[0], desc[3:].split("|")[1])
+        tc_i = TC_I.objects.get(code=desc[0])
+        l.append(
+            TC_II(
+                code=desc[:3],
+                name_en=desc[3:].split("|")[0],
+                name_cn=desc[3:].split("|")[1],
+                tc_i=tc_i,
+            )
+        )
+
+    TC_II.objects.all().delete()
+    TC_II.objects.bulk_create(l)
+
+    tc_iii = df["TC III"].unique()
+    l = []
+    for desc in tc_iii:
+        print(desc[:5], desc[5:].split("|")[0], desc[5:].split("|")[1])
+        tc_ii = TC_II.objects.get(code=desc[:3])
+        l.append(
+            TC_III(
+                code=desc[:5],
+                name_en=desc[5:].split("|")[0],
+                name_cn=desc[5:].split("|")[1],
+                tc_ii=tc_ii,
+            )
+        )
+
+    TC_III.objects.all().delete()
+    TC_III.objects.bulk_create(l)
 
 
 if __name__ == "__main__":
@@ -234,8 +285,8 @@ if __name__ == "__main__":
     # import_bid()
     # update_tender()
     # import_company()
-    # import_drug()
-    # import_sales()
-    import_tc()
+    import_drug()
+    import_sales()
+    # import_tc()
     print("Done!", time.process_time())
     # print(Drug.objects.get(pk=2248).product_name_cn)

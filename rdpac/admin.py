@@ -10,5 +10,5 @@ admin.site.register(
     Drug, DrugAdmin,
 )
 admin.site.register(
-    [Company, Sales,]
+    [Company, Sales, TC_I, TC_II, TC_III]
 )
