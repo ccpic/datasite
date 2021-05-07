@@ -201,82 +201,32 @@ def import_drug():
 
 def import_sales():
     df = pd.read_excel("rdpac.xlsx", sheet_name="summary", header=0)
-    
+
     Sales.objects.all().delete()
-    
+
     start_col = 15
     for sale in df.values:
         print(sale)
         for j in range(8):
             company = Company.objects.get(name_cn=sale[1])
             drug = Drug.objects.get(product_name_en=sale[4])
-            
-            if math.isnan(sale[start_col+j]) is False:
+
+            if math.isnan(sale[start_col + j]) is False:
                 sale_obj = Sales.objects.create(
-                    company = company,
-                    drug = drug,
-                    year = df.columns[start_col+j],
-                    netsales_value = sale[start_col+j]
+                    company=company,
+                    drug=drug,
+                    year=df.columns[start_col + j],
+                    netsales_value=sale[start_col + j],
                 )
-                
-    # tenders = Tender.objects.all()
-    # for tender in tenders:
-    #     for bid in df.values:
-    #         tender_name = bid[1]
-    #         multi_spec = bid[2]
-    #         spec = bid[3]
-    #         company_full_name = bid[4]
-    #         company_abbr_name = bid[5]
-    #         origin = bid[6]
-    #         mnc_or_local = bid[7]
-    #         original_price = bid[10]
-    #         bid_price = bid[11]
-    #         region_win = bid[12]
 
-    #         if tender_name == tender.target:
-    #             if Company.objects.filter(full_name=company_full_name).exists():
-    #                 company = Company.objects.get(full_name=company_full_name)
-    #             else:
-    #                 company = Company.objects.create(
-    #                     full_name=company_full_name,
-    #                     abbr_name=company_abbr_name,
-    #                     mnc_or_local=D_BOOLEAN[mnc_or_local],
-    #                 )
-    #             if original_price == "-":
-    #                 bid_obj = Bid.objects.create(
-    #                     tender=tender,
-    #                     bidder=company,
-    #                     origin=D_BOOLEAN[origin],
-    #                     bid_spec=spec,
-    #                     bid_price=bid_price,
-    #                 )
-    #             else:
-    #                 bid_obj = Bid.objects.create(
-    #                     tender=tender,
-    #                     bidder=company,
-    #                     origin=D_BOOLEAN[origin],
-    #                     bid_spec=spec,
-    #                     bid_price=bid_price,
-    #                     original_price=original_price,
-    #                 )
 
-    #             if region_win != "-":
-    #                 list_region = [x.strip() for x in region_win.split("，")]
-    #                 for region in list_region:
-    #                     volume_objs = Volume.objects.filter(
-    #                         tender__target=tender_name, region=region,
-    #                     )
-    #                     for obj in volume_objs:
-    #                         obj.winner = bid_obj
-    #                         obj.save()
+def import_tc():
+    sql = "SELECT DISTINCT [TC I], [TC II], [TC III] FROM " + table
+    df = pd.read_sql(sql=sql, con=engine)
+    df.dropna(inplace=True)
+    print(df)
 
-        # l = []
-        # for tender in tenders:
-        #     l.append(Record(tender=tender, real_or_sim=True))
 
-        # Record.objects.bulk_create(l)
-        
-        
 if __name__ == "__main__":
     # importModel(D_MODEL)
     # import_tender()
@@ -284,7 +234,8 @@ if __name__ == "__main__":
     # import_bid()
     # update_tender()
     # import_company()
-    import_drug()
-    import_sales()
+    # import_drug()
+    # import_sales()
+    import_tc()
     print("Done!", time.process_time())
     # print(Drug.objects.get(pk=2248).product_name_cn)

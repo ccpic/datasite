@@ -75,7 +75,9 @@ class Company(models.Model):
     def drugs(self):
         qs = self.sales.all().order_by("drug_id")
         data = list(
-            pivot(queryset=qs, rows="drug_id", column="year", data="netsales_value").order_by("-2020")
+            pivot(
+                queryset=qs, rows="drug_id", column="year", data="netsales_value"
+            ).order_by("-2020")
         )
 
         for drug_sale in data:
@@ -125,6 +127,51 @@ class Company(models.Model):
                 return None
 
 
+class TC_I(models.Model):
+    code = models.CharField(max_length=1, verbose_name="TC编码", unique=True)
+    name_en = models.CharField(max_length=50, verbose_name="英文TC名", unique=True)
+    name_cn = models.CharField(max_length=50, verbose_name="中文TC名", unique=True)
+
+    class Meta:
+        verbose_name = "TC_I"
+        ordering = ["code"]
+
+    def __str__(self):
+        return "%s %s|%s" % (self.code, self.name_en, self.name_cn,)
+
+
+class TC_II(models.Model):
+    code = models.CharField(max_length=3, verbose_name="TC编码", unique=True)
+    name_en = models.CharField(max_length=50, verbose_name="英文TC名", unique=True)
+    name_cn = models.CharField(max_length=50, verbose_name="中文TC名", unique=True)
+    tc_i = models.ForeignKey(
+        TC_I, on_delete=models.CASCADE, verbose_name="TC_I", related_name="TC_II"
+    )
+
+    class Meta:
+        verbose_name = "TC_II"
+        ordering = ["code"]
+
+    def __str__(self):
+        return "%s %s|%s" % (self.code, self.name_en, self.name_cn,)
+
+
+class TC_III(models.Model):
+    code = models.CharField(max_length=4, verbose_name="TC编码", unique=True)
+    name_en = models.CharField(max_length=50, verbose_name="英文TC名", unique=True)
+    name_cn = models.CharField(max_length=50, verbose_name="中文TC名", unique=True)
+    tc_ii = models.ForeignKey(
+        TC_II, on_delete=models.CASCADE, verbose_name="TC_II", related_name="TC_III"
+    )
+
+    class Meta:
+        verbose_name = "TC_III"
+        ordering = ["code"]
+
+    def __str__(self):
+        return "%s %s|%s" % (self.code, self.name_en, self.name_cn,)
+
+
 class Drug(models.Model):
     molecule_en = models.CharField(max_length=100, verbose_name="英文通用名")
     molecule_cn = models.CharField(max_length=50, verbose_name="中文通用名")
@@ -132,6 +179,9 @@ class Drug(models.Model):
         max_length=30, verbose_name="英文产品名", unique=True, blank=True
     )
     product_name_cn = models.CharField(max_length=30, verbose_name="中文产品名", blank=True)
+    tc_iii = models.ForeignKey(
+        TC_III, on_delete=models.CASCADE, verbose_name="TC_III", related_name="TC_III"
+    )
 
     class Meta:
         verbose_name = "药物"
@@ -150,7 +200,7 @@ class Drug(models.Model):
         qs = self.sales.all()
         if qs.exists():
             return qs.last().company
-    
+
     @property
     def performance_matrix(self):
         qs = self.sales.all()
