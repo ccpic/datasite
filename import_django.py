@@ -193,7 +193,7 @@ def import_drug():
                 molecule_en=drug[7],
                 product_name_cn=drug[5],
                 product_name_en=drug[4],
-                tc_iii=tc_iii,
+                tc_iii=tc_iii
             )
         )
 

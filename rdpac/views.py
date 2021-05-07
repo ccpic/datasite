@@ -1,11 +1,11 @@
-from vbp.views import DISPLAY_LENGTH
 from django.shortcuts import render, HttpResponse
-from .models import Company, Drug, Sales, CURRENT_YEAR
+from .models import Company, Drug, Sales, TC_III, CURRENT_YEAR
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Q
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core import serializers
 import json
+
 
 @login_required
 def index(request):
@@ -14,13 +14,26 @@ def index(request):
     try:
         companies_ranked = sorted(
             companies, key=lambda x: x.latest_annual_netsales, reverse=True
-        )[:TOP_N]  # 按最新年份销售由高到低排序
+        )[
+            :TOP_N
+        ]  # 按最新年份销售由高到低排序
     except:
         companies_ranked = None
-    sales_ranked = Sales.objects.filter(year=CURRENT_YEAR).order_by("-netsales_value")[:TOP_N] 
+
+    tc_iiis = TC_III.objects.filter(drugs__isnull=False).distinct()  # 所有有关联药物存在的TC3
+    tc_iiis_ranked = sorted(
+        tc_iiis, key=lambda x: x.latest_annual_netsales, reverse=True
+    )[
+        :TOP_N
+    ]  # 按最新年份销售由高到低排序
+
+    sales_ranked = Sales.objects.filter(year=CURRENT_YEAR).order_by("-netsales_value")[
+        :TOP_N
+    ]
     # drugs_ranked = sorted(drugs, key=lambda x: x.annual_netsales, reverse=True) # 按最新年份销售由高到低排序
     context = {
         "companies_ranked": companies_ranked,
+        "tc_iiis_ranked": tc_iiis_ranked,
         "sales_ranked": sales_ranked,
         "CURRENT_YEAR": CURRENT_YEAR,
     }
@@ -51,7 +64,7 @@ def drug(request):
 @login_required
 def company_detail(request, company_id):
     company = Company.objects.get(pk=company_id)
-        
+
     context = {
         "company": company,
     }
@@ -100,4 +113,18 @@ def search(request, kw):
         json.dumps(res, ensure_ascii=False),
         content_type="application/json charset=utf-8",
     )
-    
+
+
+if __name__ == "__main__":
+    TOP_N = 10
+    tc_iiis = TC_III.objects.all()
+    try:
+        tc_iiis_ranked = sorted(
+            tc_iiis, key=lambda x: x.latest_annual_netsales, reverse=True
+        )[
+            :TOP_N
+        ]  # 按最新年份销售由高到低排序
+    except:
+        tc_iiis_ranked = None
+
+    print(tc_iiis_ranked)

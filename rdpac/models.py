@@ -171,6 +171,34 @@ class TC_III(models.Model):
     def __str__(self):
         return "%s %s|%s" % (self.code, self.name_en, self.name_cn,)
 
+    @property
+    def sales_by_year(self):
+        qs = Sales.objects.filter(drug__tc_iii__id=self.pk)
+        if qs.exists():
+            return qs.values("year").order_by("year").annotate(Sum(F("netsales_value")))
+
+    @property
+    def latest_annual_netsales(self):
+        qs = self.sales_by_year.filter(year=CURRENT_YEAR)
+        if len(qs) == 1:
+            return qs.first()["netsales_value__sum"]
+        else:
+            return 0
+
+    @property
+    def latest_annual_netsales_gr(self):
+        netsales = self.latest_annual_netsales
+        qs_ya = self.sales_by_year.filter(year=CURRENT_YEAR - 1)
+        if len(qs_ya) == 1:
+            netsales_ya = qs_ya.first()["netsales_value__sum"]
+        else:
+            netsales_ya = 0
+
+        try:
+            return netsales / netsales_ya - 1
+        except ZeroDivisionError:
+            return None
+
 
 class Drug(models.Model):
     molecule_en = models.CharField(max_length=100, verbose_name="英文通用名")
@@ -180,7 +208,7 @@ class Drug(models.Model):
     )
     product_name_cn = models.CharField(max_length=30, verbose_name="中文产品名", blank=True)
     tc_iii = models.ForeignKey(
-        TC_III, on_delete=models.CASCADE, verbose_name="TC_III", related_name="TC_III"
+        TC_III, on_delete=models.CASCADE, verbose_name="TC_III", related_name="drugs"
     )
 
     class Meta:
