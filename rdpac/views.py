@@ -20,6 +20,8 @@ def index(request):
     except:
         companies_ranked = None
 
+    print(companies_ranked)
+    
     tc_iiis = TC_III.objects.filter(drugs__isnull=False).distinct()  # 所有有关联药物存在的TC3
     tc_iiis_ranked = sorted(
         tc_iiis, key=lambda x: x.latest_annual_netsales, reverse=True
@@ -57,7 +59,7 @@ def company(request):
     try:
         companies_ranked = sorted(
             companies, key=lambda x: x.latest_annual_netsales, reverse=True
-        ) # 按最新年份销售由高到低排序
+        )  # 按最新年份销售由高到低排序
     except:
         companies_ranked = None
 

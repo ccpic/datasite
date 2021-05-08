@@ -22,7 +22,7 @@
         <div class="ui huge breadcrumb">
             <a href="{% url "rdpac:index" %}" class="section">首页</a>
             <i class="right angle icon divider"></i>
-            <a href="{% url "rdpac:company_detail" company.pk %}" class="section">{{ company.name_cn }} {{ company.name_en }}</a>
+            {{ company.name_cn }} {{ company.name_en }}
         </div>
         <div class="ui divider"></div>
         <div class="ui top attached tabular menu">
@@ -409,6 +409,7 @@
     ;
     $('.gr:contains("-")').css('color', 'red');
     $('.gr:not(:contains("-"))').css('color', 'green');
+    $('.gr:contains("n/a")').css('color', 'black');
   });
 </script>
 {% endblock body %}

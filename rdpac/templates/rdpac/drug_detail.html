@@ -24,11 +24,10 @@
             <i class="right angle icon divider"></i>
             <a href="{% url "rdpac:company_detail" drug.company.pk %}" class="section">{{ drug.company.name_cn }} {{ drug.company.name_en|truncatechars:20 }} </a>
             <i class="right angle icon divider"></i>
-            <a href="{% url "rdpac:drug_detail" drug.pk %}" class="section">
             {% if drug.product_name_cn %}
             {{ drug.product_name_cn }}
             {% endif %}
-             {{ drug.product_name_en }} </a>
+             {{ drug.product_name_en }}
         </div>
         <div class="ui divider"></div>
 
