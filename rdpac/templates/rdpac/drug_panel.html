@@ -1,0 +1,61 @@
+{% load humanize %} {% load tags %}
+
+<table class="ui blue selectable table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Molecule</th>
+            <th>Product</th>
+            <th>Company</th>
+            <th>{{ CURRENT_YEAR }} Sales</th>
+            <th>{{ CURRENT_YEAR }} Sales GR</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sales in sales_ranked %}
+        <tr>
+            <td>{{ forloop.counter0|add:1 }}</td>
+            <td>
+                <div class="item">
+                    <div class="middle aligned content">
+                        <div class="header">
+                            <a href="{% url 'rdpac:drug_detail' sales.drug.pk %}">{{ sales.drug.molecule_cn }}</a>
+                        </div>
+                        <div class="meta">
+                            <span class="molecule_en">{{ sales.drug.molecule_en|truncatechars:20 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="item">
+                    <div class="middle aligned content">
+                        <div class="header">
+                            {% if sales.drug.product_name_cn %}
+                            {{ sales.drug.product_name_cn }}
+                            {% else %}
+                            暂无中文商品名
+                            {% endif %}
+                        </div>
+                        <div class="meta">
+                            <span class="product_name_en">{{ sales.drug.product_name_en|truncatechars:20 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td><a href="{% url 'rdpac:company_detail' sales.company.pk %}"><img
+                        src="{{ sales.company.logo.url }}" /></a></td>
+            <td align="right">
+                {{ sales.drug.latest_annual_netsales|floatformat:"0"|intcomma }}
+            </td>
+            <td class="gr">
+                {% if sales.drug.latest_annual_netsales_gr %}
+                {{ sales.drug.latest_annual_netsales_gr|percentage:0 }}
+                {% else %}
+                new
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,51 @@
+<!-- extends表明此页面继承自 index.html 文件 -->
+{% extends "rdpac/index.html" %} {% load humanize %} {% load tags %}
+
+{% block data %}
+
+<div class="ui huge breadcrumb">
+    <a href="{% url "rdpac:index" %}" class="section">首页</a>
+    <i class="right angle icon divider"></i>
+    <span>公司表现一览</span>
+</div>
+
+{% include "rdpac/company_panel.html" %}
+
+<div class="ui hidden divider"></div>
+<style>
+    .quick.link {
+        color: #e9e9e9;
+        cursor: pointer;
+    }
+
+    .quick.link:hover {
+        color: #0d71bb;
+        cursor: pointer;
+    }
+
+    .green {
+        color: green;
+    }
+
+    .red {
+        color: red;
+    }
+</style>
+<style>
+    img {
+        max-height: 30px;
+        max-width: 100px;
+        height: auto;
+        width: auto;
+    }
+</style>
+<script>
+    $(document).ready(function () {
+        $('.menu .item')
+            .tab();
+        $('.gr:contains("-")').css('color', 'red');
+        $('.gr:not(:contains("-"))').css('color', 'green');
+    });
+</script>
+
+{% endblock data %}

@@ -10,5 +10,6 @@ urlpatterns = [
     path(
         r"company/<int:company_id>", views.company_detail, name="company_detail"
     ),  # 公司详情页
+    path(r"tc_iii/", views.tc_iii, name="tc_iii"),  # TC3列表
     path(r"search/<str:kw>", views.search, name="search"),  # 搜索
 ]

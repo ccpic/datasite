@@ -1,0 +1,41 @@
+{% load humanize %} {% load tags %}
+
+<table class="ui purple selectable table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>TC III Code</th>
+            <th>TC III Description</th>
+            <th>{{ CURRENT_YEAR }} Sales</th>
+            <th>{{ CURRENT_YEAR }} Sales GR</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tc_iii in tc_iiis_ranked %}
+        <tr>
+            <td>{{ forloop.counter0|add:1 }}</td>
+            <td>{{ tc_iii.code }}</td>
+            <td>
+                <div class="item">
+                    <div class="middle aligned content">
+                        <div class="header">{{ tc_iii.name_cn }}</div>
+                        <div class="meta">
+                            <span class="molecule_en">{{ tc_iii.name_en }}</span>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td align="right">
+                {{ tc_iii.latest_annual_netsales|floatformat:"0"|intcomma }}
+            </td>
+            <td class="gr">
+                {% if tc_iii.latest_annual_netsales_gr %}
+                {{ tc_iii.latest_annual_netsales_gr|percentage:0 }}
+                {% else %}
+                new
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

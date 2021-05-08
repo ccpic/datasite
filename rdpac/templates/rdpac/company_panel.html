@@ -1,0 +1,43 @@
+{% load humanize %} {% load tags %}
+
+<table class="ui red selectable table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th colspan="2">Company</th>
+            <th>Country</th>
+            <th>{{ CURRENT_YEAR }} Sales</th>
+            <th>{{ CURRENT_YEAR }} Sales GR</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for company in companies_ranked %}
+        <tr>
+            <td>{{ forloop.counter0|add:1 }}</td>
+            <td><a href="{% url 'rdpac:company_detail' company.pk %}"><img src="{{ company.logo.url }}" /></a></td>
+            <td>
+                <div class="item">
+                    <div class="middle aligned content">
+                        <div class="header"><a
+                                href="{% url 'rdpac:company_detail' company.pk %}">{{ company.name_cn }}</a></div>
+                        <div class="meta">
+                            <span class="molecule_en">{{ company.name_en }}</span>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td><i class="{{ company.country_code }} flag"></i></td>
+            <td align="right">
+                {{ company.latest_annual_netsales|floatformat:"0"|intcomma }}
+            </td>
+            <td class="gr">
+                {% if company.latest_annual_netsales_gr %}
+                {{ company.latest_annual_netsales_gr|percentage:0 }}
+                {% else %}
+                new
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

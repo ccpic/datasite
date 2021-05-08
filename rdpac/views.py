@@ -37,7 +37,7 @@ def index(request):
         "sales_ranked": sales_ranked,
         "CURRENT_YEAR": CURRENT_YEAR,
     }
-    return render(request, "rdpac/index.html", context)
+    return render(request, "rdpac/rank.html", context)
 
 
 @login_required
@@ -53,11 +53,28 @@ def drug_detail(request, drug_id):
 
 @login_required
 def company(request):
-    pass
+    companies = Company.objects.all()
+    try:
+        companies_ranked = sorted(
+            companies, key=lambda x: x.latest_annual_netsales, reverse=True
+        ) # 按最新年份销售由高到低排序
+    except:
+        companies_ranked = None
+
+    context = {
+        "companies_ranked": companies_ranked,
+        "CURRENT_YEAR": CURRENT_YEAR,
+    }
+    return render(request, "rdpac/company.html", context)
 
 
 @login_required
 def drug(request):
+    pass
+
+
+@login_required
+def tc_iii(request):
     pass
 
 
