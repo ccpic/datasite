@@ -6,10 +6,11 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core import serializers
 import json
 
+TOP_N = 10
+
 
 @login_required
 def index(request):
-    TOP_N = 10
     companies = Company.objects.all()
     try:
         companies_ranked = sorted(
@@ -21,7 +22,7 @@ def index(request):
         companies_ranked = None
 
     print(companies_ranked)
-    
+
     tc_iiis = TC_III.objects.filter(drugs__isnull=False).distinct()  # 所有有关联药物存在的TC3
     tc_iiis_ranked = sorted(
         tc_iiis, key=lambda x: x.latest_annual_netsales, reverse=True
@@ -72,12 +73,27 @@ def company(request):
 
 @login_required
 def drug(request):
-    pass
+    sales_ranked = Sales.objects.filter(year=CURRENT_YEAR).order_by("-netsales_value")
+
+    context = {
+        "sales_ranked": sales_ranked,
+        "CURRENT_YEAR": CURRENT_YEAR,
+    }
+    return render(request, "rdpac/drug.html", context)
 
 
 @login_required
 def tc_iii(request):
-    pass
+    tc_iiis = TC_III.objects.filter(drugs__isnull=False).distinct()  # 所有有关联药物存在的TC3
+    tc_iiis_ranked = sorted(
+        tc_iiis, key=lambda x: x.latest_annual_netsales, reverse=True
+    )  # 按最新年份销售由高到低排序
+
+    context = {
+        "tc_iiis_ranked": tc_iiis_ranked,
+        "CURRENT_YEAR": CURRENT_YEAR,
+    }
+    return render(request, "rdpac/tc_iii.html", context)
 
 
 @login_required
