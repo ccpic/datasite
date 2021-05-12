@@ -93,7 +93,14 @@ class Company(models.Model):
             drug_sale["product_name_cn"] = Drug.objects.get(
                 pk=drug_sale["drug_id"]
             ).product_name_cn
-
+            drug_sale["latest_annual_netsales"] = drug_sale[CURRENT_YEAR]
+            try:
+                drug_sale["latest_annual_netsales_gr"] = (
+                    drug_sale[CURRENT_YEAR] / drug_sale[CURRENT_YEAR - 1] - 1
+                )
+            except:
+                continue
+            
         return data
 
     @property
@@ -121,8 +128,14 @@ class Company(models.Model):
                     for drug_sale in drugs_in_tc:
                         if drug_sale.netsales_value != 0:
                             c = {}
-                            c["name"] = "%s\n%s" % (drug_sale.drug.molecule_cn, drug_sale.drug.molecule_en)
-                            c["product_name"] = "%s\n%s" % (drug_sale.drug.product_name_cn, drug_sale.drug.product_name_en)
+                            c["name"] = "%s\n%s" % (
+                                drug_sale.drug.molecule_cn,
+                                drug_sale.drug.molecule_en,
+                            )
+                            c["product_name"] = "%s\n%s" % (
+                                drug_sale.drug.product_name_cn,
+                                drug_sale.drug.product_name_en,
+                            )
                             c["value"] = drug_sale.netsales_value
                             # c["path"] = "%s/%s" % (d["path"], c["name"])
                             l_drugs.append(c)
