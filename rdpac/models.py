@@ -97,6 +97,40 @@ class Company(models.Model):
         return data
 
     @property
+    def drugs_in_tc(self):
+        qs = self.sales.filter(year=CURRENT_YEAR).order_by("drug_id")
+        if qs.exists():
+            tc_i_sales = (
+                qs.values("drug__tc_iii__tc_ii__tc_i")
+                .order_by("drug__tc_iii__tc_ii__tc_i")
+                .annotate(Sum(F("netsales_value")))
+            )
+            l_tcs = []
+            for tc_i in tc_i_sales:
+                if tc_i["netsales_value__sum"] != 0:
+                    tc_i_obj = TC_I.objects.get(pk=tc_i["drug__tc_iii__tc_ii__tc_i"])
+                    d = {}
+                    d["name"] = "%s %s" % (tc_i_obj.code, tc_i_obj.name_cn)
+                    d["value"] = tc_i["netsales_value__sum"]
+                    # d["path"] = d["name"]
+                    drugs_in_tc = self.sales.filter(
+                        year=CURRENT_YEAR,
+                        drug__tc_iii__tc_ii__tc_i__pk=tc_i["drug__tc_iii__tc_ii__tc_i"],
+                    )
+                    l_drugs = []
+                    for drug_sale in drugs_in_tc:
+                        if drug_sale.netsales_value != 0:
+                            c = {}
+                            c["name"] = "%s\n%s" % (drug_sale.drug.molecule_cn, drug_sale.drug.molecule_en)
+                            c["product_name"] = "%s\n%s" % (drug_sale.drug.product_name_cn, drug_sale.drug.product_name_en)
+                            c["value"] = drug_sale.netsales_value
+                            # c["path"] = "%s/%s" % (d["path"], c["name"])
+                            l_drugs.append(c)
+                    d["children"] = l_drugs
+                    l_tcs.append(d)
+            return l_tcs
+
+    @property
     def sales_by_year(self):
         qs = self.sales.all()
         if qs.exists():

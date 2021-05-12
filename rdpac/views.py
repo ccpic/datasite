@@ -102,6 +102,7 @@ def company_detail(request, company_id):
 
     context = {
         "company": company,
+        "CURRENT_YEAR": CURRENT_YEAR,
     }
     return render(request, "rdpac/company_detail.html", context)
 

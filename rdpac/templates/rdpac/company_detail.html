@@ -27,11 +27,12 @@
         <div class="ui divider"></div>
         <div class="ui top attached tabular menu">
         <a class="active item" data-tab="company_performance">公司表现</a>
+        <a class="item" data-tab="company_contrib">营收构成</a>
         <a class="item" data-tab="company_products">产品表现</a>
         </div>
         <div class="ui bottom attached active tab segment" data-tab="company_performance">
             <div class="row">
-                <div class="sixteen wide column">
+                <div class="sixteen wide column" id="chart_width">
                     <div class="ui red ribbon label">销售数据</div>
                     <table class="ui red selectable table">
                         <thead>
@@ -87,6 +88,15 @@
                             <div id="company_share" style="height:400px; width:100%"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="ui bottom attached tab segment" data-tab="company_contrib">
+            <div class="row">
+                <div class="ui red ribbon label">营收构成 - {{ CURRENT_YEAR }}年</div>
+                <div class="sixteen wide column">
+                <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                    <div id="company_contrib" style="width: 100%; height: 800px"></div>
                 </div>
             </div>
         </div>
@@ -157,6 +167,7 @@
 </div>
 </div>
 <div class="ui hidden divider"></div>
+
 <script>
     function toPercent(str) {
         if (isNaN(str) === false) {
@@ -167,6 +178,151 @@
         }
         return strP;
     }
+</script>
+
+<script>
+    function colorMappingChange(value) {
+        var levelOption = getLevelOption(value);
+        chart.setOption({
+            series: [{
+                levels: levelOption
+            }]
+        });
+    }
+
+    var formatUtil = echarts.format;
+
+    function getLevelOption() {
+        return [
+            {
+                itemStyle: {
+                    borderColor: '#777',
+                    borderWidth: 0,
+                    gapWidth: 1
+                },
+                upperLabel: {
+                    show: false
+                }
+            },
+            {
+                itemStyle: {
+                    borderColor: '#555',
+                    borderWidth: 5,
+                    gapWidth: 1
+                },
+                emphasis: {
+                    itemStyle: {
+                        borderColor: '#ddd'
+                    }
+                }
+            },
+            {
+                colorSaturation: [0.35, 0.5],
+                itemStyle: {
+                    borderWidth: 2,
+                    gapWidth: 1,
+                    borderColorSaturation: 0.6
+                }
+            }
+        ];
+    }
+
+    var data_tm = {{ company.drugs_in_tc|safe }};
+    console.log(data_tm)
+    
+    var width = $("#chart_width").width();
+    $("#company_contrib").css("width", width)
+    
+    var chartCompanyContrib = echarts.init(document.getElementById('company_contrib'));
+    option = {
+        tooltip: {
+            formatter: function (info) {
+                var molecule = info.name;
+                var product = info.data.product_name
+                var sales = Number((info.value / 1000000).toFixed(0))
+
+                return [
+                    '<div class="tooltip-title">' + formatUtil.encodeHTML(molecule) + '</div>',
+                    formatUtil.encodeHTML(product) + '<br>',
+                    '2020营收: ' + formatUtil.addCommas(sales) + ' mil.',
+                ].join('');
+            }
+        },
+
+        series: [
+            {
+                name: "{{ company.name_cn }}",
+                type: 'treemap',
+                visibleMin: 300,
+                label: {
+                normal: {
+                    position: 'inside',
+                    formatter: function (params) {
+                        var sales = Number((params.value / 1000000).toFixed(0))
+                        var arr = [
+                            '{name|' + params.name + '}',
+                            '{hr|}',
+                            '{sales|¥ ' + echarts.format.addCommas(sales) + '} {label|mil.}'
+                        ];
+
+                        return arr.join('\n');
+                    },
+                    rich: {
+                        sales: {
+                            fontSize: 16,
+                            lineHeight: 30,
+                            color: 'white'
+                        },
+                        household: {
+                            fontSize: 14,
+                            color: '#fff'
+                        },
+                        label: {
+                            fontSize: 9,
+                            backgroundColor: 'rgba(0,0,0,0.3)',
+                            color: '#fff',
+                            borderRadius: 2,
+                            padding: [2, 4],
+                            lineHeight: 25,
+                            align: 'right'
+                        },
+                        name: {
+                            fontSize: 12,
+                            color: '#fff'
+                        },
+                        hr: {
+                            width: '100%',
+                            borderColor: 'rgba(255,255,255,0.2)',
+                            borderWidth: 0.5,
+                            height: 0,
+                            lineHeight: 10
+                        }
+                    }
+                }
+            },
+                upperLabel: {
+                    show: true,
+                    height: 30
+                },
+                itemStyle: {
+                    borderColor: '#fff'
+                },
+                levels: getLevelOption(),
+                data: data_tm
+            }
+        ]
+    }
+    chartCompanyContrib.setOption(option);
+    
+    {% comment %} // 监听点击事件
+    window.addEventListener("click", function () {
+        chartCompanyContrib.resize();
+    });
+    // 监听浏览器页面缩放事件
+    window.addEventListener("resize", function () {
+        chartCompanyContrib.resize();
+    }); {% endcomment %}
+
 </script>
 
 <script>
@@ -182,7 +338,6 @@
             annual_gr.push(null)
         {% endif %}
     {% endfor %}
-    console.log(years, netsales, annual_gr)
 
     var chartAnnualPerformance = echarts.init(document.getElementById('annual_performance'));
     option = {
@@ -298,7 +453,6 @@
             company_share.push(null)
         {% endif %}
     {% endfor %}
-    console.log(years, company_share)
 
     var chartAnnualContrib = echarts.init(document.getElementById('company_share'));
     option = {
