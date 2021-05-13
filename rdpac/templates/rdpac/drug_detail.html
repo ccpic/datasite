@@ -86,7 +86,7 @@
                                                 {{ drug.tc_iii.tc_ii }}
                                                 <ul>
                                                     <li>
-                                                        {{ drug.tc_iii }}
+                                                        <a href="{% url 'rdpac:tc_iii_detail' drug.tc_iii.pk %}">{{ drug.tc_iii }}</a>
                                                     </li>
                                                 </ul>
                                             </li>

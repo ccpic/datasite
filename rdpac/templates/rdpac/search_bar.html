@@ -38,9 +38,11 @@
                 // translate API response to work with search
                 $.each(JSON.parse(searchResponse.data), function (index, item) {
                     var
-                        maxResults = 8
-                        company_url = "{% url 'rdpac:company' %}";
-                        drug_url = "{% url 'rdpac:drug' %}";
+                        maxResults = 10
+                    company_url = "{% url 'rdpac:company' %}";
+                    drug_url = "{% url 'rdpac:drug' %}";
+                    tc_iii_url = "{% url 'rdpac:tc_iii' %}";
+
                     if (index >= maxResults) {
                         return false;
                     }
@@ -51,20 +53,32 @@
                             results: []
                         };
                     }
+                    if (response.results["TC III"] === undefined) {
+                        response.results["TC III"] = {
+                            name: "TC III",
+                            results: []
+                        };
+                    }
                     if (response.results["药品"] === undefined) {
                         response.results["药品"] = {
                             name: "药品",
                             results: []
                         };
                     }
-
                     // add result to categories
                     if (item.model === "rdpac.company") {
                         response.results["企业"].results.push({
                             title: item.fields.name_cn,
                             description: item.fields.name_en,
-                            image: {{ MEDIA_URL}} + item.fields.logo,
+                            image: {{ MEDIA_URL }} + item.fields.logo,
                             url: company_url + item.pk,
+                            pk: item.pk
+                        });
+                    } else if (item.model === "rdpac.tc_iii") {
+                        response.results["TC III"].results.push({
+                            title: item.fields.code + " " + item.fields.name_cn,
+                            description: item.fields.name_en,
+                            url: tc_iii_url + item.pk,
                             pk: item.pk
                         });
                     } else if (item.model === "rdpac.drug") {
@@ -76,7 +90,7 @@
                             url: drug_url + item.pk,
                             pk: item.pk
                         });
-                    }
+                    } 
                 });
                 return response;
             },

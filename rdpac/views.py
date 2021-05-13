@@ -110,7 +110,7 @@ def company_detail(request, company_id):
 @login_required
 def tc_iii_detail(request, tc_iii_id):
     tc_iii = TC_III.objects.get(pk=tc_iii_id)
-    
+
     context = {
         "tc_iii": tc_iii,
         "CURRENT_YEAR": CURRENT_YEAR,
@@ -137,13 +137,30 @@ def search(request, kw):
         | Q(molecule_cn__icontains=kw)  # 搜索药品中文通用名
         | Q(product_name_en__icontains=kw)  # 搜索药品英文产品名
         | Q(product_name_cn__icontains=kw)  # 搜索药品中文产品名
+        | Q(tc_iii__code__icontains=kw)  # 搜索TC3 Code
+        | Q(tc_iii__name_cn__icontains=kw)  # 搜索TC3中文名
+        | Q(tc_iii__name_en__icontains=kw)  # 搜索TC3英文名
     )
 
     #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
     sr_ids = [drug.id for drug in drug_result]
     drug_result2 = Drug.objects.filter(id__in=sr_ids)
 
-    objs = list(company_result2) + list(drug_result2)
+    tc_iii_result = (
+        TC_III.objects.filter(drugs__isnull=False) # TC III必须是有数据的
+        .filter(
+            Q(name_en__icontains=kw)  # 搜索TC3英文名
+            | Q(name_cn__icontains=kw)  # 搜索TC3中文名
+            | Q(code__icontains=kw)  # 搜索TC3 Code
+        )
+        .distinct()
+    )
+
+    #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
+    sr_ids = [tc_iii.id for tc_iii in tc_iii_result]
+    tc_iii_result2 = TC_III.objects.filter(id__in=sr_ids)
+
+    objs = list(company_result2) + list(tc_iii_result2) + list(drug_result2)
     try:
         data = serializers.serialize("json", objs, ensure_ascii=False)
         res = {
