@@ -18,22 +18,22 @@
         {% include 'rdpac/search_bar.html' %}
     </div>
     <div class="ui hidden divider"></div>
-    {% if company %}
+    {% if tc_iii %}
         <div class="ui huge breadcrumb">
             <a href="{% url "rdpac:index" %}" class="section">首页</a>
             <i class="right angle icon divider"></i>
-            {{ company.name_cn }} {{ company.name_en }}
+            {{ tc_iii.code }} {{ tc_iii.name_cn }} {{ tc_iii.name_en }}
         </div>
         <div class="ui divider"></div>
         <div class="ui top attached tabular menu">
-        <a class="active item" data-tab="company_performance">公司表现</a>
-        <a class="item" data-tab="company_contrib">营收构成</a>
-        <a class="item" data-tab="company_products">产品表现</a>
+        <a class="active item" data-tab="tc_iii_performance">TC III表现</a>
+        <a class="item" data-tab="tc_iii_contrib">销售构成</a>
+        <a class="item" data-tab="tc_iii_products">产品表现</a>
         </div>
-        <div class="ui bottom attached active tab segment" data-tab="company_performance">
+        <div class="ui bottom attached active tab segment" data-tab="tc_iii_performance">
             <div class="row">
                 <div class="sixteen wide column" id="chart_width">
-                    <div class="ui red ribbon label">年度营收</div>
+                    <div class="ui red ribbon label">年度销售</div>
                     <table class="ui red selectable table">
                         <thead>
                             <tr>
@@ -41,11 +41,11 @@
                                 <th>NetSales</th>
                                 <th>NetSales Uplift</th>
                                 <th>GR(y-1)</th>
-                                <th>Company % in RDPAC</th>
+                                <th>TC III % in RDPAC</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for sale in company.performance_matrix %}
+                            {% for sale in tc_iii.performance_matrix %}
                             <tr>
                                 <td>{{ sale.year }}</td>
                                 <td>{{ sale.netsales_value__sum|floatformat:"0" |intcomma }}</td>
@@ -62,8 +62,8 @@
                                 <td>n/a</td>
                                 {% endif %}
 
-                                {% if sale.company_share %}
-                                <td>{{ sale.company_share|percentage:0 }}</td>
+                                {% if sale.tc_iii_share %}
+                                <td>{{ sale.tc_iii_share|percentage:0 }}</td>
                                 {% else %}
                                 <td>n/a</td>
                                 {% endif %}
@@ -85,22 +85,22 @@
                         <div class="ui orange segment" style="width: 50%">
                             <div class="ui orange ribbon label">份额趋势</div>
                             <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                            <div id="company_share" style="height:400px; width:100%"></div>
+                            <div id="tc_iii_share" style="height:400px; width:100%"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="ui bottom attached tab segment" data-tab="company_contrib">
+        <div class="ui bottom attached tab segment" data-tab="tc_iii_contrib">
             <div class="row">
-                <div class="ui green ribbon label">营收构成 - {{ CURRENT_YEAR }}年</div>
+                <div class="ui green ribbon label">销售构成 - {{ CURRENT_YEAR }}年</div>
                 <div class="sixteen wide column">
                 <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                    <div id="company_contrib" style="width: 100%; height: 800px"></div>
+                    <div id="tc_iii_contrib" style="width: 100%; height: 800px"></div>
                 </div>
             </div>
         </div>
-        <div class="ui bottom attached tab segment" data-tab="company_products">
+        <div class="ui bottom attached tab segment" data-tab="tc_iii_products">
             <div class="row">
                 <div class="sixteen wide column">
                     <div class="ui blue ribbon label">产品表现</div>
@@ -109,7 +109,7 @@
                             <tr>
                                 <th rowspan=2>Molecule</th>
                                 <th rowspan=2>Product</th>
-                                <th rowspan=2>TC III</th>
+                                <th rowspan=2>Company</th>
                                 <th colspan=8>年度销售额（百万元）</th>
                             </tr>
                             <tr>
@@ -119,7 +119,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for drug_sale in company.drugs_sales %}
+                            {% for drug_sale in tc_iii.drugs_sales %}
                             <tr>
                                 <td width=10%>
                                     <div class="item">
@@ -149,7 +149,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td><a href="{% url "rdpac:tc_iii_detail" drug_sale.tc_iii.pk %}">{{ drug_sale.tc_iii.code }}</a></td>
+                                <td><a href="{% url 'rdpac:company_detail' drug_sale.company.pk %}"><img src="{{ drug_sale.company.logo.url }}" /></a></td>
                                 <td align="right">{{ drug_sale.2013|change_unit }}</td>
                                 <td align="right">{{ drug_sale.2014|change_unit }}</td>
                                 <td align="right">{{ drug_sale.2015|change_unit }}</td>
@@ -169,6 +169,15 @@
 </div>
 </div>
 <div class="ui hidden divider"></div>
+
+<style>
+    img {
+        max-height: 30px;
+        max-width: 100px;
+        height: auto;
+        width: auto;
+    }
+</style>
 
 <script>
     function toPercent(str) {
@@ -229,13 +238,13 @@
         ];
     }
 
-    var data_tm = {{ company.drugs_in_tc|safe }};
+    var data_tm = {{ tc_iii.drugs_in_company|safe }};
     console.log(data_tm)
     
     var width = $("#chart_width").width();
-    $("#company_contrib").css("width", width)
+    $("#tc_iii_contrib").css("width", width)
     
-    var chartCompanyContrib = echarts.init(document.getElementById('company_contrib'));
+    var chartTC3Contrib = echarts.init(document.getElementById('tc_iii_contrib'));
     option = {
         tooltip: {
             formatter: function (info) {
@@ -253,7 +262,7 @@
 
         series: [
             {
-                name: "{{ company.name_cn }}",
+                name: "{{ tc_iii.name_cn }}",
                 type: 'treemap',
                 visibleMin: 300,
                 label: {
@@ -314,15 +323,15 @@
             }
         ]
     }
-    chartCompanyContrib.setOption(option);
+    chartTC3Contrib.setOption(option);
     
     {% comment %} // 监听点击事件
     window.addEventListener("click", function () {
-        chartCompanyContrib.resize();
+        chartTC3Contrib.resize();
     });
     // 监听浏览器页面缩放事件
     window.addEventListener("resize", function () {
-        chartCompanyContrib.resize();
+        chartTC3Contrib.resize();
     }); {% endcomment %}
 
 </script>
@@ -331,7 +340,7 @@
     var years = [],
         netsales = [],
         annual_gr = [];
-    {% for sale in company.performance_matrix %}
+    {% for sale in tc_iii.performance_matrix %}
         years.push({{ sale.year }})
         netsales.push({{ sale.netsales_value__sum|floatformat:"0" }})
         {% if sale.annual_gr %}
@@ -446,17 +455,17 @@
 </script>
 <script>
     var years = [],
-        company_share = [];
-    {% for sale in company.performance_matrix %}
+        tc_iii_share = [];
+    {% for sale in tc_iii.performance_matrix %}
         years.push({{ sale.year }})
-        {% if sale.company_share %}
-            company_share.push({{ sale.company_share }})
+        {% if sale.tc_iii_share %}
+            tc_iii_share.push({{ sale.tc_iii_share }})
         {% else %}
-            company_share.push(null)
+            tc_iii_share.push(null)
         {% endif %}
     {% endfor %}
 
-    var chartAnnualContrib = echarts.init(document.getElementById('company_share'));
+    var chartAnnualContrib = echarts.init(document.getElementById('tc_iii_share'));
     option = {
         tooltip: {
             trigger: 'axis',
@@ -470,7 +479,7 @@
                 let html = params[0].name + "<br>";
                 for (let i = 0; i < params.length; i++) {
                     html += params[i].marker
-                    if (params[i].seriesName == "公司销售份额（占RDPAC整体）") {
+                    if (params[i].seriesName == "TC III销售份额（占RDPAC整体）") {
                         html += params[i].seriesName + ": " + toPercent(params[i].value) + "<br>";
                     } else {
                         html += params[i].seriesName + ": " + params[i].value.toLocaleString() + "<br>";
@@ -552,7 +561,7 @@
         series: [{
                 name: '公司销售份额（占RDPAC整体）',
                 type: 'line',
-                data: company_share
+                data: tc_iii_share
             },
         ]
     };

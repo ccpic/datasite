@@ -108,6 +108,17 @@ def company_detail(request, company_id):
 
 
 @login_required
+def tc_iii_detail(request, tc_iii_id):
+    tc_iii = TC_III.objects.get(pk=tc_iii_id)
+    
+    context = {
+        "tc_iii": tc_iii,
+        "CURRENT_YEAR": CURRENT_YEAR,
+    }
+    return render(request, "rdpac/tc_iii_detail.html", context)
+
+
+@login_required
 def search(request, kw):
     print(kw)
     # kw = request.POST.get("kw")

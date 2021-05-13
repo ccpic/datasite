@@ -18,7 +18,7 @@
             <td>
                 <div class="item">
                     <div class="middle aligned content">
-                        <div class="header">{{ tc_iii.name_cn }}</div>
+                        <div class="header"><a href="{% url "rdpac:tc_iii_detail" tc_iii.pk %}">{{ tc_iii.name_cn }}</a></div>
                         <div class="meta">
                             <span class="molecule_en">{{ tc_iii.name_en }}</span>
                         </div>

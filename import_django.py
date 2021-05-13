@@ -186,11 +186,11 @@ def import_drug():
     l = []
     for drug in df.values:
         print(drug)
-        tc_iii = TC_III.objects.get(code=drug[9])
+        tc_iii = TC_III.objects.get(code=drug[10])
         l.append(
             Drug(
-                molecule_cn=drug[6],
-                molecule_en=drug[7],
+                molecule_cn=drug[7],
+                molecule_en=drug[8],
                 product_name_cn=drug[5],
                 product_name_en=drug[4],
                 tc_iii=tc_iii
@@ -206,7 +206,7 @@ def import_sales():
 
     Sales.objects.all().delete()
 
-    start_col = 15
+    start_col = 16
     for sale in df.values:
         print(sale)
         for j in range(8):

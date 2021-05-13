@@ -72,7 +72,7 @@ class Company(models.Model):
             return result
 
     @property
-    def drugs(self):
+    def drugs_sales(self):
         qs = self.sales.all().order_by("drug_id")
         data = list(
             pivot(
@@ -81,26 +81,9 @@ class Company(models.Model):
         )
 
         for drug_sale in data:
-            drug_sale["molecule_en"] = Drug.objects.get(
-                pk=drug_sale["drug_id"]
-            ).molecule_en
-            drug_sale["molecule_cn"] = Drug.objects.get(
-                pk=drug_sale["drug_id"]
-            ).molecule_cn
-            drug_sale["product_name_en"] = Drug.objects.get(
-                pk=drug_sale["drug_id"]
-            ).product_name_en
-            drug_sale["product_name_cn"] = Drug.objects.get(
-                pk=drug_sale["drug_id"]
-            ).product_name_cn
-            drug_sale["latest_annual_netsales"] = drug_sale[CURRENT_YEAR]
-            try:
-                drug_sale["latest_annual_netsales_gr"] = (
-                    drug_sale[CURRENT_YEAR] / drug_sale[CURRENT_YEAR - 1] - 1
-                )
-            except:
-                continue
-            
+            drug_sale["drug"] = Drug.objects.get(pk=drug_sale["drug_id"])
+            drug_sale["tc_iii"] = Drug.objects.get(pk=drug_sale["drug_id"]).tc_iii
+
         return data
 
     @property
@@ -217,6 +200,100 @@ class TC_III(models.Model):
 
     def __str__(self):
         return "%s %s|%s" % (self.code, self.name_en, self.name_cn,)
+
+    @property
+    def performance_matrix(self):
+        qs = Sales.objects.filter(drug__tc_iii__id=self.pk)
+        if qs.exists():
+            result = list(
+                qs.values("year").order_by("year").annotate(Sum(F("netsales_value")))
+            )
+        qs_all = Sales.objects.all()
+        result_all = list(
+            qs_all.values("year").order_by("year").annotate(Sum(F("netsales_value")))
+        )
+        if qs.exists():
+            for item in result:
+                try:
+                    item["annual_uplift"] = item[
+                        "netsales_value__sum"
+                    ] - get_sales_by_year(result, item["year"] - 1)
+                except:
+                    item["annual_uplift"] = None
+
+                try:
+                    item["annual_gr"] = (
+                        item["netsales_value__sum"]
+                        / get_sales_by_year(result, item["year"] - 1)
+                        - 1
+                    )
+                except:
+                    item["annual_gr"] = None
+
+                try:
+                    item["tc_iii_share"] = item[
+                        "netsales_value__sum"
+                    ] / get_sales_by_year(result_all, item["year"])
+                except:
+                    item["tc_iii_share"] = None
+
+            return result
+
+    @property
+    def drugs_sales(self):
+        qs = Sales.objects.filter(drug__tc_iii__id=self.pk).order_by("drug_id")
+        data = list(
+            pivot(
+                queryset=qs, rows="drug_id", column="year", data="netsales_value"
+            ).order_by("-2020")
+        )
+
+        for drug_sale in data:
+            drug_sale["drug"] = Drug.objects.get(pk=drug_sale["drug_id"])
+            drug_sale["company"] = Drug.objects.get(pk=drug_sale["drug_id"]).company
+
+        return data
+
+    @property
+    def drugs_in_company(self):
+        qs = (
+            Sales.objects.filter(drug__tc_iii__id=self.pk, year=CURRENT_YEAR)
+            .order_by("drug_id")
+        )
+        if qs.exists():
+            company_sales = (
+                qs.values("company")
+                .order_by("company")
+                .annotate(Sum(F("netsales_value")))
+            )
+            l_companies = []
+            for company in company_sales:
+                print(company)
+                if company["netsales_value__sum"] != 0:
+                    company_obj = Company.objects.get(pk=company["company"])
+                    d = {}
+                    d["name"] = "%s %s" % (company_obj.name_en, company_obj.name_cn)
+                    d["value"] = company["netsales_value__sum"]
+                    # d["path"] = d["name"]
+                    drugs_in_company = Sales.objects.filter(drug__tc_iii__id=self.pk, company=company["company"], year=CURRENT_YEAR)
+                    l_drugs = []
+                    for drug_sale in drugs_in_company:
+                        if drug_sale.netsales_value != 0:
+                            c = {}
+                            c["name"] = "%s\n%s" % (
+                                drug_sale.drug.molecule_cn,
+                                drug_sale.drug.molecule_en,
+                            )
+                            c["product_name"] = "%s\n%s" % (
+                                drug_sale.drug.product_name_cn,
+                                drug_sale.drug.product_name_en,
+                            )
+                            c["value"] = drug_sale.netsales_value
+                            # c["path"] = "%s/%s" % (d["path"], c["name"])
+                            l_drugs.append(c)
+                    d["children"] = l_drugs
+                    l_companies.append(d)
+            return l_companies
 
     @property
     def sales_by_year(self):
