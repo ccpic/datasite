@@ -1,8 +1,4 @@
 {% load static %}
-{% url 'chpa:index' as chpa_url %}
-{% url 'price_calc:index' as price_calc_url %}
-{% url 'vbp:index' as vbp_url %}
-{% url 'internal_sales:index' as internal_sales_url %}
 
 <div class="ui large top fixed inverted menu">
     <div class="ui container">
@@ -10,20 +6,35 @@
             <img class="logo" src="{% static 'assets/images/logo.png' %}">
             内网数据分析平台
         </div>
-        <a href="{{ chpa_url }}" class="{% if request.get_full_path == chpa_url %}active blue{% endif %} item">
-            IQVIA CHPA全国
-            <div class="ui horizontal black label">2020Q4季度版</div>
-        </a>
-        <a href="{{ internal_sales_url }}" class="{% if request.get_full_path == internal_sales_url %}active blue{% endif %} item">
-            内部In-market三合一销售数据
-            <div class="ui horizontal black label">2021年3月终版</div>
-        </a>
-        <a href="{{ vbp_url }}" class="{% if request.get_full_path == vbp_url %}active blue{% endif %} item">
-            带量采购数据
-        </a>
-        <a href="{{ price_calc_url }}" class="{% if request.get_full_path == price_calc_url %}active blue{% endif %} item">
-            差比价计算器
-        </a>
+        <div class="ui simple dropdown item">
+            数据 <i class="dropdown icon"></i>
+            <div class="menu">
+                <a class="item" href="{% url 'chpa:index' %}" class="{% if request.get_full_path == chpa_url %}active blue{% endif %} item">
+                    IQVIA CHPA全国
+                    <div class="ui horizontal black label">2020Q4季度版</div>
+                </a>
+                <a class="item" href="{% url 'internal_sales:index' %}" class="{% if request.get_full_path == internal_sales_url %}active blue{% endif %} item">
+                    内部In-market三合一销售数据
+                    <div class="ui horizontal black label">2021年3月终版</div>
+                </a>
+                <a class="item" href="{% url 'vbp:index' %}" class="{% if request.get_full_path == vbp_url %}active blue{% endif %} item">
+                    带量采购数据
+                    <div class="ui horizontal black label">更新至第四批</div>
+                </a>
+                <a class="item" href="{% url 'rdpac:index' %}" class="{% if request.get_full_path == vbp_url %}active blue{% endif %} item">
+                    RDPAC数据
+                    <div class="ui horizontal black label">2020年度版</div>
+                </a>
+            </div>
+        </div>
+        <div class="ui simple dropdown item">
+            小工具 <i class="dropdown icon"></i>
+            <div class="menu">
+                <a class="item" href="{% url 'price_calc:index' %}" class="{% if request.get_full_path == price_calc_url %}active blue{% endif %} item">
+                    差比价计算器
+                </a>
+                </div>
+        </div>
         {% if request.user.is_staff %}
             <a href="{% url 'admin:index' %}" class="item">后台管理</a>
         {% endif %}
