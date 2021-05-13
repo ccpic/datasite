@@ -149,7 +149,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td><a href="{% url "rdpac:tc_iii_detail" drug_sale.tc_iii.pk %}">{{ drug_sale.tc_iii.code }}</a></td>
+                                <td><a title="{{ drug_sale.tc_iii.name_cn }}&#10;{{ drug_sale.tc_iii.name_en }}" href="{% url "rdpac:tc_iii_detail" drug_sale.tc_iii.pk %}">{{ drug_sale.tc_iii.code }}</a></td>
                                 <td align="right">{{ drug_sale.2013|change_unit }}</td>
                                 <td align="right">{{ drug_sale.2014|change_unit }}</td>
                                 <td align="right">{{ drug_sale.2015|change_unit }}</td>

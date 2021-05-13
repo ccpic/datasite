@@ -6,6 +6,7 @@
             <th>Rank</th>
             <th>Molecule</th>
             <th>Product</th>
+            <th>TC III</th>
             <th>Company</th>
             <th>{{ CURRENT_YEAR }} Sales</th>
             <th>{{ CURRENT_YEAR }} Sales GR</th>
@@ -43,7 +44,8 @@
                     </div>
                 </div>
             </td>
-            <td><a href="{% url 'rdpac:company_detail' sales.company.pk %}"><img
+            <td><a title="{{ sales.drug.tc_iii.name_cn }}&#10;{{ sales.drug.tc_iii.name_en }}" href="{% url "rdpac:tc_iii_detail" sales.drug.tc_iii.pk %}">{{ sales.drug.tc_iii.code }}</a></td>
+            <td ><a href="{% url 'rdpac:company_detail' sales.company.pk %}"><img
                         src="{{ sales.company.logo.url }}" /></a></td>
             <td align="right">
                 {{ sales.drug.latest_annual_netsales|floatformat:"0"|intcomma }}
