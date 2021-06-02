@@ -60,7 +60,7 @@
                 <!--<div class="or"></div>-->
                 <input class="ui blue button" type='button' id='AJAX_get' value="查询"/>
                 {% comment %} <input class="ui blue basic button" type='button' id='show_history' value="历史"/> {% endcomment %}
-                <input class="ui blue basic button" type='button' id='show_options' value="选项"/>
+                <input class="ui blue basic button" type='button' id='show_options' value="设置"/>
             </div>
         </form>
     </div>
@@ -135,7 +135,7 @@
 
         // 获取交互表单数据
         var form_data = getForm();
-
+        console.log(form_data)
         $.ajax({
             // 请求的url
             url: '{% url 'chpa:query' %}',

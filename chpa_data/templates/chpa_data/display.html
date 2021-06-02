@@ -1,5 +1,5 @@
 {% extends "chpa_data/analysis.html" %}
-
+{% load tags %}
 {% block display %}
 
 <!-- 数据处理时的loading遮罩 -->
@@ -10,7 +10,7 @@
     <div class="ui text" style="color: #FFFFFF;">请使用左侧筛选框选择分析维度和定义市场</div>
 </div>
 
-<!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
+<!-- 创建若干个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
 <div class="ui pointing secondary menu">
     <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
     <a class="item" data-tab="competition"><i class="trophy icon"></i>竞争现状</a>
@@ -221,56 +221,70 @@
         <img id="bubble_performance" style="width: 100%" alt="" />
     </div>
 </div>
-<div class="ui modal" id="modal_options">
+<div class="ui large modal" id="modal_options">
     <div class="header">
-        查询选项
+        设置
     </div>
-    <div class="content">
-        <div class="ui form">
-            <div class="grouped fields" id="radio_lang">
-                <label for="lang">数据显示偏好</label>
-                <div class="field">
-                    <div class="ui radio checkbox">
-                        <input type="radio" name="lang" value="CN" checked="" tabindex="0" class="hidden">
-                        <label>中文</label>
+    <div class="ui form content">
+        <div class="ui pointing secondary stackable menu">
+            <a class="item active" data-tab="options"><i class="cogs icon"></i>查询选项</a>
+            <a class="item" data-tab="history"><i class="history icon"></i>查询历史</a>
+        </div>
+        <div class="ui tab segment active" data-tab="options">
+            <div class="header">
+                查询选项
+            </div>
+            <div class="content">
+                <div class="ui form">
+                    <div class="grouped fields" id="radio_lang">
+                        <label for="lang">数据显示偏好</label>
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input type="radio" name="lang" value="CN" checked="" tabindex="0" class="hidden">
+                                <label>中文</label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input type="radio" name="lang" value="EN" tabindex="0" class="hidden">
+                                <label>英文</label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input type="radio" name="lang" value="CE" tabindex="0" class="hidden">
+                                <label>中英文（原始）</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="ui radio checkbox">
-                        <input type="radio" name="lang" value="EN" tabindex="0" class="hidden">
-                        <label>英文</label>
+                    <div class="ui hidden divider"></div>
+                    <div class="ui hidden divider"></div>
+                    <div class="grouped fields">
+                        <label for="output">输出高级图表（可能大幅增加查询时长）</label>
+                        <div class="field">
+                            <div class="ui toggle checkbox" id="toggle_treemap_share">
+                                <input type="checkbox" name="output">
+                                <label>份额矩形Treemap</label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <div class="ui toggle checkbox" id="toggle_bubble_performance">
+                                <input type="checkbox" name="output">
+                                <label>规模 versus 增长 气泡图</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="ui radio checkbox">
-                        <input type="radio" name="lang" value="CE" tabindex="0" class="hidden">
-                        <label>中英文（原始）</label>
+                    <div class="ui hidden divider"></div>
+                    <div class="ui hidden divider"></div>
+                    <div class="field">
+                        <label>自定义SQL</label>
+                        <textarea id="customized_sql"></textarea>
                     </div>
                 </div>
             </div>
-            <div class="ui hidden divider"></div>
-            <div class="ui hidden divider"></div>
-            <div class="grouped fields">
-                <label for="output">输出高级图表（可能大幅增加查询时长）</label>
-                <div class="field">
-                    <div class="ui toggle checkbox" id="toggle_treemap_share">
-                        <input type="checkbox" name="output">
-                        <label>份额矩形Treemap</label>
-                    </div>
-                </div>
-                <div class="field">
-                    <div class="ui toggle checkbox" id="toggle_bubble_performance">
-                        <input type="checkbox" name="output">
-                        <label>规模 versus 增长 气泡图</label>
-                    </div>
-                </div>
-            </div>
-            <div class="ui hidden divider"></div>
-            <div class="ui hidden divider"></div>
-              <div class="field">
-                <label>自定义SQL</label>
-                <textarea id="customized_sql"></textarea>
-              </div>
+        </div>
+        <div class="ui tab segment" data-tab="history">
+            {% include 'chpa_data/history.html' %}
         </div>
     </div>
     <div class="actions">

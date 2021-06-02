@@ -81,32 +81,45 @@ D_TRANS = {
 
 @login_required
 def index(request):
+    
+    # 历史查询记录
+    if request.user.is_superuser:
+        records = Record.objects.all()
+    else:
+        records = Record.objects.filter(user=request.user)
+    
+    # 表单字典
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
         mselect_dict[key] = {}
         mselect_dict[key]["select"] = value
 
-    context = {"mselect_dict": mselect_dict}
+    context = {
+        "records": records,
+        "mselect_dict": mselect_dict,
+    }
     return render(request, "chpa_data/display.html", context)
 
 
 @login_required
-@cache_page(60 * 60 * 24 * 90)
+# @cache_page(60 * 60 * 24 * 90)
 def query(request):
     print(request.GET)
     form_dict = dict(six.iterlists(request.GET))
-    label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]  # 分析时间段+单位组成数据标签
+    label = (
+        D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
+    )  # 分析时间段+单位组成数据标签
     pivoted = get_df(form_dict)
 
     # 保存查询记录
     record = Record.objects.create(
-        args = form_dict, # 查询参数以字典形式保存
-        sql = sqlparse(form_dict), # 查询sql
-        is_fav = False, # 是否收藏，默认查询为否，后续可在前端收藏
-        fav_name = "", # 收藏名称，默认为空，后续可在前端命名
-        user = request.user # 查询用户，直接关联系统用户
+        args=form_dict,  # 查询参数以字典形式保存
+        sql=sqlparse(form_dict),  # 查询sql
+        is_fav=False,  # 是否收藏，默认查询为否，后续可在前端收藏
+        fav_name="",  # 收藏名称，默认为空，后续可在前端命名
+        user=request.user,  # 查询用户，直接关联系统用户
     )
-    
+
     # KPI
     kpi = get_kpi(pivoted)
 
@@ -142,8 +155,12 @@ def query(request):
 
     # Pyecharts交互图表
     bar_total_trend = json.loads(prepare_chart(pivoted, "bar_total_trend", form_dict))
-    stackarea_abs_trend = json.loads(prepare_chart(pivoted, "stackarea_abs_trend", form_dict))
-    stackarea_share_trend = json.loads(prepare_chart(pivoted, "stackarea_share_trend", form_dict))
+    stackarea_abs_trend = json.loads(
+        prepare_chart(pivoted, "stackarea_abs_trend", form_dict)
+    )
+    stackarea_share_trend = json.loads(
+        prepare_chart(pivoted, "stackarea_share_trend", form_dict)
+    )
     line_gr_trend = json.loads(prepare_chart(pivoted, "line_gr_trend", form_dict))
 
     context = {
@@ -170,12 +187,13 @@ def query(request):
         context["bubble_performance"] = bubble_performance
 
     return HttpResponse(
-        json.dumps(context, ensure_ascii=False), content_type="application/json charset=utf-8",
+        json.dumps(context, ensure_ascii=False),
+        content_type="application/json charset=utf-8",
     )  # 返回结果必须是json格式
 
 
 @login_required
-@cache_page(60 * 60 * 24 * 90)
+# @cache_page(60 * 60 * 24 * 90)
 def search(request, column, kw):
     # sql = "SELECT DISTINCT TOP 20 %s FROM %s WHERE %s like '%%%s%%'" % (column, DB_TABLE, column, kw) # 返回不重复的前20个结果
     try:
@@ -204,7 +222,8 @@ def search(request, column, kw):
             "code": 0,
         }
     return HttpResponse(
-        json.dumps(res, ensure_ascii=False), content_type="application/json charset=utf-8",
+        json.dumps(res, ensure_ascii=False),
+        content_type="application/json charset=utf-8",
     )  # 返回结果必须是json格式
 
 
@@ -230,7 +249,8 @@ def export(request, type):
 
     # 设置浏览器mime类型
     response = HttpResponse(
-        excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        excel_file.read(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
     # 设置文件名
@@ -294,7 +314,12 @@ def get_df(form_dict, is_pivoted=True):
         df["TC III"] = df["TC III"].str[:5] + df["TC III"].str.split("|").str[1]
         df["TC IV"] = df["TC IV"].str[:6] + df["TC IV"].str.split("|").str[1]
         df["MOLECULE"] = df["MOLECULE"].str.split("|").str[0]
-        df["PRODUCT"] = df["PRODUCT"].str.split("|").str[0] + "(" + df["PRODUCT"].str.split("|").str[1].str[-3:] + ")"
+        df["PRODUCT"] = (
+            df["PRODUCT"].str.split("|").str[0]
+            + "("
+            + df["PRODUCT"].str.split("|").str[1].str[-3:]
+            + ")"
+        )
         df["CORPORATION"] = df["CORPORATION"].str.split("|").str[0]
         df["PRODUCT_CORP"] = (
             df["PRODUCT_CORP"].str.split(" （").str[0].str.split("|").str[0]
@@ -302,7 +327,11 @@ def get_df(form_dict, is_pivoted=True):
             + df["PRODUCT_CORP"].str.split(" （").str[1].str.split("|").str[0]
             + "）"
         )
-        df["MOLECULE_TC"] = df["MOLECULE_TC"].str.split("|").str[0] + " （" + df["MOLECULE_TC"].str.split(" （").str[1]
+        df["MOLECULE_TC"] = (
+            df["MOLECULE_TC"].str.split("|").str[0]
+            + " （"
+            + df["MOLECULE_TC"].str.split(" （").str[1]
+        )
     elif form_dict["lang"][0] == "EN":
         df["TC I"] = df["TC I"].str.split("|").str[0]
         df["TC II"] = df["TC II"].str.split("|").str[0]
@@ -335,7 +364,9 @@ def get_df(form_dict, is_pivoted=True):
             aggfunc=np.sum,
         )  # 数据透视汇总方式为求和，一般保持不变
         if pivoted.empty is False:
-            pivoted.sort_values(by=pivoted.index[-1], axis=1, ascending=False, inplace=True)  # 结果按照最后一个DATE表现排序
+            pivoted.sort_values(
+                by=pivoted.index[-1], axis=1, ascending=False, inplace=True
+            )  # 结果按照最后一个DATE表现排序
 
         return pivoted
     else:
@@ -390,7 +421,15 @@ def get_ptable(df, label):
     df_ei_latest = (df_gr_latest + 1) / (df_total_gr_latest + 1) * 100
 
     df_combined = pd.concat(
-        [df_latest, df_latest_diff, df_share_latest, df_share_latest_diff, df_gr_latest, df_ei_latest,], axis=1,
+        [
+            df_latest,
+            df_latest_diff,
+            df_share_latest,
+            df_share_latest_diff,
+            df_gr_latest,
+            df_ei_latest,
+        ],
+        axis=1,
     )
     df_combined.columns = ["最新" + label, "净增长", "份额", "份额同比变化", "同比增长率", "EI"]
 
@@ -421,7 +460,9 @@ def get_ptable_trend(df, label):
     df_gr.index = df_gr.index.strftime("%Y-%m") + "\n" + "同比增长"
     df_cagr.name = "4年CAGR"
 
-    df_combined = pd.concat([df.T, df_share.T, df_share_diff.T, df_gr.T, df_cagr], axis=1)
+    df_combined = pd.concat(
+        [df.T, df_share.T, df_share_diff.T, df_gr.T, df_cagr], axis=1
+    )
 
     return df_combined
 
@@ -446,11 +487,15 @@ def get_price(form_dict, volume_unit):
     df_price_cagr = (df_price.iloc[-1] / df_price.iloc[0]) ** 0.25 - 1
 
     df_value_latest.name = "最新" + form_dict["PERIOD_select"][0] + "金额"
-    df_price.index = df_price.index.strftime("%Y-%m") + "\n" + form_dict["PERIOD_select"][0] + "单价"
+    df_price.index = (
+        df_price.index.strftime("%Y-%m") + "\n" + form_dict["PERIOD_select"][0] + "单价"
+    )
     df_price_gr.index = df_price_gr.index.strftime("%Y-%m") + "\n" + "同比变化"
     df_price_cagr.name = "4年CAGR"
 
-    df_combined = pd.concat([df_value_latest, df_price.T, df_price_gr.T, df_price_cagr], axis=1, sort=False)
+    df_combined = pd.concat(
+        [df_value_latest, df_price.T, df_price_gr.T, df_price_cagr], axis=1, sort=False
+    )
 
     return df_combined
 
@@ -466,7 +511,9 @@ def build_formatters_by_col(df):
             d[column] = format_share
         elif "价格" in column or "单价" in column:
             d[column] = format_currency
-        elif "同比增长" in column or "增长率" in column or "CAGR" in column or "同比变化" in column:
+        elif (
+            "同比增长" in column or "增长率" in column or "CAGR" in column or "同比变化" in column
+        ):
             d[column] = format_gr
         else:
             d[column] = format_abs
@@ -479,7 +526,9 @@ def prepare_chart(
     form_dict,  # 前端表单字典，用来获得一些变量作为图表的标签如单位
 ):
     SERIES_LIMIT = 10
-    label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
+    label = (
+        D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
+    )
 
     if chart_type == "bar_total_trend":
         df_abs = df.sum(axis=1)  # Pandas列汇总，返回一个N行1列的series，每行是一个date的市场综合
@@ -488,12 +537,16 @@ def prepare_chart(
         df_abs.columns = [label]  # 用一些设置变量为系列命名，准备作为图表标签
         df_gr = df_abs.pct_change(periods=4)  # 获取同比增长率
         df_gr.dropna(how="all", inplace=True)  # 删除没有同比增长率的行，也就是时间序列数据的最前面几行，他们没有同比
-        df_gr.replace([np.inf, -np.inf, np.nan], "-", inplace=True)  # 所有分母为0或其他情况导致的inf和nan都转换为'-'
+        df_gr.replace(
+            [np.inf, -np.inf, np.nan], "-", inplace=True
+        )  # 所有分母为0或其他情况导致的inf和nan都转换为'-'
         df_gr.columns = ["同比增长率"]
         chart = echarts_stackbar(df=df_abs, df_gr=df_gr)  # 调用stackbar方法生成Pyecharts图表对象
         return chart.dump_options()  # 用json格式返回Pyecharts图表对象的全局设置
     elif chart_type == "stackarea_abs_trend":
-        chart = echarts_stackarea(df.iloc[:, :SERIES_LIMIT], datatype="ABS")  # 直接使用绝对值时间序列
+        chart = echarts_stackarea(
+            df.iloc[:, :SERIES_LIMIT], datatype="ABS"
+        )  # 直接使用绝对值时间序列
         return chart.dump_options()
     elif chart_type == "stackarea_share_trend":
         df_share = df.transform(lambda x: x / x.sum(), axis=1)  # 时间序列转换为份额趋势
@@ -548,6 +601,8 @@ def prepare_chart(
             for m, n, p in zip(list_name, list_value, list_diff)
         ]
 
-        chart = treemap(sizes=list_value, diff=list_diff, labels=list_labels, width=2, height=1)
+        chart = treemap(
+            sizes=list_value, diff=list_diff, labels=list_labels, width=2, height=1
+        )
 
         return chart

@@ -1,3 +1,4 @@
+from chpa_data.models import Record
 from django import template
 
 register = template.Library()
@@ -118,3 +119,18 @@ def change_unit(value):
         return format_str.format(value)
     except:
         return ""
+
+
+@register.filter(name="filter_fields")  # 从表单字典中提取数据筛选字段
+def filter_fields(dict):
+    new_dict = {}
+    for k, v in dict.items():
+        if k[-2:] == "[]":
+            new_dict[k[:-9]] = v
+    return new_dict
+
+
+@register.filter(name="get_record")
+def get_record(pk):
+    obj = Record.objects.get(id=pk)
+    return obj
