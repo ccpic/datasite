@@ -98,6 +98,15 @@ def query(request):
     label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]  # 分析时间段+单位组成数据标签
     pivoted = get_df(form_dict)
 
+    # 保存查询记录
+    record = Record.objects.create(
+        args = form_dict, # 查询参数以字典形式保存
+        sql = sqlparse(form_dict), # 查询sql
+        is_fav = False, # 是否收藏，默认查询为否，后续可在前端收藏
+        fav_name = "", # 收藏名称，默认为空，后续可在前端命名
+        user = request.user # 查询用户，直接关联系统用户
+    )
+    
     # KPI
     kpi = get_kpi(pivoted)
 

@@ -1,4 +1,26 @@
 from django.db import models
+from django.conf import settings
+from picklefield.fields import PickledObjectField
+
+class Record(models.Model):
+    args = PickledObjectField(verbose_name="查询参数", null=True, blank=True)
+    sql = models.CharField(max_length=1024, verbose_name="SQL语句")
+    is_fav = models.BooleanField(verbose_name="是否收藏")
+    fav_name = models.CharField(max_length=30, verbose_name="收藏名称", null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="用户")
+    query_date = models.DateTimeField(verbose_name='查询日期',auto_now=True)
+
+    class Meta:
+        verbose_name = '查询记录'
+        verbose_name_plural = '查询记录'
+        ordering = ['-query_date']
+
+    def __str__(self):
+        return self.query_date.strftime('%Y年%m月%d日')
+
+    def args_unpacked(self):
+        return u'{args}'.format(args=self.args)
+
 
 class viz_type(models.Model):
     name = models.CharField(max_length=20)
@@ -9,7 +31,7 @@ class viz_type(models.Model):
     position = models.IntegerField()
 
     class Meta:
-        ordering = ('position',)
+        ordering = ("position",)
 
     def __str__(self):
         return self.name
