@@ -1,3 +1,4 @@
+from os import stat
 from django.shortcuts import render, HttpResponseRedirect
 from sqlalchemy import create_engine
 import pandas as pd
@@ -81,13 +82,13 @@ D_TRANS = {
 
 @login_required
 def index(request):
-    
+
     # 历史查询记录
     if request.user.is_superuser:
         records = Record.objects.all()
     else:
         records = Record.objects.filter(user=request.user)
-    
+
     # 表单字典
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
@@ -104,10 +105,12 @@ def index(request):
 @login_required
 # @cache_page(60 * 60 * 24 * 90)
 def query(request):
-    print(request.GET)
-    form_dict = dict(six.iterlists(request.GET))
+    # form_dict = dict(six.iterlists(request.GET))
+    form_dict = qdict_to_dict(request.GET)
+    print(form_dict)
+
     label = (
-        D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
+        D_TRANS[form_dict["PERIOD_select"]] + D_TRANS[form_dict["UNIT_select"]]
     )  # 分析时间段+单位组成数据标签
     pivoted = get_df(form_dict)
 
@@ -179,10 +182,10 @@ def query(request):
     }
 
     # 根据查询选线决定是否展示Matplotlib静态图表
-    if form_dict["toggle_treemap_share"][0] == "true":
+    if form_dict["toggle_treemap_share"] == "true":
         treemap_share = prepare_chart(pivoted, "treemap_share", form_dict)
         context["treemap_share"] = treemap_share
-    if form_dict["toggle_bubble_perf"][0] == "true":
+    if form_dict["toggle_bubble_perf"] == "true":
         bubble_performance = prepare_chart(pivoted, "bubble_performance", form_dict)
         context["bubble_performance"] = bubble_performance
 
@@ -260,14 +263,13 @@ def export(request, type):
 
 
 def sqlparse(context):
-    print(context)
     sql = "Select * from %s Where PERIOD = '%s' And UNIT = '%s'" % (
         DB_TABLE,
-        context["PERIOD_select"][0],
-        context["UNIT_select"][0],
+        context["PERIOD_select"],
+        context["UNIT_select"],
     )  # 先处理单选部分
     print(context["customized_sql"])
-    if context["customized_sql"][0] == "":
+    if context["customized_sql"] == "":
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
             if k not in [
@@ -287,16 +289,19 @@ def sqlparse(context):
                 selected = v  # 选择项
                 sql = sql_extent(sql, field_name, selected)  # 未来可以通过进一步拼接字符串动态扩展sql语句
     else:
-        sql = context["customized_sql"][0]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
+        sql = context["customized_sql"]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
     return sql
 
 
 def sql_extent(sql, field_name, selected, operator=" AND "):
     if selected is not None:
         statement = ""
-        for data in selected:
-            statement = statement + "'" + data + "', "
-        statement = statement[:-2]
+        if isinstance(selected,list):
+            for data in selected:
+                statement = statement + "'" + data + "', "
+            statement = statement[:-2]
+        else:
+            statement = "'" + selected + "'" 
         if statement != "":
             sql = sql + operator + field_name + " in (" + statement + ")"
     return sql
@@ -308,7 +313,7 @@ def get_df(form_dict, is_pivoted=True):
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
     #  根据中英文选项调整内容
-    if form_dict["lang"][0] == "CN":
+    if form_dict["lang"] == "CN":
         df["TC I"] = df["TC I"].str[:2] + df["TC I"].str.split("|").str[1]
         df["TC II"] = df["TC II"].str[:4] + df["TC II"].str.split("|").str[1]
         df["TC III"] = df["TC III"].str[:5] + df["TC III"].str.split("|").str[1]
@@ -332,7 +337,7 @@ def get_df(form_dict, is_pivoted=True):
             + " （"
             + df["MOLECULE_TC"].str.split(" （").str[1]
         )
-    elif form_dict["lang"][0] == "EN":
+    elif form_dict["lang"] == "EN":
         df["TC I"] = df["TC I"].str.split("|").str[0]
         df["TC II"] = df["TC II"].str.split("|").str[0]
         df["TC III"] = df["TC III"].str.split("|").str[0]
@@ -349,8 +354,8 @@ def get_df(form_dict, is_pivoted=True):
         df["MOLECULE_TC"] = df["MOLECULE_TC"].str.split("|").str[1]
 
     if is_pivoted is True:
-        dimension_selected = form_dict["DIMENSION_select"][0]
-        if dimension_selected[0] == "[":
+        dimension_selected = form_dict["DIMENSION_select"]
+        if dimension_selected == "[":
 
             column = dimension_selected[1:][:-1]
         else:
@@ -469,10 +474,10 @@ def get_ptable_trend(df, label):
 
 def get_price(form_dict, volume_unit):
     form_dict_price = form_dict.copy()  # 一定要这么处理，字典直接=是引用对象而不是拷贝
-    form_dict_price["UNIT_select"] = ["Value"]
+    form_dict_price["UNIT_select"] = "Value"
     df_value = get_df(form_dict_price)
     df_value = df_value.iloc[[-17, -13, -9, -5, -1], :]
-    form_dict_price["UNIT_select"] = [volume_unit]
+    form_dict_price["UNIT_select"] = volume_unit
     df_volume = get_df(form_dict_price)
     df_volume = df_volume.iloc[[-17, -13, -9, -5, -1], :]
 
@@ -486,9 +491,9 @@ def get_price(form_dict, volume_unit):
 
     df_price_cagr = (df_price.iloc[-1] / df_price.iloc[0]) ** 0.25 - 1
 
-    df_value_latest.name = "最新" + form_dict["PERIOD_select"][0] + "金额"
+    df_value_latest.name = "最新" + form_dict["PERIOD_select"] + "金额"
     df_price.index = (
-        df_price.index.strftime("%Y-%m") + "\n" + form_dict["PERIOD_select"][0] + "单价"
+        df_price.index.strftime("%Y-%m") + "\n" + form_dict["PERIOD_select"] + "单价"
     )
     df_price_gr.index = df_price_gr.index.strftime("%Y-%m") + "\n" + "同比变化"
     df_price_cagr.name = "4年CAGR"
@@ -526,9 +531,7 @@ def prepare_chart(
     form_dict,  # 前端表单字典，用来获得一些变量作为图表的标签如单位
 ):
     SERIES_LIMIT = 10
-    label = (
-        D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
-    )
+    label = D_TRANS[form_dict["PERIOD_select"]] + D_TRANS[form_dict["UNIT_select"]]
 
     if chart_type == "bar_total_trend":
         df_abs = df.sum(axis=1)  # Pandas列汇总，返回一个N行1列的series，每行是一个date的市场综合
@@ -606,3 +609,13 @@ def prepare_chart(
         )
 
         return chart
+
+
+def qdict_to_dict(qdict):
+    """Convert a Django QueryDict to a Python dict.
+
+    Single-value fields are put in directly, and for multi-value fields, a list
+    of all values is stored at the field's key.
+
+    """
+    return {k: v[0] if len(v) == 1 else v for k, v in qdict.lists()}
