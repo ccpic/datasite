@@ -124,9 +124,16 @@ def change_unit(value):
 @register.filter(name="filter_fields")  # 从表单字典中提取数据筛选字段
 def filter_fields(dict):
     new_dict = {}
-    for k, v in dict.items():
-        if k[-2:] == "[]":
-            new_dict[k[:-9]] = v
+
+    if dict["customized_sql"] != "":
+        new_dict["customized_sql"] = [dict["customized_sql"]]
+    else:
+        for k, v in dict.items():
+            if k[-2:] == "[]":
+                if isinstance(v, list):
+                    new_dict[k[:-9]] = v
+                else:
+                    new_dict[k[:-9]] = [v]
     return new_dict
 
 
