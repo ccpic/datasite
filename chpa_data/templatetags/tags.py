@@ -140,4 +140,4 @@ def filter_fields(dict):
 @register.filter(name="get_record")
 def get_record(pk):
     obj = Record.objects.get(id=pk)
-    return obj
+    return obj.args

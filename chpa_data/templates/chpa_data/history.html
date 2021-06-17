@@ -27,7 +27,7 @@
                 </td>
                 <td>{{ record.user }}</td>
                 <td>{{ record.query_date|date:"M d, Y" }}</td>
-                <td><a id="retry" title="点击重新查询结果" href="#" onclick="recordQuery({{ record.args|safe }});return false;">查询</a></td>
+                <td><a id="retry" title="点击重新查询结果" href="#" onclick="recordQuery({{ record.args|escape }})">查询</a></td>
             </tr>
         {% endfor %}
     </tbody>
