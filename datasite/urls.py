@@ -26,6 +26,7 @@ urlpatterns = [
     path('rdpac/', include('rdpac.urls')),
     path('forecast/', include('forecast.urls')),
     path('internal_sales/', include('internal_sales.urls')),
+    path('medical_info/', include('medical_info.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
 ]

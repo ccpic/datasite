@@ -1,0 +1,98 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}医学信息平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+            {% if post %}
+                <div class="ui huge breadcrumb">
+                    <a href="{% url "medical_info:index" %}" class="section">返回首页</a>
+                </div>
+                <div class="ui divider"></div>
+                <div class="item">
+                    {% if post.images.all %}
+                        <div class="image">
+                        <img src="/images/wireframe/image.png">
+                        </div>
+                    {% endif %}
+                    <div class="content">
+                        {% if post.title_cn %}
+                            <h2 class="ui header">
+                                {% comment %} <i class="bookmark outline icon"></i> {% endcomment %}
+                                <div class="content">
+                                    {{ post.title_cn }}
+                                    {% if post.title_en %}
+                                        <div class="sub header">{{ post.title_en }}</div>
+                                    {% endif %}
+                                </div>
+                            </h2>
+                        {% else %}
+                            {% if post.title_en %}
+                                <h2 class="ui header">
+                                    {% comment %} <i class="leanpub icon"></i> {% endcomment %}
+                                    <div class="content">
+                                        {{ post.title_en }}
+                                    </div>
+                                </h2>
+                            {% endif %}
+                        {% endif %}
+
+                        <div class="meta">
+                            <span class="pub_agent" data-tooltip="{{ post.pub_agent.full_name }}"><i>{{ post.pub_agent.abbr_name }}.</i></span>
+                            <span class="pub_date"><i>{{ post.pub_date }}</i></span>
+                            <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
+                        </div>
+                        <div class="description">
+                            <p><b>CONCLUSIONS:</b> {{ post.abstract }}</p>
+                        </div>
+                        <div class="extra">
+                            {% for tag in post.tags.all %}
+                                <a class="ui label">{{ tag }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="ui divider"></div>
+                <div class="ui top attached tabular menu">
+                {% for doc in post.files.all %}
+                
+                    <a class="{% if forloop.first %}active{% endif %} item" data-tab="pdf{{ forloop.counter0|add:1 }}">原文{% if not forloop.first %}{{ forloop.counter0|add:1 }}{% endif %}</a>
+                {% endfor %}
+                </div>
+                {% for doc in post.files.all %}
+                <div class="ui bottom attached {% if forloop.first %}active{% endif %} tab segment" data-tab="pdf{{ forloop.counter0|add:1 }}">
+                    <a class="ui blue right ribbon label" href="{{ doc.file.url }}"><i class="external alternate icon"></i>在新窗口中打开</a>
+                    <div class="ui hidden divider"></div>
+                    <iframe src="{{ doc.file.url }}" width="100%" height="768"></iframe>
+                </div>
+                {% endfor %}
+
+            {% endif %}
+        </div>
+    </div>
+    <div class="ui hidden divider"></div>
+
+<script>
+    $(document).ready(function () {
+        $('.menu .item')
+            .tab();
+    });
+</script>
+
+{% endblock body %}
+
+
+
+
+

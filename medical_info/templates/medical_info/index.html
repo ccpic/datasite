@@ -1,0 +1,137 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}医学信息平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+            <div class="ui inverted segment">
+                <form method="get" action="{% url 'vbp:search' %}" class="ui inverted fluid form">
+                    {% csrf_token %}
+                    <div class="field">
+                        <div class="ui action input">
+                            <input type="search" name="kw" placeholder="请输入关键字进行搜索" required>
+                            <button type="submit" class="ui blue submit button">搜索</button>
+                        </div>
+                    </div>
+                    常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %}
+
+                </form>
+            </div>
+            {% if posts %}
+                <div class="ui dividing header">
+                    {% if kw %}
+                        <a href="{% url 'medical_info:index' %}">所有医学信息</a> - 搜索关键字 "{{ kw }}" 结果 - <span>当前显示第
+                    {{ posts.start_index }}-{{ posts.end_index }} of {{ record_n }}条记录
+                    </span>
+                    {% else %}
+                        所有医学信息 - <span>当前显示第
+                    {{ posts.start_index }}-{{ posts.end_index }} of {{ record_n }}条记录
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="ui divided items">
+                {% for post in posts %}
+                    <div class="item">
+                        {% if post.images.all %}
+                            <div class="image">
+                            <img src="/images/wireframe/image.png">
+                            </div>
+                        {% endif %}
+                        <div class="content">
+                            {% if post.title_cn %}
+                                <h2 class="ui header">
+                                    {% comment %} <i class="bookmark outline icon"></i> {% endcomment %}
+                                    <div class="content">
+                                        {{ post.title_cn }}
+                                        {% if post.title_en %}
+                                            <div class="sub header">{{ post.title_en }}</div>
+                                        {% endif %}
+                                    </div>
+                                </h2>
+                            {% else %}
+                                {% if post.title_en %}
+                                    <h2 class="ui header">
+                                        {% comment %} <i class="leanpub icon"></i> {% endcomment %}
+                                        <div class="content">
+                                            {{ post.title_en }}
+                                        </div>
+                                    </h2>
+                                {% endif %}
+                            {% endif %}
+
+                            <div class="meta">
+                                <span class="pub_agent" data-tooltip="{{ post.pub_agent.full_name }}"><i>{{ post.pub_agent.abbr_name }}.</i></span>
+                                <span class="pub_date"><i>{{ post.pub_date }}</i></span>
+                                <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
+                            </div>
+                            <div class="description">
+                                <p><b>CONCLUSIONS:</b> {{ post.abstract }}</p>
+                            </div>
+                            <div class="extra">
+                                {% for tag in post.tags.all %}
+                                    <a class="ui label">{{ tag }}</a>
+                                {% endfor %}
+                                <a class="ui right floated primary basic button" data-tooltip="{{ post.link }}" href="{{ post.link }}">
+                                原平台链接
+                                <i class="right chevron icon"></i>
+                                </a>
+                                <a class="ui right floated primary button" href="{% url 'medical_info:post_detail' post.url_slug %}">
+                                阅读PDF原文
+                                <i class="right chevron icon"></i>
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+                <div class="ui pagination menu">
+                    <a class="item" href="{% if kw %}?kw={{ kw }}&page=1{% else %}?page=1{% endif %}">&lt;&lt;</a>
+
+                    {% if posts.number|add:'-4' > 1 %}
+                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ posts.number|add:'-5' }}{% else %}?page={{ posts.number|add:'-5' }}{% endif %}">&hellip;</a>
+                    {% endif %}
+
+
+                    {% for n in num_pages|times %}
+                    {% if n == posts.number %}
+                    <span class="active item" href="{% if kw %}?kw={{ kw }}&page={{ n }}{% else %}?page={{ n }}{% endif %}">{{ n }}</span>
+                    {% elif n > posts.number|add:'-5' and n < posts.number|add:'5' %}
+                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ n }}{% else %}?page={{ n }}{% endif %}">{{ n }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+
+                    {% if num_pages > posts.number|add:'4' %}
+                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ posts.number|add:'5' }}{% else %}?page={{ posts.number|add:'5' }}{% endif %}">&hellip;</a>
+                    {% endif %}
+
+                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ num_pages }}{% else %}?page={{ num_pages }}{% endif %}">&gt;&gt;</a>
+                </div>
+            {% else %}
+                <div class="ui error message">
+                    没有搜索到符合条件的记录
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ui hidden divider"></div>
+
+{% endblock body %}
+
+
+
+
+
