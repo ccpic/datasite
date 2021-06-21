@@ -10,14 +10,16 @@
 {% block body %}
 <!-- 因为semantic ui的特性需要在body部分写个pusher避免内容被顶部导航栏遮挡 -->
 <div id="pusher" class="pusher" style="padding-top:50px">
-    <div class="ui celled grid">
-        <!-- 左边13/16为display页面 -->
-        <div class="thirteen wide column">
-            {% block display %}{% endblock display %}
-        </div>
-        <!-- 右边3/16为filter页面 -->
-        <div class="three wide column">
-            {% include 'medical_info/sidebar.html' %}
+    <div class="ui container">
+        <div class="ui celled grid">
+            <!-- 左边12/16为display页面 -->
+            <div class="twelve wide column">
+                {% block display %}{% endblock display %}
+            </div>
+            <!-- 右边4/16为filter页面 -->
+            <div class="four wide column">
+                {% include 'medical_info/sidebar.html' %}
+            </div>
         </div>
     </div>
 </div>

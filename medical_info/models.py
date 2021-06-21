@@ -3,6 +3,8 @@ from django.db.models.base import Model
 from taggit.managers import TaggableManager
 from uuslug import slugify
 import os
+import datetime
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 def get_filename(instance, filename):
@@ -21,6 +23,14 @@ def slugify_max(text, max_length=50):
     return slug[:max_length]
 
 
+def current_year():
+    return datetime.date.today().year
+
+
+def max_value_current_year(value):
+    return MaxValueValidator(current_year())(value)
+
+
 class PubAgent(models.Model):
     full_name = models.CharField(verbose_name="全称", max_length=200)
     abbr_name = models.CharField(verbose_name="简称", max_length=100)
@@ -33,6 +43,20 @@ class PubAgent(models.Model):
         return "%s (%s)" % (self.full_name, self.abbr_name)
 
 
+class Program(models.Model):
+    name = models.CharField(verbose_name="名称", max_length=50)
+    year = models.IntegerField(
+        verbose_name="年份", validators=[MinValueValidator(2020), max_value_current_year]
+    )
+    vol = models.CharField(verbose_name="期数", max_length=50, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "发布栏目"
+        verbose_name_plural = "发布栏目"
+
+    def __str__(self):
+        return "%s %s (%s)" % (self.year, self.name, self.vol)
+
 class Post(models.Model):
     title_en = models.CharField(verbose_name="英文标题", max_length=300)
     title_cn = models.CharField(verbose_name="中文标题", max_length=300)
@@ -43,6 +67,7 @@ class Post(models.Model):
     pub_identifier = models.CharField(verbose_name="识别码", max_length=100)
     abstract = models.TextField(verbose_name="摘要")
     link = models.CharField(verbose_name="原平台链接", max_length=100)
+    program = models.ForeignKey(Program, on_delete=models.CASCADE, default=None, verbose_name="栏目", null=True, blank=True)
     upload_date = models.DateTimeField(verbose_name="上传日期", auto_now=True)
     url_slug = models.SlugField(editable=False)
     tags = TaggableManager()
@@ -64,7 +89,9 @@ class Post(models.Model):
 
 
 class Images(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, default=None, related_name="images")
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, default=None, related_name="images"
+    )
     image = models.ImageField(upload_to=get_filename, verbose_name="图片")
 
     class Meta:
@@ -79,7 +106,9 @@ class Images(models.Model):
 
 
 class Files(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, default=None, related_name="files")
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, default=None, related_name="files"
+    )
     file = models.FileField(upload_to=get_filename, verbose_name="文件")
 
     class Meta:
