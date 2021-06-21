@@ -25,15 +25,16 @@ class FilesInline(admin.StackedInline):
     extra = 0
 
 
+# class ContentForm(forms.ModelForm):
+#     tags = TagField(required=False, widget=LabelWidget)
+
+
 class PostAdmin(admin.ModelAdmin):
+    # form = ContentForm
     inlines = [
         ImagesInline,
         FilesInline,
     ]
-
-
-class ContentForm(forms.ModelForm):
-    tags = TagField(required=False, widget=LabelWidget)
 
 
 admin.site.register(Images, ImagesAdmin)

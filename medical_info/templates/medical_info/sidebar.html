@@ -1,0 +1,27 @@
+{% load taggit_templatetags2_tags %}
+
+<div class="ui container">    
+    <div class="ui red vertical segment">
+        <h3 class="ui header">搜索</h3>
+        <form method="get" action="{% url 'vbp:search' %}" class="ui fluid form">
+            {% csrf_token %}
+            <div class="field">
+                <div class="ui action input">
+                    <input type="search" name="kw" placeholder="请输入关键字进行搜索" required>
+                    <button type="submit" class="ui blue submit button">搜索</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="ui blue vertical segment">
+        <h3 class="ui header">标签</h3>
+        {% get_taglist as tags %}
+        <div class="ui labels">
+            {% for tag in tags %}
+                <a class="ui label" href="{% url 'medical_info:tagged' tag.pk %}">
+                    {{ tag }} <div class="detail">({{ tag.num_times }})</div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
