@@ -37,7 +37,7 @@
             
             <div class="ui divided items">
             {% for post in posts %}
-                <div class="item">
+                <div class="item" id="medical_posts">
                     {% if post.images.all %}
                         <div class="image">
                         <img src="/images/wireframe/image.png">
@@ -48,9 +48,23 @@
                             <h2 class="ui header">
                                 {% comment %} <i class="bookmark outline icon"></i> {% endcomment %}
                                 <div class="content">
-                                    {{ post.title_cn }}
+                                    {% if kw %}
+                                        {{ post.title_cn|highlight:kw }}
+                                    {% elif tag %}
+                                        {{ post.title_cn|highlight:tag.name }}
+                                    {% else %}
+                                        {{ post.title_cn}}
+                                    {% endif %}
                                     {% if post.title_en %}
-                                        <div class="sub header">{{ post.title_en }}</div>
+                                        <div class="sub header">
+                                            {% if kw %}
+                                                {{ post.title_en|highlight:kw }}
+                                            {% elif tag %}
+                                                {{ post.title_en|highlight:tag.name }}
+                                            {% else %}
+                                                {{ post.title_en}}
+                                            {% endif %}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </h2>
@@ -59,7 +73,13 @@
                                 <h2 class="ui header">
                                     {% comment %} <i class="leanpub icon"></i> {% endcomment %}
                                     <div class="content">
-                                        {{ post.title_en }}
+                                        {% if kw %}
+                                            {{ post.title_en|highlight:kw }}
+                                        {% elif tag %}
+                                            {{ post.title_en|highlight:tag.name }}
+                                        {% else %}
+                                            {{ post.title_en}}
+                                        {% endif %}
                                     </div>
                                 </h2>
                             {% endif %}
@@ -71,7 +91,16 @@
                             <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
                         </div>
                         <div class="description">
-                            <p><b>CONCLUSIONS:</b> {{ post.abstract }}</p>
+                            <p>
+                            <b>CONCLUSIONS:</b> 
+                            {% if kw %}
+                                {{ post.abstract|highlight:kw }}
+                            {% elif tag %}
+                                {{ post.abstract|highlight:tag.name }}
+                            {% else %}
+                                {{post.abstract}}
+                            {% endif %}
+                            </p>
                         </div>
                         <div class="extra">
                             标签：
@@ -80,6 +109,12 @@
                             {% endfor %}
                         </div>
                         <div class="extra">
+                                {% if request.user.is_superuser %}
+                                <a class="ui right floated red button" href="{% url 'admin:medical_info_post_change' post.id %}">
+                                编辑
+                                <i class="right chevron icon"></i>
+                                </a>
+                            {% endif %}
                             <a class="ui right floated primary basic button" data-tooltip="{{ post.link }}" href="{{ post.link }}">
                             原平台链接
                             <i class="right chevron icon"></i>
@@ -131,6 +166,9 @@
     </div>
     <div class="ui hidden divider"></div>
 
+<style>
+.highlight { background-color:#FFFF00; }
+</style>
 {% endblock display %}
 
 

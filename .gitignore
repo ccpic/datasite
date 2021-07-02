@@ -136,6 +136,7 @@ dmypy.json
 *.xlsx
 *.xls
 *.pkl
+*.pdf
 
 # Migration
 migrations

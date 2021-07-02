@@ -70,7 +70,7 @@
                         <th>品种总体<br>协议金额<br>（按中标价）</th>
                         <th>标期开始</th>
                         <th>标期</th>
-                        <th>最高限价</th>
+                        {% comment %} <th>最高限价</th> {% endcomment %}
                         <th>竞标结果</th>
                         <th>操作</th>
                     </tr>
@@ -85,7 +85,7 @@
                                     {{ spec }}
                                 {% endfor %}
                             </td>
-                            <td>
+                            <td style="width: 100px">
                                 {{ tender.vol }}
                             </td>
                             <td style="width: 50px">{{ tender.proc_percentage|percentage:0 }}</td>
@@ -100,7 +100,7 @@
                             </td>
                             <td style="width: 70px">{{ tender.tender_begin|date:'Y年m月' }}</td>
                             <td style="width: 50px">{{ tender.tender_period }}年</td>
-                            <td style="width: 100px">&yen{{ tender.ceiling_price }}</td>
+                            {% comment %} <td style="width: 100px">&yen{{ tender.ceiling_price }}</td> {% endcomment %}
                             <td style="width: 30%">
                                 {% if tender.bids.all %}
                                     <div class="ui divided selection list">
@@ -140,7 +140,7 @@
                                     没有填写竞标者
                                 {% endif %}
                             </td>
-                            <td>
+                            <td style="width: 50px">
                                 <a href="{% url 'vbp:tender_detail' tender.pk %}">详情</a>
                             </td>
                         </tr>

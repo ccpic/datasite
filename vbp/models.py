@@ -142,8 +142,9 @@ D_MAIN_SPEC = {
 class Tender(models.Model):
     target = models.CharField(max_length=30, verbose_name="带量品种")
     vol = models.CharField(max_length=30, verbose_name="批次")
-    ceiling_price = models.FloatField(verbose_name="报价最高限价")
+    # ceiling_price = models.FloatField(verbose_name="报价最高限价")
     tender_begin = models.DateField(verbose_name="标期起始日期")
+    only_valid_spec = models.BooleanField(verbose_name="只采购企业可生产规格")
 
     class Meta:
         verbose_name = "集采标的"
@@ -396,6 +397,7 @@ class Bid(models.Model):
     bid_spec = models.CharField(max_length=30, verbose_name="报价规格")
     bid_price = models.FloatField(verbose_name="报价")
     original_price = models.FloatField(verbose_name="集采前最低价", blank=True, null=True)
+    ceiling_price = models.FloatField(verbose_name="最高有效申报价")
 
     class Meta:
         verbose_name = "投标记录"
@@ -439,7 +441,7 @@ class Bid(models.Model):
     def price_cut_to_ceiling(self):  # 相比最高限价降价幅度
         if self.bid_price != 99999:
             try:
-                return self.bid_price / self.tender.ceiling_price - 1
+                return self.bid_price / self.ceiling_price - 1
             except:
                 return None
         else:

@@ -38,9 +38,10 @@ class PubAgent(models.Model):
     class Meta:
         verbose_name = "发布平台"
         verbose_name_plural = "发布平台"
+        ordering = ["abbr_name"]
 
     def __str__(self):
-        return "%s (%s)" % (self.full_name, self.abbr_name)
+        return "%s (%s)" % (self.abbr_name, self.full_name)
 
 
 class Program(models.Model):
@@ -61,13 +62,13 @@ class Post(models.Model):
     title_en = models.CharField(verbose_name="英文标题", max_length=300)
     title_cn = models.CharField(verbose_name="中文标题", max_length=300)
     pub_agent = models.ForeignKey(
-        PubAgent, on_delete=models.CASCADE, verbose_name="发布方"
+        PubAgent, on_delete=models.CASCADE, verbose_name="发布方", related_name="pub_agents"
     )
     pub_date = models.DateField(verbose_name="发布日期")
     pub_identifier = models.CharField(verbose_name="识别码", max_length=100)
     abstract = models.TextField(verbose_name="摘要")
     link = models.CharField(verbose_name="原平台链接", max_length=100)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE, default=None, verbose_name="栏目", null=True, blank=True)
+    program = models.ForeignKey(Program, on_delete=models.CASCADE, default=None, verbose_name="栏目", null=True, blank=True, related_name="programs")
     upload_date = models.DateTimeField(verbose_name="上传日期", auto_now=True)
     url_slug = models.SlugField(editable=False)
     tags = TaggableManager()

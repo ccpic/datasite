@@ -30,7 +30,7 @@ class ContentForm(forms.ModelForm):
 
 
 class PostAdmin(admin.ModelAdmin):
-    form = ContentForm
+    # form = ContentForm
     inlines = [
         ImagesInline,
         FilesInline,

@@ -1,5 +1,7 @@
 from chpa_data.models import Record
 from django import template
+from re import IGNORECASE, compile, escape as rescape
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 from vbp.models import *
@@ -141,3 +143,14 @@ def filter_fields(dict):
 def get_record(pk):
     obj = Record.objects.get(id=pk)
     return obj.args
+
+
+@register.filter(name="highlight")
+def highlight(text, search):
+    try:
+        rgx = compile(rescape(search), IGNORECASE)
+        return mark_safe(
+            rgx.sub(lambda m: '<b class="highlight">{}</b>'.format(m.group()), text)
+        )
+    except:
+        return text
