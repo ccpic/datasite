@@ -232,7 +232,7 @@ def search(request, column, kw):
 
 @login_required
 def export(request, type):
-    form_dict = dict(six.iterlists(request.GET))
+    form_dict = qdict_to_dict(request.GET)
 
     if type == "pivoted":
         df = get_df(form_dict)  # 透视后的数据

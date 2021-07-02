@@ -13,7 +13,7 @@ django.setup()
 
 from chpa_data.views import *
 from vbp.models import *
-from rdpac.models import *
+# from rdpac.models import *
 
 engine = create_engine("mssql+pymssql://(local)/CHPA_1806")
 table = "data"
@@ -39,7 +39,7 @@ def importModel(dict):
 
 
 def import_tender():
-    df = pd.read_excel("vbp.xlsx", sheet_name="第四轮集采", header=0)
+    df = pd.read_excel("第五批.xlsx", sheet_name="第五批集采", header=0)
     df = df.drop_duplicates("药品通用名")
     # pivoted = pd.pivot_table(df, index='药品通用名', values='最高限价', aggfunc=np.mean)
     # d = pivoted.to_dict()['最高限价']
@@ -47,11 +47,11 @@ def import_tender():
     l = []
     for tender in df.values:
         print(tender)
-        tender_begin = datetime.datetime.strptime("01-05-2021", "%d-%m-%Y")
+        tender_begin = datetime.datetime.strptime("01-10-2021", "%d-%m-%Y")
         l.append(
             Tender(
                 target=tender[1],
-                vol="第四轮45品种",
+                vol="第五轮62品种",
                 tender_begin=tender_begin,
                 ceiling_price=tender[9],
             )
@@ -61,7 +61,7 @@ def import_tender():
 
 
 def import_volume():
-    df = pd.read_excel("vbp_amount.xlsx", sheet_name="第四轮集采 by 省")
+    df = pd.read_excel("第五批.xlsx", sheet_name="第五轮采购量by省")
     # df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
     print(df)
 
@@ -81,7 +81,7 @@ def import_volume():
 
 
 def import_bid():
-    df = pd.read_excel("vbp.xlsx", sheet_name="第四轮集采", header=0)
+    df = pd.read_excel("第五批.xlsx", sheet_name="第五批集采", header=0)
     df.fillna("-", inplace=True)
     print(df)
 
@@ -279,14 +279,14 @@ def import_tc():
 
 
 if __name__ == "__main__":
-    # importModel(D_MODEL)
+    importModel(D_MODEL)
     # import_tender()
     # import_volume()
     # import_bid()
     # update_tender()
     # import_company()
-    import_drug()
-    import_sales()
+    # import_drug()
+    # import_sales()
     # import_tc()
     print("Done!", time.process_time())
     # print(Drug.objects.get(pk=2248).product_name_cn)

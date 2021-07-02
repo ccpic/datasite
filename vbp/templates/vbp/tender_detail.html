@@ -33,8 +33,8 @@
                                     <th>带量品种</th>
                                     <th>带量批次</th>
                                     <th>带量比例</th>
-                                    <th>合同量<br>（折算为一种规格）</th>
-                                    <th>合同金额<br>（按中标价）</th>
+                                    <th>品种总体<br>协议量<br>（折算为一种规格）</th>
+                                    <th>品种总体<br>协议金额<br>（按中标价）</th>
                                     <th>标期开始</th>
                                     <th>标期</th>
                                     <th>最高限价</th>
@@ -312,7 +312,7 @@
 
         option = {
             title: {
-                text: '预估合同量份额',
+                text: '预估协议量份额',
                 left: 'center',
                 y: '57.5%',
             },
@@ -381,7 +381,7 @@
             },
             xAxis: {
                 scale: true,
-                name: '获取合同量',
+                name: '获取协议量',
                 nameLocation: 'middle',
                 nameGap: 30,
             },
@@ -392,7 +392,7 @@
             tooltip: {
                 trigger: 'item',
                 formatter: function (params) {
-                    return nameData[params.dataIndex] + '<br> 获取合同量：' + params.data[0] + '万<br> 竞标价（折算后）：' + params.data[1] + '元';
+                    return nameData[params.dataIndex] + '<br> 获取协议量：' + params.data[0] + '万<br> 竞标价（折算后）：' + params.data[1] + '元';
                 },
             },
             series: [{

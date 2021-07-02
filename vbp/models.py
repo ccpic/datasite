@@ -126,6 +126,16 @@ D_MAIN_SPEC = {
     "特比萘芬口服常释剂型": {"0.125g": 1, "0.25g": 2},
     "左氧氟沙星口服常释剂型": {"0.25g": 0.5, "0.5g": 1},
     "玻璃酸钠滴眼剂 0.1%": {"5ml:5mg (0.1%)": 1, "10ml:10mg (0.1%)": 2},
+    "贝那普利口服常释剂型": {"5mg": 0.5, "10mg": 1},
+    "乐卡地平口服常释剂型": {"10mg": 1, "20mg": 2},
+    "头孢呋辛注射剂": {
+        "0.25g": 1 / 3,
+        "0.5g": 2 / 3,
+        "0.75g": 1,
+        "1g": 4 / 3,
+        "1.5g": 2,
+        "2g": 8 / 3,
+    },
 }
 
 
@@ -170,6 +180,17 @@ class Tender(models.Model):
             "左氧氟沙星口服常释剂型",
             "玻璃酸钠滴眼剂",
             "注射用比伐芦定",
+            "阿奇霉素注射剂",
+            "氟康唑注射剂型",
+            "利奈唑胺葡萄糖注射液",
+            "莫西沙星滴眼剂",
+            "替硝唑口服常释剂型",
+            "头孢呋辛注射剂",
+            "头孢曲松注射剂",
+            "头孢他啶注射剂",
+            "头孢唑林注射剂型",
+            "左氧氟沙星注射剂型",
+            "布地奈德吸入剂",
         ]:
             if self.winner_num == 1:
                 pct = 0.4
@@ -299,6 +320,13 @@ class Tender(models.Model):
                     return 2
                 elif self.winner_num >= 4:
                     return 3
+        elif "第五轮" in self.vol:  # 第五轮集采规则
+            if self.winner_num <= 2:  # 1-2家中标，标期1年
+                return 1
+            elif self.winner_num == 3:
+                return 2
+            elif self.winner_num >= 4:
+                return 3
         else:
             return None
 
@@ -567,14 +595,12 @@ class Volume(models.Model):
 class Doc(models.Model):
     title = models.CharField(max_length=50, verbose_name="文件名")
     vol = models.CharField(max_length=30, verbose_name="批次")
-    file = models.FileField(upload_to='doc_files/%Y/%m/%d/', verbose_name="PDF文件")
+    file = models.FileField(upload_to="doc_files/%Y/%m/%d/", verbose_name="PDF文件")
 
     class Meta:
         verbose_name = "官方文件"
         verbose_name_plural = "官方文件"
 
     def __str__(self):
-        return "%s %s" % (
-            self.vol,
-            self.title
-        )
+        return "%s %s" % (self.vol, self.title)
+
