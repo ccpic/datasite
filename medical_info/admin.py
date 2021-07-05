@@ -30,6 +30,14 @@ class ContentForm(forms.ModelForm):
 
 
 class PostAdmin(admin.ModelAdmin):
+    search_fields = [
+        "title_cn",
+        "title_en",
+        "program__name",
+        "program__vol",
+        "pub_agent__full_name",
+        "pub_agent__abbr_name",
+    ]
     # form = ContentForm
     inlines = [
         ImagesInline,
@@ -40,7 +48,5 @@ class PostAdmin(admin.ModelAdmin):
 admin.site.register(Images, ImagesAdmin)
 admin.site.register(Files, FilesAdmin)
 admin.site.register(Post, PostAdmin)
-admin.site.register(
-    [PubAgent, Program]
-)
+admin.site.register([PubAgent, Program])
 

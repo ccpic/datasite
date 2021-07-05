@@ -37,7 +37,6 @@
                                     <th>品种总体<br>协议金额<br>（按中标价）</th>
                                     <th>标期开始</th>
                                     <th>标期</th>
-                                    <th>最高限价</th>
                                     <th>竞标结果</th>
                                 </tr>
                                 </thead>
@@ -65,7 +64,6 @@
                                     </td>
                                     <td style="width: 70px">{{ tender.tender_begin|date:'Y年m月' }}</td>
                                     <td style="width: 50px">{{ tender.tender_period }}年</td>
-                                    <td style="width: 100px">&yen{{ tender.ceiling_price }}</td>
                                     <td style="width: 30%">
                                         {% if tender.bids.all %}
                                             <div class="ui divided selection list">
@@ -88,11 +86,9 @@
                                                             <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated label">
                                                                 &yen{{ bid.bid_price|fix_decimal:2 }}
                                                             </div>
-                                                            {% if bid.original_price %}
-                                                                <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
-                                                                    {{ bid.price_cut|percentage }}
-                                                                </div>
-                                                            {% endif %}
+                                                            <div class="{% if bid.is_winner %}ui green{% else %}ui red{% endif %} horizontal left floated basic label">
+                                                                {{ bid.price_cut_to_ceiling|percentage }}
+                                                            </div>
                                                             <div class="middle aligned content">
                                                                 {{ bid.bidder.abbr_name }}
                                                                 {% if bid.origin %}<i class="star icon"></i>{% endif %}
@@ -237,7 +233,7 @@
         var mapData = [];
         {% for region in tender.regions %}
             var region = '{{ region }}';
-            if (region === '新疆（含兵团）') {
+            if (region === '新疆(含兵团)') {
                 region = '新疆'
             }
             var region_data = {

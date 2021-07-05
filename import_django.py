@@ -13,6 +13,7 @@ django.setup()
 
 from chpa_data.views import *
 from vbp.models import *
+
 # from rdpac.models import *
 
 engine = create_engine("mssql+pymssql://(local)/CHPA_1806")
@@ -39,7 +40,7 @@ def importModel(dict):
 
 
 def import_tender():
-    df = pd.read_excel("第五批.xlsx", sheet_name="第五批集采", header=0)
+    df = pd.read_excel("vbp_summary_7.2.xlsx", sheet_name="汇总", header=0)
     df = df.drop_duplicates("药品通用名")
     # pivoted = pd.pivot_table(df, index='药品通用名', values='最高限价', aggfunc=np.mean)
     # d = pivoted.to_dict()['最高限价']
@@ -50,10 +51,11 @@ def import_tender():
         tender_begin = datetime.datetime.strptime("01-10-2021", "%d-%m-%Y")
         l.append(
             Tender(
-                target=tender[1],
-                vol="第五轮62品种",
+                target=tender[2],
+                vol=tender[0],
                 tender_begin=tender_begin,
-                ceiling_price=tender[9],
+                # ceiling_price=tender[10],
+                only_valid_spec=D_BOOLEAN[tender[16]],
             )
         )
 
@@ -61,7 +63,7 @@ def import_tender():
 
 
 def import_volume():
-    df = pd.read_excel("第五批.xlsx", sheet_name="第五轮采购量by省")
+    df = pd.read_excel("vbp_amount_7.2.xlsx", sheet_name="汇总")
     # df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
     print(df)
 
@@ -70,10 +72,10 @@ def import_volume():
         print(volume)
         l.append(
             Volume(
-                tender=Tender.objects.get(target=volume[1]),
-                region=volume[0],
-                spec=volume[2],
-                amount_reported=volume[3],
+                tender=Tender.objects.get(target=volume[2]),
+                region=volume[1],
+                spec=volume[3],
+                amount_reported=volume[4],
             )
         )
 
@@ -81,23 +83,69 @@ def import_volume():
 
 
 def import_bid():
-    df = pd.read_excel("第五批.xlsx", sheet_name="第五批集采", header=0)
+
+    D_DELTA = {
+        "埃索美拉唑(艾司奥美拉唑)注射剂": {
+            "重庆莱美": ["40mg"],
+            "特瑞药业": ["40mg"],
+            "海思科制药": ["20mg", "40mg"],
+            "海南中玉": ["20mg", "40mg"],
+            "海南倍特": ["40mg"],
+            "正大天晴": ["20mg", "40mg"],
+            "扬子江药业": ["40mg"],
+            "山东裕欣": ["40mg"],
+            "江苏奥赛康": ["20mg", "40mg"],
+            "福安药业": ["40mg"],
+        },
+        "单硝酸异山梨酯缓释控释剂型": {
+            "乐普医疗": ["40mg"],
+            "合肥合源": ["50mg"],
+            "珠海润都": ["40mg"],
+            "齐鲁制药": ["40mg"],
+            "鲁南制药": ["40mg"],
+        },
+        "碘海醇注射剂 100ml:30g(I)": {
+            "通用电气": ["100ml:30g(I)"],
+            "上海司太立": ["100ml:30g(I)"],
+            "扬子江药业": ["100ml:30g(I)"],
+        },
+        "碘海醇注射剂 100ml:35g(I)": {
+            "通用电气": ["100ml:35g(I)"],
+            "上海司太立": ["100ml:35g(I)"],
+            "北京北陆": ["100ml:35g(I)"],
+        },
+        "碘克沙醇注射剂": {
+            "通用电气": ["100ml:32g(I)"],
+            "上海司太立": ["100ml:32g(I)"],
+            "正大天晴": ["100ml:32g(I)"],
+            "扬子江药业": ["100ml:32g(I)"],
+        },
+        "脂肪乳氨基酸葡萄糖注射剂": {"海思科制药": ["1440ml"], "科伦药业": ["1440ml"], "费森": ["1440ml"],},
+        "中/长链脂肪乳(C8-24Ve)注射剂": {
+            "科伦药业": ["250ml(20%)"],
+            "广东嘉博": ["250ml(20%)"],
+            "德国贝朗": ["250ml(20%)"],
+        },
+    }
+
+    df = pd.read_excel("vbp_summary_7.2.xlsx", sheet_name="汇总", header=0)
     df.fillna("-", inplace=True)
     print(df)
 
     tenders = Tender.objects.all()
     for tender in tenders:
         for bid in df.values:
-            tender_name = bid[1]
-            multi_spec = bid[2]
-            spec = bid[3]
-            company_full_name = bid[4]
-            company_abbr_name = bid[5]
-            origin = bid[6]
-            mnc_or_local = bid[7]
-            original_price = bid[10]
-            bid_price = bid[11]
-            region_win = bid[12]
+            tender_name = bid[2]
+            multi_spec = bid[3]
+            spec = bid[4]
+            company_full_name = bid[5]
+            company_abbr_name = bid[6]
+            origin = bid[7]
+            mnc_or_local = bid[8]
+            ceiling_price = bid[10]
+            original_price = bid[11]
+            bid_price = bid[12]
+            region_win = bid[13]
 
             if tender_name == tender.target:
                 if Company.objects.filter(full_name=company_full_name).exists():
@@ -115,6 +163,7 @@ def import_bid():
                         origin=D_BOOLEAN[origin],
                         bid_spec=spec,
                         bid_price=bid_price,
+                        ceiling_price=ceiling_price,
                     )
                 else:
                     bid_obj = Bid.objects.create(
@@ -124,23 +173,34 @@ def import_bid():
                         bid_spec=spec,
                         bid_price=bid_price,
                         original_price=original_price,
+                        ceiling_price=ceiling_price,
                     )
-
+                # 将对应区域销量和中标者挂钩
                 if region_win != "-":
-                    list_region = [x.strip() for x in region_win.split("，")]
+                    list_region = [x.strip() for x in region_win.split(",")]
                     for region in list_region:
                         volume_objs = Volume.objects.filter(
                             tender__target=tender_name, region=region,
                         )
                         for obj in volume_objs:
-                            obj.winner = bid_obj
-                            obj.save()
+                            if tender.target in D_DELTA:  # 处理第五轮的特殊规则，带三角标志的标的
+                                if bid_obj.bidder.abbr_name in D_DELTA[tender.target]:
+                                    if (
+                                        obj.spec
+                                        in D_DELTA[tender.target][
+                                            bid_obj.bidder.abbr_name
+                                        ]
+                                    ):
+                                        obj.winner = bid_obj
+                                        obj.save()
+                            else:
+                                obj.winner = bid_obj
+                                obj.save()
+    # l = []
+    # for tender in tenders:
+    #     l.append(Record(tender=tender, real_or_sim=True))
 
-        # l = []
-        # for tender in tenders:
-        #     l.append(Record(tender=tender, real_or_sim=True))
-
-        # Record.objects.bulk_create(l)
+    # Record.objects.bulk_create(l)
 
 
 def update_tender():
@@ -193,7 +253,7 @@ def import_drug():
                 molecule_en=drug[8],
                 product_name_cn=drug[5],
                 product_name_en=drug[4],
-                tc_iii=tc_iii
+                tc_iii=tc_iii,
             )
         )
 
@@ -279,10 +339,10 @@ def import_tc():
 
 
 if __name__ == "__main__":
-    importModel(D_MODEL)
-    # import_tender()
-    # import_volume()
-    # import_bid()
+    # importModel(D_MODEL)
+    import_tender()
+    import_volume()
+    import_bid()
     # update_tender()
     # import_company()
     # import_drug()

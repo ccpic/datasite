@@ -59,6 +59,33 @@
                         </div>
                     </div>
                 </div>
+
+
+                <div class="ui info message">
+                    <i class="close icon"></i>
+                    <div class="header">
+                        请注意
+                    </div>
+                    <p>名称带▲的品种，若中选企业不满足该品种采购目录内所有规格，其所缺规格的首年约定采购量不计，残缺规格的价格联动方案另行通知。</p>
+                    图例：
+                    <div class="ui label">
+                        报价规格
+                    </div>
+                    <div class="ui green label">
+                        中标价
+                    </div>
+                    <div class="ui red label">
+                        未中标报价(非官方)
+                    </div>
+                    <div class="ui basic green label">
+                        相比最高有效申报价降幅
+                    </div>
+                </div>
+                
+
+
+
+
                 <table class="ui celled table" id="client-selected">
                     <thead>
                     <tr>
@@ -80,7 +107,7 @@
                         <tr>
                             <td style="display:none">{{ tender.pk }}</td>
                             <td style="width: 15%">
-                                <h3 class="ui center aligned header">{{ tender.target }}</h3>
+                                <h3 class="ui center aligned header">{% if tender.only_valid_spec %}▲{% endif %} {{ tender.target }}</h3>
                                 {% for spec in tender.get_specs %}
                                     {{ spec }}
                                 {% endfor %}
@@ -123,11 +150,9 @@
                                                     <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated label">
                                                         &yen{{ bid.bid_price|fix_decimal:2 }}
                                                     </div>
-                                                    {% if bid.original_price %}
-                                                        <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated basic label">
-                                                            {{ bid.price_cut|percentage }}
-                                                        </div>
-                                                    {% endif %}
+                                                    <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated basic label">
+                                                        {{ bid.price_cut_to_ceiling|percentage }}
+                                                    </div>
                                                     <div class="middle aligned content">
                                                         {{ bid.bidder.abbr_name }}
                                                         {% if bid.origin %}<i class="star icon"></i>{% endif %}
@@ -147,6 +172,8 @@
                     {% endfor %}
                     </tbody>
                 </table>
+
+                </div>
                 <div class="ui pagination menu">
                     <a class="item" href="{% if kw %}?kw={{ kw }}&page=1{% else %}?page=1{% endif %}">&lt;&lt;</a>
 
@@ -183,6 +210,16 @@
         $('#button_add').click(function () {
             $('#modal_add').modal('show')
         })
+    </script>
+    <script>
+        $('.message .close')
+            .on('click', function() {
+                $(this)
+                .closest('.message')
+                .transition('fade')
+                ;
+            })
+            ;
     </script>
     <script>
         $('.quick.link').click(function () {

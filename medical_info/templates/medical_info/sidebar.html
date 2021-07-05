@@ -19,10 +19,11 @@
     <div class="ui red vertical segment">
         <h3 class="ui header">
             标签
+            <div class="ui red label">Top20</div>
         </h3>
         {% get_taglist as tags %}
         <div class="ui labels">
-            {% for tag in tags %}
+            {% for tag in tags|slice:"20" %}
             <a class="ui label" href="{% url 'medical_info:tagged' tag.pk %}">
                 {{ tag }} <div class="detail">({{ tag.num_times }})</div>
             </a>
