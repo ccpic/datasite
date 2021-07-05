@@ -1,3 +1,4 @@
+from medical_info.models import Program
 from chpa_data.models import Record
 from django import template
 from re import IGNORECASE, compile, escape as rescape
@@ -154,3 +155,9 @@ def highlight(text, search):
         )
     except:
         return text
+    
+    
+@register.inclusion_tag('medical_info/programs.html')
+def show_programs():
+    programs = Program.objects.all()
+    return {'programs': programs}

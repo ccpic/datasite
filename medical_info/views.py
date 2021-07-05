@@ -11,7 +11,6 @@ DISPLAY_LENGTH = 10
 def index(request):
 
     posts = Post.objects.all()
-    programs = Program.objects.all()
     paginator = Paginator(posts, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
@@ -24,7 +23,6 @@ def index(request):
 
     context = {
         "posts": rows,
-        "programs": programs,
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
@@ -35,7 +33,6 @@ def index(request):
 @login_required
 def tagged(request, pk):
     posts = Post.objects.filter(tags__pk=pk)
-    programs = Program.objects.all()
     paginator = Paginator(posts, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
@@ -59,7 +56,6 @@ def tagged(request, pk):
 @login_required
 def program(request, pk):
     posts = Post.objects.filter(program__pk=pk)
-    programs = Program.objects.all()
     paginator = Paginator(posts, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
@@ -83,7 +79,6 @@ def program(request, pk):
 @login_required
 def post_detail(request, slug):
     post = Post.objects.get(url_slug=slug)
-
     context = {
         "post": post,
     }

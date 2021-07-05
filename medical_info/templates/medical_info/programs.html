@@ -1,0 +1,17 @@
+{% regroup programs by year as year_list %}
+
+{% for year in year_list %}
+    <div class="ui segment">
+        <a class="ui top left attached label">{{ year.grouper }}</a>
+        <div class="ui list">
+            {% for program in year.list %}
+            <div class="item">
+                <i class="ellipsis vertical icon"></i>
+                <div class="content">
+                    <a href="{% url 'medical_info:program' program.pk %}">{{ program.name}} {{ program.vol }}</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endfor%} 

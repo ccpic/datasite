@@ -1,8 +1,11 @@
 {% load taggit_templatetags2_tags %}
+{% load tags %}
 
 <div class="ui container">
-    <div class="ui red vertical segment">
-        <h3 class="ui header">搜索</h3>
+    <div class="ui blue vertical segment">
+        <h3 class="ui header">
+            搜索
+        </h3>
         <form method="get" action="{% url 'medical_info:search' %}" class="ui fluid form">
             {% csrf_token %}
             <div class="field">
@@ -13,8 +16,10 @@
             </div>
         </form>
     </div>
-    <div class="ui blue vertical segment">
-        <h3 class="ui header">标签</h3>
+    <div class="ui red vertical segment">
+        <h3 class="ui header">
+            标签
+        </h3>
         {% get_taglist as tags %}
         <div class="ui labels">
             {% for tag in tags %}
@@ -24,25 +29,10 @@
             {% endfor %}
         </div>
     </div>
-    <div class="ui blue vertical segment">
-        <h3 class="ui header">专栏</h3>
-        {% regroup programs by year as year_list %}
-
-        {% for year in year_list %}
-            <div class="ui segment">
-                <a class="ui blue ribbon label">{{ year.grouper }}</a>
-                <div class="ui list">
-                    {% for program in year.list %}
-                    <div class="item">
-                        <i class="file pdf outline icon"></i>
-                        <div class="content">
-                            <a href="{% url 'medical_info:program' program.pk %}">{{ program.name}}</a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% endfor%}
-
+    <div class="ui purple vertical segment">
+        <h3 class="ui header">
+            栏目
+        </h3>
+        {% show_programs %}
     </div>
 </div>
