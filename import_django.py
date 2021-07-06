@@ -40,7 +40,7 @@ def importModel(dict):
 
 
 def import_tender():
-    df = pd.read_excel("vbp_summary_7.2.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_7.6.xlsx", sheet_name="汇总", header=0)
     df = df.drop_duplicates("药品通用名")
     # pivoted = pd.pivot_table(df, index='药品通用名', values='最高限价', aggfunc=np.mean)
     # d = pivoted.to_dict()['最高限价']
@@ -63,7 +63,7 @@ def import_tender():
 
 
 def import_volume():
-    df = pd.read_excel("vbp_amount_7.2.xlsx", sheet_name="汇总")
+    df = pd.read_excel("vbp_amount_7.6.xlsx", sheet_name="汇总")
     # df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
     print(df)
 
@@ -128,7 +128,7 @@ def import_bid():
         },
     }
 
-    df = pd.read_excel("vbp_summary_7.2.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_7.6.xlsx", sheet_name="汇总", header=0)
     df.fillna("-", inplace=True)
     print(df)
 

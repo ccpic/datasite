@@ -89,6 +89,9 @@
                             <span class="pub_agent" data-tooltip="{{ post.pub_agent.full_name }}"><i>{{ post.pub_agent.abbr_name }}.</i></span>
                             <span class="pub_date"><i>{{ post.pub_date }}</i></span>
                             <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
+                            {% for nation in post.nation.all %}
+                                <i class="{{ nation.code }} flag" title="{{ nation.name }}"></i>
+                            {% endfor %}
                         </div>
                         <div class="description">
                             <p>
@@ -130,6 +133,9 @@
                                 <a class="detail" href="{% url 'medical_info:program' post.program.pk %}">{{ post.program }}</a>
                                 </div>
                             {% endif %}
+                            <div class="ui basic label">
+                            <i class="eye icon"></i> {{ post.views }}
+                            </div>
                         </div>
                     </div>
                 </div>

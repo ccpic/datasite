@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .models import Post, Program
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Q
+from django.db.models import Q,F
 
 DISPLAY_LENGTH = 10
 
@@ -79,6 +79,9 @@ def program(request, pk):
 @login_required
 def post_detail(request, slug):
     post = Post.objects.get(url_slug=slug)
+    post.views = F("views") + 1
+    post.save()
+    post.refresh_from_db()
     context = {
         "post": post,
     }

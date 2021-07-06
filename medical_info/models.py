@@ -31,6 +31,18 @@ def max_value_current_year(value):
     return MaxValueValidator(current_year())(value)
 
 
+class Nation(models.Model):
+    name = models.CharField(verbose_name="国家名称", max_length=50)
+    code = models.CharField(verbose_name="国家代码（用以匹配国旗）参考https://semantic-ui.com/elements/flag.html", max_length=50)  # 用以匹配国旗
+
+    class Meta:
+        verbose_name = "国家代码"
+        verbose_name_plural = "国家代码"
+        ordering = ["name"]
+
+    def __str__(self):
+        return "%s (%s)" % (self.name, self.code)
+
 class PubAgent(models.Model):
     full_name = models.CharField(verbose_name="全称", max_length=200)
     abbr_name = models.CharField(verbose_name="简称", max_length=100)
@@ -70,6 +82,7 @@ class Post(models.Model):
     )
     pub_date = models.DateField(verbose_name="发布日期")
     pub_identifier = models.CharField(verbose_name="识别码", max_length=100)
+    nation = models.ManyToManyField(to=Nation, verbose_name="涉及国家", blank=True)
     abstract = models.TextField(verbose_name="摘要")
     link = models.CharField(verbose_name="原平台链接", max_length=100)
     program = models.ForeignKey(
@@ -84,6 +97,7 @@ class Post(models.Model):
     upload_date = models.DateTimeField(verbose_name="上传日期", auto_now=True)
     url_slug = models.SlugField(editable=False)
     tags = TaggableManager()
+    views = models.IntegerField(verbose_name="阅读量", default=0)
 
     class Meta:
         verbose_name = "医学信息"

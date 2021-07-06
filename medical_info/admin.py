@@ -43,10 +43,11 @@ class PostAdmin(admin.ModelAdmin):
         ImagesInline,
         FilesInline,
     ]
+    filter_horizontal = ('nation',)
 
 
 admin.site.register(Images, ImagesAdmin)
 admin.site.register(Files, FilesAdmin)
 admin.site.register(Post, PostAdmin)
-admin.site.register([PubAgent, Program])
+admin.site.register([PubAgent, Program, Nation])
 
