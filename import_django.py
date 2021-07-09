@@ -40,6 +40,13 @@ def importModel(dict):
 
 
 def import_tender():
+    D_DATE = {
+        "第二轮33品种": "01-04-2020",
+        "第三轮56品种": "01-11-2020",
+        "第四轮45品种": "01-05-2021",
+        "第五轮62品种": "01-10-2021",
+        "第一轮25品种扩围联盟地区": "01-12-2019",
+    }
     df = pd.read_excel("vbp_summary_7.6.xlsx", sheet_name="汇总", header=0)
     df = df.drop_duplicates("药品通用名")
     # pivoted = pd.pivot_table(df, index='药品通用名', values='最高限价', aggfunc=np.mean)
@@ -48,7 +55,7 @@ def import_tender():
     l = []
     for tender in df.values:
         print(tender)
-        tender_begin = datetime.datetime.strptime("01-10-2021", "%d-%m-%Y")
+        tender_begin = datetime.datetime.strptime(D_DATE[tender[0]], "%d-%m-%Y")
         l.append(
             Tender(
                 target=tender[2],
