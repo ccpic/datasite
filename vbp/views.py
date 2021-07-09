@@ -253,6 +253,10 @@ def export(request, mode, tender_ids=None):
             lambda x: ",".join(list(Tender.objects.get(pk=x["tender_id"]).get_specs())),
             axis=1,
         )  # 添加列：剂型剂量
+        df["main_spec"] = df.apply(
+            lambda x: Tender.objects.get(pk=x["tender_id"]).main_spec,
+            axis=1,
+        )  # 添加列：折算规格
         df["total_std_volume_reported"] = df.apply(
             lambda x: Tender.objects.get(pk=x["tender_id"]).total_std_volume_reported(),
             axis=1,
@@ -290,6 +294,7 @@ def export(request, mode, tender_ids=None):
                 "vol",
                 "target",
                 "specs",
+                "main_spec",
                 "tender_begin",
                 "tender_period",
                 "ceiling_price",
@@ -313,7 +318,8 @@ def export(request, mode, tender_ids=None):
         df.columns = [
             "批次",
             "标的",
-            "标的剂型剂量",
+            "标的包含规格",
+            "折算规格",
             "标期开始时间",
             "标期",
             "最高有效申报价",
