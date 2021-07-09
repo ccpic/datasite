@@ -27,6 +27,9 @@
                 </a>
             </div>
         </div>
+        {% if request.user.is_staff %}
+            <a href="{% url 'medical_info:index' %}" class="item">医学信息（测试中）</a>
+        {% endif %}
         <div class="ui simple dropdown item">
             小工具 <i class="dropdown icon"></i>
             <div class="menu">

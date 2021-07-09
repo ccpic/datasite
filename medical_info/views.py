@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .models import Post, Program
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Q,F
+from django.db.models import Q, F
 
 DISPLAY_LENGTH = 10
 
@@ -79,13 +79,26 @@ def program(request, pk):
 @login_required
 def post_detail(request, slug):
     post = Post.objects.get(url_slug=slug)
+
+    # 记录浏览量
     post.views = F("views") + 1
     post.save()
     post.refresh_from_db()
+
     context = {
         "post": post,
     }
     return render(request, "medical_info/post_detail.html", context)
+
+
+@login_required
+def post_mail_format(request, slug):
+    post = Post.objects.get(url_slug=slug)
+    # baseurl = request.build_absolute_uri(post.url)
+    context = {
+        "post": post,
+    }
+    return render(request, "medical_info/post_mail_format.html", context)
 
 
 @login_required

@@ -32,8 +32,8 @@ def max_value_current_year(value):
 
 
 class Nation(models.Model):
-    name = models.CharField(verbose_name="国家名称", max_length=50)
-    code = models.CharField(verbose_name="国家代码（用以匹配国旗）参考https://semantic-ui.com/elements/flag.html", max_length=50)  # 用以匹配国旗
+    name = models.CharField(verbose_name="国家名称", max_length=50, unique=True)
+    code = models.CharField(verbose_name="国家代码（用以匹配国旗）参考https://semantic-ui.com/elements/flag.html", max_length=50, unique=True)  # 用以匹配国旗
 
     class Meta:
         verbose_name = "国家代码"
@@ -44,8 +44,8 @@ class Nation(models.Model):
         return "%s (%s)" % (self.name, self.code)
 
 class PubAgent(models.Model):
-    full_name = models.CharField(verbose_name="全称", max_length=200)
-    abbr_name = models.CharField(verbose_name="简称", max_length=100)
+    full_name = models.CharField(verbose_name="全称", max_length=200, unique=True)
+    abbr_name = models.CharField(verbose_name="简称", max_length=100, unique=True)
 
     class Meta:
         verbose_name = "发布平台"
@@ -84,7 +84,7 @@ class Post(models.Model):
     pub_identifier = models.CharField(verbose_name="识别码", max_length=100)
     nation = models.ManyToManyField(to=Nation, verbose_name="涉及国家", blank=True)
     abstract = models.TextField(verbose_name="摘要")
-    link = models.CharField(verbose_name="原平台链接", max_length=100)
+    link = models.CharField(verbose_name="原平台链接", max_length=100, unique=True)
     program = models.ForeignKey(
         Program,
         on_delete=models.CASCADE,
