@@ -39,11 +39,6 @@
             <div class="ui divided items">
             {% for post in posts %}
                 <div class="item" id="medical_posts">
-                    {% if post.images.all %}
-                        <div class="image">
-                        <img src="/images/wireframe/image.png">
-                        </div>
-                    {% endif %}
                     <div class="content">
                         {% if post.title_cn %}
                             <h2 class="ui header">
