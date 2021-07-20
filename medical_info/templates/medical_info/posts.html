@@ -90,6 +90,11 @@
                             {% endfor %}
                         </div>
                         <div class="description">
+                            {% if post.images.all %}
+                                <div class="ui medium right floated bordered image">
+                                    <img  src="{{ post.images.first.image.url }}">
+                                </div>
+                            {% endif %}
                             <p>
                             {% if kw %}
                                 {{ post.abstract|highlight:kw }}

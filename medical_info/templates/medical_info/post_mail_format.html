@@ -12,11 +12,6 @@
 </head>
 
 <div class="item">
-    {% if post.images.all %}
-        <div class="image">
-        <img src="/images/wireframe/image.png">
-        </div>
-    {% endif %}
     <div class="content">
         {% if post.title_cn %}
             <h2 class="ui header">
@@ -45,6 +40,11 @@
             <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
         </div>
         <div class="description">
+            {% if post.images.all %}
+                <div class="ui medium right floated bordered image">
+                    <img  src="{{ post.images.first.image.url }}">
+                </div>
+            {% endif %}
             <p>{{ post.abstract }}</p>
         </div>
         <div class="extra">

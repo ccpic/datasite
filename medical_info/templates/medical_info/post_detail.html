@@ -76,17 +76,30 @@
             </div>
             <div class="ui divider"></div>
             <div class="ui top attached tabular menu">
+            {% for img in post.images.all %}
+                <a class="{% if forloop.first and post.images.all %}active{% endif %} item" data-tab="image{{ forloop.counter0|add:1 }}">图片{% if not forloop.first %}{{ forloop.counter0|add:1 }}{% endif %}</a>
+            {% endfor %}
             {% for doc in post.files.all %}
-            
-                <a class="{% if forloop.first %}active{% endif %} item" data-tab="pdf{{ forloop.counter0|add:1 }}">原文{% if not forloop.first %}{{ forloop.counter0|add:1 }}{% endif %}</a>
+                <a class="{% if forloop.first and not post.images.all %}active{% endif %} item" data-tab="pdf{{ forloop.counter0|add:1 }}">文档{% if not forloop.first %}{{ forloop.counter0|add:1 }}{% endif %}</a>
             {% endfor %}
             </div>
+            {% for img in post.images.all %}
+                <div class="ui bottom attached {% if forloop.first and post.images.all  %}active{% endif %} tab segment" data-tab="image{{ forloop.counter0|add:1 }}">
+                    <a class="ui blue right ribbon label" href="{{ img.image.url }}"><i class="external alternate icon"></i>在新窗口中打开</a>
+                    <div class="ui hidden divider"></div>
+                    <img src="{{ img.image.url }}" width="100%" height="100%"></img>
+                </div>
+            {% endfor %}
             {% for doc in post.files.all %}
-            <div class="ui bottom attached {% if forloop.first %}active{% endif %} tab segment" data-tab="pdf{{ forloop.counter0|add:1 }}">
-                <a class="ui blue right ribbon label" href="{{ doc.file.url }}"><i class="external alternate icon"></i>在新窗口中打开</a>
-                <div class="ui hidden divider"></div>
-                <iframe src="{{ doc.file.url }}" width="100%" height="768"></iframe>
-            </div>
+                <div class="ui bottom attached {% if forloop.first and not post.images.all %}active{% endif %} tab segment" data-tab="pdf{{ forloop.counter0|add:1 }}">
+                    <a class="ui blue right ribbon label" href="{{ doc.file.url }}"><i class="external alternate icon"></i>在新窗口中打开</a>
+                    <div class="ui hidden divider"></div>
+                    <div class="wrapper" id="wrapper{{ forloop.counter0|add:1 }}">
+                        <object width="100%" height="768" type="application/pdf" data="{{ doc.file.url }}">
+                            <p>如PDF不可见，请尝试使用其他浏览器</p>
+                        </object>
+                    </div>
+                </div>
             {% endfor %}
 
         {% endif %}
@@ -96,7 +109,12 @@
 <script>
     $(document).ready(function () {
         $('.menu .item')
-            .tab();
+            .tab({'onVisible':function(){
+                $(".wrapper").each(function(){
+                    var id = $(this).attr("id")
+                    $(this).load(location.href + " #" + id);
+                })
+            }});
     });
 </script>
 
