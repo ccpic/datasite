@@ -77,13 +77,17 @@ def program(request, pk):
 
 
 @login_required
-def post_detail(request, slug):
-    post = Post.objects.get(url_slug=slug)
+def post_detail(request, pk):
+    post = Post.objects.get(pk=pk)
 
-    # 记录浏览量
-    post.views = F("views") + 1
-    post.save()
-    post.refresh_from_db()
+    key = "viewed_post_%s" % post.id
+    if request.session.get(key) is None:
+        # 记录浏览量
+
+        post.views = F("views") + 1
+        post.save(skip_lastupdatetime=True)
+        post.refresh_from_db()
+        request.session[key] = True
 
     context = {
         "post": post,
@@ -92,8 +96,8 @@ def post_detail(request, slug):
 
 
 @login_required
-def post_mail_format(request, slug):
-    post = Post.objects.get(url_slug=slug)
+def post_mail_format(request, pk):
+    post = Post.objects.get(pk=pk)
     # baseurl = request.build_absolute_uri(post.url)
     context = {
         "post": post,

@@ -5,6 +5,7 @@ from uuslug import slugify
 import os
 import datetime
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
 
 
 def get_filename(instance, filename):
@@ -33,7 +34,11 @@ def max_value_current_year(value):
 
 class Nation(models.Model):
     name = models.CharField(verbose_name="国家名称", max_length=50, unique=True)
-    code = models.CharField(verbose_name="国家代码（用以匹配国旗）参考https://semantic-ui.com/elements/flag.html", max_length=50, unique=True)  # 用以匹配国旗
+    code = models.CharField(
+        verbose_name="国家代码（用以匹配国旗）参考https://semantic-ui.com/elements/flag.html",
+        max_length=50,
+        unique=True,
+    )  # 用以匹配国旗
 
     class Meta:
         verbose_name = "国家代码"
@@ -42,6 +47,7 @@ class Nation(models.Model):
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.code)
+
 
 class PubAgent(models.Model):
     full_name = models.CharField(verbose_name="全称", max_length=200, unique=True)
@@ -94,7 +100,7 @@ class Post(models.Model):
         blank=True,
         related_name="programs",
     )
-    upload_date = models.DateTimeField(verbose_name="上传日期", auto_now=True)
+    upload_date = models.DateTimeField(verbose_name="上传日期", default=timezone.now)
     url_slug = models.SlugField(editable=False)
     tags = TaggableManager()
     views = models.IntegerField(verbose_name="阅读量", default=0)
@@ -108,6 +114,8 @@ class Post(models.Model):
         return "%s %s" % (self.title_cn, self.title_en)
 
     def save(self, *args, **kwargs):
+        if not kwargs.pop("skip_lastupdatetime", False):
+            self.lastupdatetime = datetime.datetime.now()
         if self.title_en != "":
             self.url_slug = slugify_max(self.title_en)
         else:

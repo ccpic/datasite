@@ -118,7 +118,7 @@
                             原平台链接
                             <i class="right chevron icon"></i>
                             </a>
-                            <a class="ui right floated primary button" href="{% url 'medical_info:post_detail' post.url_slug %}">
+                            <a class="ui right floated primary button" href="{% url 'medical_info:post_detail' post.pk %}">
                             阅读PDF原文
                             <i class="right chevron icon"></i>
                             </a>
@@ -133,10 +133,10 @@
                             <i class="eye icon"></i> {{ post.views }}
                             </div>
                             {% if request.user.is_staff %}
-                                <a class="ui red basic label" href="{% url 'medical_info:post_mail_format' post.url_slug %}">
+                                <a class="ui red basic label" href="{% url 'medical_info:post_mail_format' post.pk %}">
                                 邮件格式
                                 </a>
-                                <a class="ui red basic label" href="{% url 'admin:medical_info_post_change' post.id %}">
+                                <a class="ui red basic label" href="{% url 'admin:medical_info_post_change' post.pk %}">
                                 编辑
                                 </a>
                             {% endif %}
