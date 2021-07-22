@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Post, Program
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q, F
+import Levenshtein as lev
 
 DISPLAY_LENGTH = 10
 
@@ -89,8 +90,29 @@ def post_detail(request, pk):
         post.refresh_from_db()
         request.session[key] = True
 
+    # 推荐相似的医学信息
+    tags = list(post.tags.values_list("name", flat=True))
+
+    d_distance = {}
+    posts_oth = Post.objects.exclude(pk=pk)
+    for post_oth in posts_oth:
+        d_distance[post_oth.pk] = list(
+            post_oth.tags.all().values_list("name", flat=True)  # 准备除本post以外的所有post的tags
+        )
+
+    for key, value in d_distance.items():
+        d_distance[key] = lev.setratio(tags, value)  # 计算本post和其他任一post的Levenshtein距离
+
+    d_distance = {
+        k: v
+        for k, v in sorted(d_distance.items(), key=lambda item: item[1], reverse=True) # 按Levenshtein距离由高到低排序
+    }
+
+    posts_related = Post.objects.filter(pk__in=list(d_distance.keys())[:5]) # Levenshtein距离最高的5个posts
+
     context = {
         "post": post,
+        "posts_related": posts_related,
     }
     return render(request, "medical_info/post_detail.html", context)
 

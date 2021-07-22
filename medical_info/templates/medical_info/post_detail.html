@@ -11,7 +11,6 @@
 
 <!-- 写入 base.html 中定义的 body content -->
 {% block display %}
-    <div class="ui hidden divider"></div>
     <div class="ui container">
         {% if post %}
             <div class="ui big breadcrumb">
@@ -102,6 +101,27 @@
                 </div>
             {% endfor %}
 
+            <div class="ui divider"></div>
+            <h3 header>相关阅读</h3>
+            {% for post_related in posts_related %}
+                <div class="ui tiny list">
+                    <div class="item">
+                        <i class="chevron right icon"></i>
+                        <div class="content">
+                            {% if post_related.title_cn %}
+                                <a class="header" href="{% url 'medical_info:post_detail' post_related.pk %}">{{ post_related.title_cn }}</a>
+                                {% if post_related.title_en %}
+                                    <div class="description">{{ post_related.title_en }}</div>
+                                {% endif %}
+                            {% else %}
+                                {% if post_related.title_en %}
+                                    <a class="header" href="{% url 'medical_info:post_detail' post_related.pk %}">{{ post_related.title_en }}</a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         {% endif %}
     </div>
     <div class="ui hidden divider"></div>
