@@ -406,7 +406,10 @@ class Tender(models.Model):
     @property
     def tender_end(self):
         year = timedelta(days=365)  # 1年
-        return self.tender_begin + self.tender_period * year
+        try:
+            return self.tender_begin + self.tender_period * year
+        except:
+            return None
 
     # @property
     # def winner_num_max(self):

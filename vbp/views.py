@@ -6,7 +6,7 @@ from django.shortcuts import render, HttpResponse
 from django.db.models import Q
 import pandas as pd
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-import random
+import json
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -155,6 +155,42 @@ def search(request):
 
 
 @login_required
+def gantt(request):
+    D_COLOR = {
+        "第一轮25品种扩围联盟地区": "ganttBlue",
+        "第二轮33品种": "ganttRed",
+        "第三轮56品种": "ganttOrange",
+        "第四轮45品种": "ganttGreen",
+        "第五轮62品种": "ganttTeal",
+    }
+    
+    tenders = Tender.objects.all()
+
+    source = []
+    for tender in tenders:
+        tender_data = {}
+
+        value = {}
+        value["from"] = tender.tender_begin
+        value["to"] = tender.tender_end
+        value["label"] = tender.target,
+        value["customClass"] = D_COLOR[tender.vol]
+        
+        values = []
+        values.append(value)
+        
+        tender_data["pk"] = tender.pk
+        tender_data["name"] = tender.target
+        tender_data["values"] = values
+        
+        source.append(tender_data)
+        
+    context = {"source": json.dumps(source, default=str)}
+    
+    return render(request, "vbp/gantt.html", context)
+
+
+@login_required
 def export(request, mode, tender_ids=None):
     if tender_ids is None:
         tender_objs = Tender.objects.all()
@@ -254,8 +290,7 @@ def export(request, mode, tender_ids=None):
             axis=1,
         )  # 添加列：剂型剂量
         df["main_spec"] = df.apply(
-            lambda x: Tender.objects.get(pk=x["tender_id"]).main_spec,
-            axis=1,
+            lambda x: Tender.objects.get(pk=x["tender_id"]).main_spec, axis=1,
         )  # 添加列：折算规格
         df["total_std_volume_reported"] = df.apply(
             lambda x: Tender.objects.get(pk=x["tender_id"]).total_std_volume_reported(),

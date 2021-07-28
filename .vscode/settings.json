@@ -1,22 +1,21 @@
 {
-    "python.pythonPath": "venv\\Scripts\\python.exe",
-    "prettier.disableLanguages": ["django-html"],
-    "files.associations": {
-        "**/*.html": "html",
-        "**/templates/**/*.html": "django-html",
-        "**/templates/**/*": "django-txt",
-        "**/requirements{/**,*}.{txt,in}": "pip-requirements"
-      },
-      "emmet.includeLanguages": {
-        "django-html": "html"
-      },
-      "beautify.language": {
-        "html": [
-          "htm", "html", "django-html"
-        ]
-      },
-      "[django-html]": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "HookyQR.beautify"
-      }
+  "python.pythonPath": "venv\\Scripts\\python.exe",
+  "prettier.disableLanguages": ["django-html"],
+  "files.associations": {
+    "**/*.html": "html",
+    "**/templates/**/*.html": "django-html",
+    "**/templates/**/*": "django-txt",
+    "**/requirements{/**,*}.{txt,in}": "pip-requirements"
+  },
+  "emmet.includeLanguages": {
+    "django-html": "html"
+  },
+  "beautify.language": {
+    "html": ["htm", "html", "django-html"]
+  },
+  "[django-html]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "HookyQR.beautify"
+  },
+  "cSpell.words": ["gantt"]
 }
