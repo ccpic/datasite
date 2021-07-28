@@ -175,6 +175,8 @@ def gantt(request):
         value["to"] = tender.tender_end
         value["label"] = tender.target,
         value["customClass"] = D_COLOR[tender.vol]
+        value["dataObj"] = {"id": tender.pk}
+        
         
         values = []
         values.append(value)

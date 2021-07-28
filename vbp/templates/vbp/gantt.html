@@ -32,10 +32,8 @@
             scrollToToday: true,
             useCookie: true,
             onItemClick: function (data) {
-                alert("Item clicked - show some details");
-            },
-            onAddClick: function (dt, rowId) {
-                alert("Empty space clicked - add an item!");
+                url_mask = "{% url 'vbp:tender_detail' 1234 %}".replace(/1234/, data.id.toString())
+                window.location.href = url_mask
             },
             onRender: function () {
                 if (window.console && typeof console.log === "function") {
