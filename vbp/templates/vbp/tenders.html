@@ -1,250 +1,204 @@
-<!-- extends表明此页面继承自 base.html 文件 -->
-{% extends "chpa_data/base.html" %}
-{% load humanize %}
 {% load tags %}
 
-{% block title %}带量采购数据平台{% endblock title %}
+<div class="ui three item stackable tabs menu">
+    <a class="active item" data-tab="gantt">集采周期视图</a>
+    <a class="item" data-tab="table">表格明细视图</a>
+    <a class="item" data-tab="export">数据导出</a>
+</div>
+<div class="ui active red tab segment" data-tab="gantt">
+    <div class="gantt"></div>
+</div>
+<div class="ui blue tab segment" data-tab="table">
+    <div class="ui info message">
+        <i class="close icon"></i>
+        <div class="header">
+            请注意
+        </div>
+        <p>名称带▲的品种，若中选企业不满足该品种采购目录内所有规格，其所缺规格的首年约定采购量不计，残缺规格的价格联动方案另行通知。</p>
+        图例：
+        <div class="ui label">
+            报价规格
+        </div>
+        <div class="ui green label">
+            中标价
+        </div>
+        <div class="ui red label">
+            未中标报价(非官方)
+        </div>
+        <div class="ui basic green label">
+            相比最高有效申报价降幅
+        </div>
+        ★原研
+    </div>
 
-<!-- 隐藏分隔条 -->
-<div class="ui hidden divider"></div>
-
-<!-- 写入 base.html 中定义的 body content -->
-{% block body %}
-
-    <div class="ui hidden divider"></div>
-
-    <div class="ui container">
-        <div id="pusher" class="pusher" style="padding-top:50px">
-            <div class="ui inverted segment">
-                <form method="get" action="{% url 'vbp:search' %}" class="ui inverted fluid form">
-                    {% csrf_token %}
-                    <div class="field">
-                        <div class="ui action input">
-                            <input type="search" name="kw" placeholder="请输入关键字进行搜索——如：批次/标的通用名/竞标公司名" required>
-                            <button type="submit" class="ui blue submit button">搜索</button>
-                        </div>
+    <table class="ui celled table" id="client-selected">
+        <thead>
+            <tr>
+                <th style="display:none">id</th>
+                <th>带量品种</th>
+                <th>带量批次</th>
+                <th>带量比例</th>
+                <th>品种总体<br>协议量<br>（折算为一种规格）</th>
+                <th>品种总体<br>协议金额<br>（按中标价）</th>
+                <th>标期开始</th>
+                <th>标期</th>
+                {% comment %} <th>最高限价</th> {% endcomment %}
+                <th>竞标结果</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tender in tenders %}
+            <tr>
+                <td style="display:none">{{ tender.pk }}</td>
+                <td style="width: 15%">
+                    <h3 class="ui center aligned header">{% if tender.only_valid_spec %}▲{% endif %} {{ tender.target }}
+                    </h3>
+                    {% for spec in tender.get_specs %}
+                    {{ spec }}
+                    {% endfor %}
+                </td>
+                <td style="width: 100px">
+                    {{ tender.vol }}
+                </td>
+                <td style="width: 50px">{{ tender.proc_percentage|percentage:0 }}</td>
+                <td style="width: 100px">
+                    {{ tender.total_std_volume_contract|fix_decimal:0 }}万
+                    {% if tender.specs_num > 1 %}
+                    <br><u>折算为{{ tender.main_spec }}</u>
+                    {% endif %}
+                </td>
+                <td style="width: 100px">
+                    {{ tender.total_value_contract|fix_decimal:0 }}万
+                </td>
+                <td style="width: 70px">{{ tender.tender_begin|date:'Y年m月' }}</td>
+                <td style="width: 50px">{{ tender.tender_period }}年</td>
+                {% comment %} <td style="width: 100px">&yen{{ tender.ceiling_price }}</td> {% endcomment %}
+                <td style="width: 30%">
+                    {% if tender.bids.all %}
+                    <div class="ui divided selection list">
+                        {% for bid in tender.bids.all|order_by_std_price %}
+                        {% if bid.bid_price == 99999 %}
+                        <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
+                            <div class="ui red horizontal left floated label">
+                                未披露
+                            </div>
+                            <div class="middle aligned content">
+                                {{ bid.bidder.abbr_name }}
+                                {% if bid.origin %}<i class="star icon"></i>{% endif %}
+                            </div>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
+                            <div class="ui horizontal left floated label">
+                                {{ bid.bid_spec }}
+                            </div>
+                            <div
+                                class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated label">
+                                &yen{{ bid.bid_price|fix_decimal:2 }}
+                            </div>
+                            <div
+                                class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated basic label">
+                                {{ bid.price_cut_to_ceiling|percentage }}
+                            </div>
+                            <div class="middle aligned content">
+                                {{ bid.bidder.abbr_name }}
+                                {% if bid.origin %}<i class="star icon"></i>{% endif %}
+                            </div>
+                        </a>
+                        {% endif %}
+                        {% endfor %}
                     </div>
-                    常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %}
-
-                </form>
-                <div class="ui bottom right attached label"><a href="{% url 'vbp:docs' %}">查看官方文件</a></div>
-            </div>
-            {% if tenders %}
-                <div class="ui dividing header">
-                    {% if kw %}
-                        <a href="{% url 'vbp:index' %}">所有标的</a> - 搜索关键字 "{{ kw }}" 结果 - <span>当前显示第
-                    {{ tenders.start_index }}-{{ tenders.end_index }} of {{ record_n }}条记录
-                    </span>
                     {% else %}
-                        所有标的 - <span>当前显示第
-                    {{ tenders.start_index }}-{{ tenders.end_index }} of {{ record_n }}条记录
-                    </span>
+                    没有填写竞标者
                     {% endif %}
-                </div>
-                <div class="ui compact menu">
-                    <div class="ui dropdown item">
-                        导出基本信息
-                        <i class="dropdown icon"></i>
-                        <div class="menu">
-                            <a class="item" href="{% url 'vbp:export' 'tender' %}">全部记录</a>
-                            <a class="item" href="{% url 'vbp:export' 'tender' tenders|objs_id_to_string %}">当前页面记录</a>
-                        </div>
-                    </div>
-                    <div class="ui dropdown item">
-                        导出区域中标情况
-                        <i class="dropdown icon"></i>
-                        <div class="menu">
-                            <a class="item" href="{% url 'vbp:export' 'volume' %}">全部记录</a>
-                            <a class="item" href="{% url 'vbp:export' 'volume' tenders|objs_id_to_string %}">当前页面记录</a>
-                        </div>
-                    </div>
-                </div>
+                </td>
+                <td style="width: 50px">
+                    <a href="{% url 'vbp:tender_detail' tender.pk %}">详情</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-
-                <div class="ui info message">
-                    <i class="close icon"></i>
-                    <div class="header">
-                        请注意
-                    </div>
-                    <p>名称带▲的品种，若中选企业不满足该品种采购目录内所有规格，其所缺规格的首年约定采购量不计，残缺规格的价格联动方案另行通知。</p>
-                    图例：
-                    <div class="ui label">
-                        报价规格
-                    </div>
-                    <div class="ui green label">
-                        中标价
-                    </div>
-                    <div class="ui red label">
-                        未中标报价(非官方)
-                    </div>
-                    <div class="ui basic green label">
-                        相比最高有效申报价降幅
-                    </div>
-                    ★原研
-                </div>
-                
-
-
-
-
-                <table class="ui celled table" id="client-selected">
-                    <thead>
-                    <tr>
-                        <th style="display:none">id</th>
-                        <th>带量品种</th>
-                        <th>带量批次</th>
-                        <th>带量比例</th>
-                        <th>品种总体<br>协议量<br>（折算为一种规格）</th>
-                        <th>品种总体<br>协议金额<br>（按中标价）</th>
-                        <th>标期开始</th>
-                        <th>标期</th>
-                        {% comment %} <th>最高限价</th> {% endcomment %}
-                        <th>竞标结果</th>
-                        <th>操作</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for tender in tenders %}
-                        <tr>
-                            <td style="display:none">{{ tender.pk }}</td>
-                            <td style="width: 15%">
-                                <h3 class="ui center aligned header">{% if tender.only_valid_spec %}▲{% endif %} {{ tender.target }}</h3>
-                                {% for spec in tender.get_specs %}
-                                    {{ spec }}
-                                {% endfor %}
-                            </td>
-                            <td style="width: 100px">
-                                {{ tender.vol }}
-                            </td>
-                            <td style="width: 50px">{{ tender.proc_percentage|percentage:0 }}</td>
-                            <td style="width: 100px">
-                                {{ tender.total_std_volume_contract|fix_decimal:0 }}万
-                                {% if tender.specs_num > 1 %}
-                                    <br><u>折算为{{ tender.main_spec }}</u>
-                                {% endif %}
-                            </td>
-                            <td style="width: 100px">
-                                {{ tender.total_value_contract|fix_decimal:0 }}万
-                            </td>
-                            <td style="width: 70px">{{ tender.tender_begin|date:'Y年m月' }}</td>
-                            <td style="width: 50px">{{ tender.tender_period }}年</td>
-                            {% comment %} <td style="width: 100px">&yen{{ tender.ceiling_price }}</td> {% endcomment %}
-                            <td style="width: 30%">
-                                {% if tender.bids.all %}
-                                    <div class="ui divided selection list">
-                                        {% for bid in tender.bids.all|order_by_std_price %}
-                                            {% if bid.bid_price == 99999 %}
-                                                <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
-                                                    <div class="ui red horizontal left floated label">
-                                                        未披露
-                                                    </div>
-                                                    <div class="middle aligned content">
-                                                        {{ bid.bidder.abbr_name }}
-                                                        {% if bid.origin %}<i class="star icon"></i>{% endif %}
-                                                    </div>
-                                                </a>
-                                            {% else %}
-                                                <a href="{% url 'vbp:bid_detail' bid.pk %}" class="item">
-                                                    <div class="ui horizontal left floated label">
-                                                        {{ bid.bid_spec }}
-                                                    </div>
-                                                    <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated label">
-                                                        &yen{{ bid.bid_price|fix_decimal:2 }}
-                                                    </div>
-                                                    <div class="ui {% if bid.is_winner %}green{% else %}red{% endif %} horizontal left floated basic label">
-                                                        {{ bid.price_cut_to_ceiling|percentage }}
-                                                    </div>
-                                                    <div class="middle aligned content">
-                                                        {{ bid.bidder.abbr_name }}
-                                                        {% if bid.origin %}<i class="star icon"></i>{% endif %}
-                                                    </div>
-                                                </a>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    没有填写竞标者
-                                {% endif %}
-                            </td>
-                            <td style="width: 50px">
-                                <a href="{% url 'vbp:tender_detail' tender.pk %}">详情</a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-
-                </div>
-                <div class="ui pagination menu">
-                    <a class="item" href="{% if kw %}?kw={{ kw }}&page=1{% else %}?page=1{% endif %}">&lt;&lt;</a>
-
-                    {% if tenders.number|add:'-4' > 1 %}
-                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ tenders.number|add:'-5' }}{% else %}?page={{ tenders.number|add:'-5' }}{% endif %}">&hellip;</a>
-                    {% endif %}
-
-
-                    {% for n in num_pages|times %}
-                    {% if n == tenders.number %}
-                    <span class="active item" href="{% if kw %}?kw={{ kw }}&page={{ n }}{% else %}?page={{ n }}{% endif %}">{{ n }}</span>
-                    {% elif n > tenders.number|add:'-5' and n < tenders.number|add:'5' %}
-                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ n }}{% else %}?page={{ n }}{% endif %}">{{ n }}</a>
-                    {% endif %}
-                    {% endfor %}
-
-
-                    {% if num_pages > tenders.number|add:'4' %}
-                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ tenders.number|add:'5' }}{% else %}?page={{ tenders.number|add:'5' }}{% endif %}">&hellip;</a>
-                    {% endif %}
-
-                    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ num_pages }}{% else %}?page={{ num_pages }}{% endif %}">&gt;&gt;</a>
-                </div>
-            {% else %}
-                <div class="ui error message">
-                    没有搜索到符合条件的记录
-                </div>
-            {% endif %}
+</div>
+<div class="ui purple tab segment" data-tab="export">
+    <div class="ui compact menu">
+        <div class="ui dropdown item">
+            导出基本信息
+            <i class="dropdown icon"></i>
+            <div class="menu">
+                <a class="item" href="{% url 'vbp:export' 'tender' %}">全部记录</a>
+                <a class="item" href="{% url 'vbp:export' 'tender' tenders|objs_id_to_string %}">当前页面记录</a>
+            </div>
+        </div>
+        <div class="ui dropdown item">
+            导出区域中标情况
+            <i class="dropdown icon"></i>
+            <div class="menu">
+                <a class="item" href="{% url 'vbp:export' 'volume' %}">全部记录</a>
+                <a class="item" href="{% url 'vbp:export' 'volume' tenders|objs_id_to_string %}">当前页面记录</a>
+            </div>
         </div>
     </div>
-    <div class="ui hidden divider"></div>
+</div>
+<div class="ui hidden divider"></div>
 
-    <script>
-        $('#button_add').click(function () {
-            $('#modal_add').modal('show')
-        })
-    </script>
-    <script>
-        $('.message .close')
-            .on('click', function() {
-                $(this)
-                .closest('.message')
-                .transition('fade')
-                ;
-            })
-            ;
-    </script>
-    <script>
-        $('.quick.link').click(function () {
-            var url = '{% url 'vbp:search' %}'+ '?' + $.param({'kw':this.text}, true);
-            window.location.href = url;
-        })
-    </script>
-    <script>
-    $('.ui.dropdown.item').dropdown({on: 'hover'});
-    </script>
-    <style>
-    .quick.link{
-        color: #e9e9e9;
-        cursor:pointer;
-    }
+<div class="ui pagination menu">
+    <a class="item" href="{% if kw %}?kw={{ kw }}&page=1{% else %}?page=1{% endif %}">&lt;&lt;</a>
 
-    .quick.link:hover{
-        color: #0d71bb;
-        cursor:pointer;
-    }
-    </style>
-{% endblock body %}
+    {% if tenders.number|add:'-4' > 1 %}
+    <a class="item"
+        href="{% if kw %}?kw={{ kw }}&page={{ tenders.number|add:'-5' }}{% else %}?page={{ tenders.number|add:'-5' }}{% endif %}">&hellip;</a>
+    {% endif %}
 
 
+    {% for n in num_pages|times %}
+    {% if n == tenders.number %}
+    <span class="active item"
+        href="{% if kw %}?kw={{ kw }}&page={{ n }}{% else %}?page={{ n }}{% endif %}">{{ n }}</span>
+    {% elif n > tenders.number|add:'-5' and n < tenders.number|add:'5' %}
+    <a class="item" href="{% if kw %}?kw={{ kw }}&page={{ n }}{% else %}?page={{ n }}{% endif %}">{{ n }}</a>
+    {% endif %}
+    {% endfor %}
 
 
+    {% if num_pages > tenders.number|add:'4' %}
+    <a class="item"
+        href="{% if kw %}?kw={{ kw }}&page={{ tenders.number|add:'5' }}{% else %}?page={{ tenders.number|add:'5' }}{% endif %}">&hellip;</a>
+    {% endif %}
 
+    <a class="item"
+        href="{% if kw %}?kw={{ kw }}&page={{ num_pages }}{% else %}?page={{ num_pages }}{% endif %}">&gt;&gt;</a>
+</div>
+
+<script>
+$('.menu .item')
+  .tab()
+;
+</script>
+<script>
+    $(function () {
+        console.log({{ gantt_source|safe }})
+        $(".gantt").gantt({
+            source: {{ gantt_source|safe }},
+            navigate: "scroll",
+            scale: "months",
+            maxScale: "months",
+            minScale: "months",
+            itemsPerPage: 100,
+            waitText: "数据处理中，请稍后",
+            scrollToToday: true,
+            useCookie: true,
+            onItemClick: function (data) {
+                url_mask = "{% url 'vbp:tender_detail' 1234 %}".replace(/1234/, data.id.toString())
+                window.location.href = url_mask
+            },
+            onRender: function () {
+                if (window.console && typeof console.log === "function") {
+                    console.log("chart rendered");
+                }
+            }
+        });
+    });
+</script>

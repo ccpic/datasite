@@ -30,7 +30,7 @@ import datetime
 #     serializer_class = TenderSerializer
 
 
-DISPLAY_LENGTH = 10
+DISPLAY_LENGTH = 15
 
 HOT_KWS = [
     "扩围",
@@ -52,6 +52,41 @@ HOT_KWS = [
 ]
 
 
+def get_gantt_json(tenders):  # 以下部分准备集采标的的甘特图json数据
+
+    D_COLOR = {
+        "第一轮25品种扩围联盟地区": "ganttBlue",
+        "第二轮33品种": "ganttRed",
+        "第三轮56品种": "ganttOrange",
+        "第四轮45品种": "ganttGreen",
+        "第五轮62品种": "ganttTeal",
+    }
+
+    gantt_source = []
+    for tender in tenders:
+        tender_data = {}
+
+        value = {}
+        value["from"] = tender.tender_begin
+        value["to"] = tender.tender_end
+        value["label"] = (tender.target,)
+        value["customClass"] = D_COLOR[tender.vol]
+        value["dataObj"] = {"id": tender.pk}
+
+        values = []
+        values.append(value)
+
+        tender_data["pk"] = tender.pk
+        tender_data["name"] = tender.target
+        tender_data["values"] = values
+
+        gantt_source.append(tender_data)
+
+    json_source = json.dumps(gantt_source, default=str)
+
+    return json_source
+
+
 @login_required
 def index(request):
     tenders = Tender.objects.all()
@@ -71,8 +106,9 @@ def index(request):
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "hot_kws": HOT_KWS,
+        "gantt_source": get_gantt_json(rows),
     }
-    return render(request, "vbp/tenders.html", context)
+    return render(request, "vbp/index.html", context)
 
 
 @login_required
@@ -149,47 +185,10 @@ def search(request):
         "display_length": DISPLAY_LENGTH,
         "kw": kw,
         "hot_kws": HOT_KWS,
+        "gantt_source": get_gantt_json(rows),
     }
 
-    return render(request, "vbp/tenders.html", context)
-
-
-@login_required
-def gantt(request):
-    D_COLOR = {
-        "第一轮25品种扩围联盟地区": "ganttBlue",
-        "第二轮33品种": "ganttRed",
-        "第三轮56品种": "ganttOrange",
-        "第四轮45品种": "ganttGreen",
-        "第五轮62品种": "ganttTeal",
-    }
-    
-    tenders = Tender.objects.all()
-
-    source = []
-    for tender in tenders:
-        tender_data = {}
-
-        value = {}
-        value["from"] = tender.tender_begin
-        value["to"] = tender.tender_end
-        value["label"] = tender.target,
-        value["customClass"] = D_COLOR[tender.vol]
-        value["dataObj"] = {"id": tender.pk}
-        
-        
-        values = []
-        values.append(value)
-        
-        tender_data["pk"] = tender.pk
-        tender_data["name"] = tender.target
-        tender_data["values"] = values
-        
-        source.append(tender_data)
-        
-    context = {"source": json.dumps(source, default=str)}
-    
-    return render(request, "vbp/gantt.html", context)
+    return render(request, "vbp/index.html", context)
 
 
 @login_required

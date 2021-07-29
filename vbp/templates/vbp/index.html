@@ -1,0 +1,85 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}带量采购数据平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    <div id="pusher" class="pusher" style="padding-top:50px">
+        <div class="ui inverted segment">
+            <form method="get" action="{% url 'vbp:search' %}" class="ui inverted fluid form">
+                {% csrf_token %}
+                <div class="field">
+                    <div class="ui action input">
+                        <input type="search" name="kw" placeholder="请输入关键字进行搜索——如：批次/标的通用名/竞标公司名" required>
+                        <button type="submit" class="ui blue submit button">搜索</button>
+                    </div>
+                </div>
+                常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %}
+
+            </form>
+            <div class="ui bottom right attached label"><a href="{% url 'vbp:docs' %}">查看官方文件</a></div>
+        </div>
+        {% if tenders %}
+            <div class="ui dividing header">
+                {% if kw %}
+                <a href="{% url 'vbp:index' %}">所有标的</a> - 搜索关键字 "{{ kw }}" 结果 - <span>当前显示第
+                    {{ tenders.start_index }}-{{ tenders.end_index }} of {{ record_n }}条记录
+                </span>
+                {% else %}
+                所有标的 - <span>当前显示第
+                    {{ tenders.start_index }}-{{ tenders.end_index }} of {{ record_n }}条记录
+                </span>
+                {% endif %}
+            </div>
+
+            {% include "vbp/tenders.html" %}
+        {% else %}
+            <div class="ui error message">
+                没有搜索到符合条件的记录
+            </div>
+        {% endif %}
+    </div>
+</div>
+<div class="ui hidden divider"></div>
+
+<script>
+    $('.message .close')
+        .on('click', function () {
+            $(this)
+                .closest('.message')
+                .transition('fade');
+        });
+</script>
+<script>
+    $('.quick.link').click(function () {
+        var url = '{% url 'vbp:search' %}'+ '?' + $.param({'kw':this.text}, true);
+        window.location.href = url;
+    })
+</script>
+<script>
+    $('.ui.dropdown.item').dropdown({
+        on: 'hover'
+    });
+</script>
+<style>
+    .quick.link {
+        color: #e9e9e9;
+        cursor: pointer;
+    }
+
+    .quick.link:hover {
+        color: #0d71bb;
+        cursor: pointer;
+    }
+</style>
+{% endblock body %}
