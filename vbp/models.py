@@ -409,7 +409,7 @@ class Tender(models.Model):
         try:
             return self.tender_begin + self.tender_period * year
         except:
-            return None
+            return self.tender_begin
 
     # @property
     # def winner_num_max(self):

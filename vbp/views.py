@@ -1,6 +1,7 @@
 from re import T
 from .models import Tender, Volume, Bid, Company, Doc
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 from .serializers import TenderSerializer
 from rest_framework import viewsets
 from django.shortcuts import render, HttpResponse
@@ -89,6 +90,7 @@ def get_gantt_json(tenders):  # 以下部分准备集采标的的甘特图json�
 
 
 @login_required
+@cache_page(60 * 60 * 24 * 90)
 def index(request):
     print(request.GET)
     kw = request.GET.get("kw")
@@ -97,7 +99,7 @@ def index(request):
     if sorter is None:
         sorter = "sort_by_name"
 
-    if kw in [None, ""] and current_kw in [None, ""]:
+    if kw in [None, "None", ""] and current_kw in [None, "None", ""]:
         tenders = Tender.objects.all()
     else:
         if kw in [None, ""]:
@@ -115,18 +117,15 @@ def index(request):
         tenders = Tender.objects.filter(id__in=sr_ids)
 
     # 根据排序表单参数排序
-    try:
-        if sorter == "sort_by_name":
-            tenders = sorted(tenders, key=lambda x: x.target)
-        elif sorter == "sort_by_contract":
-            tenders = sorted(tenders, key=lambda x: x.total_value_contract(), reverse=True)
-        elif sorter == "sort_by_begin":
-            tenders = sorted(tenders, key=lambda x: x.tender_begin)
-        elif sorter == "sort_by_end":
-            tenders = sorted(tenders, key=lambda x: x.tender_end)
-    except:
-        pass
-    
+    if sorter == "sort_by_name":
+        tenders = sorted(tenders, key=lambda x: x.target)
+    elif sorter == "sort_by_contract":
+        tenders = sorted(tenders, key=lambda x: x.total_value_contract(), reverse=True)
+    elif sorter == "sort_by_begin":
+        tenders = sorted(tenders, key=lambda x: x.tender_begin)
+    elif sorter == "sort_by_end":
+        tenders = sorted(tenders, key=lambda x: x.tender_end)
+
     # 分页
     paginator = Paginator(tenders, DISPLAY_LENGTH)
     page = request.GET.get("page")
@@ -152,6 +151,7 @@ def index(request):
 
 
 @login_required
+@cache_page(60 * 60 * 24 * 90)
 def analysis(request):
     tenders = Tender.objects.all()
 
@@ -160,6 +160,7 @@ def analysis(request):
 
 
 @login_required
+@cache_page(60 * 60 * 24 * 90)
 def docs(request):
     docs = Doc.objects.all()
 
@@ -168,6 +169,7 @@ def docs(request):
 
 
 @login_required
+@cache_page(60 * 60 * 24 * 90)
 def bid_detail(request, bid_id):
     bid = Bid.objects.get(pk=bid_id)
 
@@ -176,6 +178,7 @@ def bid_detail(request, bid_id):
 
 
 @login_required
+@cache_page(60 * 60 * 24 * 90)
 def tender_detail(request, tender_id):
     tender = Tender.objects.get(pk=tender_id)
 
@@ -184,6 +187,7 @@ def tender_detail(request, tender_id):
 
 
 @login_required
+@cache_page(60 * 60 * 24 * 90)
 def company_detail(request, record_id):
     company = Company.objects.get(pk=record_id)
 
@@ -192,6 +196,7 @@ def company_detail(request, record_id):
 
 
 @login_required
+@cache_page(60 * 60 * 24 * 90)
 def export(request, mode, tender_ids=None):
     if tender_ids is None:
         tender_objs = Tender.objects.all()
