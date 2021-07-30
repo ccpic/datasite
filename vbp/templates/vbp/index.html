@@ -1,4 +1,4 @@
-<!-- extends表明此页面继承自 base.html 文件 -->
+s<!-- extends表明此页面继承自 base.html 文件 -->
 {% extends "chpa_data/base.html" %}
 {% load humanize %}
 {% load tags %}
@@ -15,20 +15,49 @@
 
 <div class="ui container">
     <div id="pusher" class="pusher" style="padding-top:50px">
-        <div class="ui inverted segment">
-            <form method="get" action="{% url 'vbp:search' %}" class="ui inverted fluid form">
+        <form method="get" action="{% url 'vbp:index' %}" class="ui inverted fluid form">
+            <div class="ui inverted segment">
                 {% csrf_token %}
-                <div class="field">
-                    <div class="ui action input">
-                        <input type="search" name="kw" placeholder="请输入关键字进行搜索——如：批次/标的通用名/竞标公司名" required>
-                        <button type="submit" class="ui blue submit button">搜索</button>
+                <div class="fields">
+                    <div class="twelve wide field">
+                        <div class="ui action input">
+                            <input type="search" name="kw" placeholder="请输入关键字进行搜索——如：批次/标的通用名/竞标公司名" required>
+                            <input type="hidden" name="current_kw" value="{{ kw }}">
+                            <button type="submit" class="ui blue submit button">搜索</button>
+                        </div>
+                    </div>
+                    <div class="four wide field">
+                    <div class="ui selection dropdown" id="select_sorter">
+                        <input type="hidden" name="sorter" value="{% if sorter %}{{ sorter }}{% else %}sort_by_name{% endif %}">
+                        <div class="text">按品种名称排序</div>
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <div class="item" data-value="sort_by_name">
+                            <i class="sort alphabet down icon"></i>
+                            按品种名称排序
+                            </div>
+                            <div class="item" data-value="sort_by_contract">
+                            <i class="sort amount down icon"></i>
+                            按中标金额排序
+                            </div>
+                            <div class="item" data-value="sort_by_begin">
+                            <i class="play icon"></i>
+                            按起始时间排序
+                            </div>
+                            <div class="item" data-value="sort_by_end">
+                            <i class="stop icon"></i>
+                            按结束时间排序
+                            </div>
+                        </div>
+                        </div>
                     </div>
                 </div>
                 常用关键字：{% for link in hot_kws %}<a class="quick link">{{ link }}</a>; {% endfor %}
 
-            </form>
-            <div class="ui bottom right attached label"><a href="{% url 'vbp:docs' %}">查看官方文件</a></div>
-        </div>
+                <div class="ui bottom right attached label"><a href="{% url 'vbp:docs' %}">查看官方文件</a></div>
+            </div>
+        </form>
+
         {% if tenders %}
             <div class="ui dividing header">
                 {% if kw %}
@@ -53,6 +82,15 @@
 <div class="ui hidden divider"></div>
 
 <script>
+$('#select_sorter')
+    .dropdown({
+        onChange: function () {
+            $(this).closest('form').submit();
+        }
+    })
+;
+</script>
+<script>
     $('.message .close')
         .on('click', function () {
             $(this)
@@ -62,7 +100,7 @@
 </script>
 <script>
     $('.quick.link').click(function () {
-        var url = '{% url 'vbp:search' %}'+ '?' + $.param({'kw':this.text}, true);
+        var url = '{% url 'vbp:index' %}'+ '?' + $.param({'kw':this.text, 'sorter':"{{ sorter }}"}, true);
         window.location.href = url;
     })
 </script>
@@ -81,5 +119,6 @@
         color: #0d71bb;
         cursor: pointer;
     }
+    
 </style>
 {% endblock body %}

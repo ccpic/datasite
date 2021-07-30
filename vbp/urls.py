@@ -8,12 +8,10 @@ from . import views
 
 app_name = 'vbp'
 urlpatterns = [
-    path('', views.index, name='index'),
+    path(r'', views.index, name='index'),
     path(r'bids/<int:bid_id>',  views.bid_detail, name='bid_detail'),
     path(r'tenders/<int:tender_id>', views.tender_detail, name='tender_detail'),
     path(r'companies/<int:company_id>', views.company_detail, name='company_detail'),
-    path(r'search', views.search, name='search'), # 搜索功能
-    # path(r'gantt', views.gantt, name='gantt'), # 甘特图
     path(r'analysis', views.analysis, name='analysis'), # 分析功能
     path(r'docs', views.docs, name='docs'), # 集采官方文档展示页面
     path(r'export/<str:mode>/', views.export, name='export'),   # 导出全部

@@ -1,3 +1,4 @@
+from re import T
 from .models import Tender, Volume, Bid, Company, Doc
 from django.contrib.auth.decorators import login_required
 from .serializers import TenderSerializer
@@ -89,7 +90,44 @@ def get_gantt_json(tenders):  # 以下部分准备集采标的的甘特图json�
 
 @login_required
 def index(request):
-    tenders = Tender.objects.all()
+    print(request.GET)
+    kw = request.GET.get("kw")
+    current_kw = request.GET.get("current_kw")
+    sorter = request.GET.get("sorter")
+    if sorter is None:
+        sorter = "sort_by_name"
+
+    if kw in [None, ""] and current_kw in [None, ""]:
+        tenders = Tender.objects.all()
+    else:
+        if kw in [None, ""]:
+            kw = current_kw
+
+        search_result = Tender.objects.filter(
+            Q(target__icontains=kw)  # 搜索标的名称
+            | Q(bids__bidder__full_name__icontains=kw)  # 搜索竞标公司全称
+            | Q(bids__bidder__abbr_name__icontains=kw)  # 搜索竞标公司简称
+            | Q(vol__icontains=kw)  # 搜索批次
+        ).distinct()
+
+        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
+        sr_ids = [tender.id for tender in search_result]
+        tenders = Tender.objects.filter(id__in=sr_ids)
+
+    # 根据排序表单参数排序
+    try:
+        if sorter == "sort_by_name":
+            tenders = sorted(tenders, key=lambda x: x.target)
+        elif sorter == "sort_by_contract":
+            tenders = sorted(tenders, key=lambda x: x.total_value_contract(), reverse=True)
+        elif sorter == "sort_by_begin":
+            tenders = sorted(tenders, key=lambda x: x.tender_begin)
+        elif sorter == "sort_by_end":
+            tenders = sorted(tenders, key=lambda x: x.tender_end)
+    except:
+        pass
+    
+    # 分页
     paginator = Paginator(tenders, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
@@ -105,6 +143,8 @@ def index(request):
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
+        "kw": kw,
+        "sorter": sorter,
         "hot_kws": HOT_KWS,
         "gantt_source": get_gantt_json(rows),
     }
@@ -149,46 +189,6 @@ def company_detail(request, record_id):
 
     context = {"company": company}
     return render(request, "vbp/bid_detail.html", context)
-
-
-@login_required
-def search(request):
-    print(request.GET)
-    kw = request.GET.get("kw")
-    search_result = Tender.objects.filter(
-        Q(target__icontains=kw)  # 搜索标的名称
-        | Q(bids__bidder__full_name__icontains=kw)  # 搜索竞标公司全称
-        | Q(bids__bidder__abbr_name__icontains=kw)  # 搜索竞标公司简称
-        | Q(vol__icontains=kw)  # 搜索批次
-    ).distinct()
-
-    #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
-    sr_ids = [tender.id for tender in search_result]
-    search_result2 = Tender.objects.filter(id__in=sr_ids)
-
-    paginator = Paginator(
-        search_result2, DISPLAY_LENGTH
-    )  #  为了克服pagination bug这里的参数时search_result2
-    page = request.GET.get("page")
-
-    try:
-        rows = paginator.page(page)
-    except PageNotAnInteger:
-        rows = paginator.page(1)
-    except EmptyPage:
-        rows = paginator.page(paginator.num_pages)
-
-    context = {
-        "tenders": rows,
-        "num_pages": paginator.num_pages,
-        "record_n": paginator.count,
-        "display_length": DISPLAY_LENGTH,
-        "kw": kw,
-        "hot_kws": HOT_KWS,
-        "gantt_source": get_gantt_json(rows),
-    }
-
-    return render(request, "vbp/index.html", context)
 
 
 @login_required
