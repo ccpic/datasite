@@ -32,7 +32,7 @@ import datetime
 #     serializer_class = TenderSerializer
 
 
-DISPLAY_LENGTH = 15
+DISPLAY_LENGTH = 10
 
 HOT_KWS = [
     "扩围",
