@@ -16,8 +16,8 @@ except ImportError:
     from io import StringIO as IO  # for legacy python
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
-DB_TABLE = "data"
-date = datetime.datetime(year=2021, month=6, day=1) # 目标分析月份
+DB_TABLE = "sales"
+date = datetime.datetime(year=2021, month=7, day=1) # 目标分析月份
 date_ya = date.replace(year=date.year - 1)  # 同比月份
 date_year_begin = date.replace(month=1)  # 本年度开头
 date_ya_begin = date_ya.replace(month=1)  # 去年开头

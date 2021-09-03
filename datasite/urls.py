@@ -15,20 +15,21 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import include,path
+from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('chpa/', include('chpa_data.urls')),
-    path('price_calc/', include('price_calc.urls')),
-    path('vbp/', include('vbp.urls')),
-    path('rdpac/', include('rdpac.urls')),
-    path('forecast/', include('forecast.urls')),
-    path('internal_sales/', include('internal_sales.urls')),
-    path('medical_info/', include('medical_info.urls')),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path("chpa/", include("chpa_data.urls")),
+    path("price_calc/", include("price_calc.urls")),
+    path("vbp/", include("vbp.urls")),
+    path("rdpac/", include("rdpac.urls")),
+    path("forecast/", include("forecast.urls")),
+    path("internal_sales/", include("internal_sales.urls")),
+    path("potential/", include("potential.urls")),
+    path("medical_info/", include("medical_info.urls")),
+    path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
 ]
 
 # 配置url 当我们访问 settings.MEDIA_URL中的路径时，static会通过document_root去寻找对应的文件

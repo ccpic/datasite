@@ -15,7 +15,7 @@ pd.set_option("display.width", 5000)
 
 engine = create_engine("mssql+pymssql://(local)/Internal_sales")
 
-df = pd.read_excel(open("三合一销售报表/三合一表6月终版.xlsx", "rb"), sheet_name="三合一表_导出版")  # 从Excel读取数
+df = pd.read_excel(open("三合一销售报表/三合一表7月终版.xlsx", "rb"), sheet_name="三合一表_导出版")  # 从Excel读取数
 print("Finished data reading...")
 
 df.columns = [
@@ -80,7 +80,7 @@ print(df)
 
 print("start importing...")
 df.to_sql(
-    "data",
+    "sales",
     con=engine,
     if_exists="replace",
     index=False,

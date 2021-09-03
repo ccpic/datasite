@@ -1,0 +1,34 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load static %}
+
+{% block title %}线性回归预测{% endblock title%}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block body %}
+
+<div class="ui hidden divider"></div>
+<div class="ui container">
+    <div id="pusher" class="pusher" style="padding-top: 50px">
+        <form action="{% url "forecast:index" %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" title="Upload excel file" name="excel_file"
+                style="border: 1px solid black; padding: 5px;" required="required">
+            <input type="submit" value="Upload"
+                style="border: 1px solid green; padding:5px; border-radius: 2px; cursor: pointer;">
+        </form>
+
+        <p></p>
+        <hr>
+        {% for AIC in AIC_result %}
+            {{ AIC }}<br>
+        {% endfor %}
+        {{ table_data|safe }}
+    </div>
+</div>
+
+{% endblock body %}
