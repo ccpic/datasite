@@ -346,10 +346,10 @@ def import_tc():
 
 
 if __name__ == "__main__":
-    # importModel(D_MODEL)
-    import_tender()
-    import_volume()
-    import_bid()
+    importModel(D_MODEL)
+    # import_tender()
+    # import_volume()
+    # import_bid()
     # update_tender()
     # import_company()
     # import_drug()

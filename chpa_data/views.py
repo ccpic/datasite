@@ -355,7 +355,7 @@ def get_df(form_dict, is_pivoted=True):
 
     if is_pivoted is True:
         dimension_selected = form_dict["DIMENSION_select"]
-        if dimension_selected == "[":
+        if dimension_selected[0] == "[":
 
             column = dimension_selected[1:][:-1]
         else:
