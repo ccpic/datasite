@@ -15,7 +15,7 @@ from internal_sales.views import *
 
 
 engine = create_engine("mssql+pymssql://(local)/Internal_sales")
-table = "data"
+table = "sales"
 
 D_BOOLEAN = {"是": True, "否": False}
 
