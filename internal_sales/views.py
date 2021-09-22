@@ -544,7 +544,8 @@ def get_df(form_dict, is_pivoted=True):
         return {
             "销售": pivot(df=df[df.TAG != "指标"], form_dict=form_dict),
             "社区销售": pivot(
-                df=df[(df.TAG != "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
+                # df=df[(df.TAG != "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
+                df=df[(df.TAG != "指标") & (df.IF_COMMUNITY == 1)],
                 form_dict=form_dict,
             ),
             "带指标销售": pivot(
@@ -556,7 +557,8 @@ def get_df(form_dict, is_pivoted=True):
                 form_dict=form_dict,
             ),
             "社区指标": pivot(
-                df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
+                # df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
+                df=df[(df.TAG == "指标") & (df.IF_COMMUNITY == 1)],
                 form_dict=form_dict,
             ),
             "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
