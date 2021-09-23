@@ -3,6 +3,8 @@ from chpa_data.models import Record
 from django import template
 from re import IGNORECASE, compile, escape as rescape
 from django.utils.safestring import mark_safe
+from django.http import QueryDict
+from django.utils.datastructures import MultiValueDict
 
 register = template.Library()
 from vbp.models import *
@@ -155,9 +157,26 @@ def highlight(text, search):
         )
     except:
         return text
-    
-    
-@register.inclusion_tag('medical_info/programs.html')
+
+
+@register.inclusion_tag("medical_info/programs.html")
 def show_programs():
     programs = Program.objects.all()
-    return {'programs': programs}
+    return {"programs": programs}
+
+
+# 根据参数生成url
+@register.simple_tag
+def add_query_params(request, **kwargs):
+    updated = request.GET.copy()
+    
+    for k, v in kwargs.items():
+        if v is not None:
+            if (k, v) not in updated.items():
+                d = {k: v}
+                updated.update(MultiValueDict(d) if isinstance(v, list) else d)
+                # updated[k] = v
+        else:
+            updated.pop(k, 0)  # Remove or return 0 - aka, delete safely this key
+
+    return updated.urlencode()

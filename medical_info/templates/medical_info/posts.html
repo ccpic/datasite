@@ -21,8 +21,8 @@
                     <a href="{% url 'medical_info:index' %}">所有医学信息</a> - 搜索关键字 "{{ kw }}" 的结果 - <span>当前显示第
                 {{ posts.start_index }}-{{ posts.end_index }} of {{ record_n }}条记录
                 </span>
-                {% elif tag %}
-                    <a href="{% url 'medical_info:index' %}">所有医学信息</a> - 标签含有 "{{ tag }}" 的结果 - <span>当前显示第
+                {% elif tag_selected %}
+                    <a href="{% url 'medical_info:index' %}">所有医学信息</a> - 标签含有 "{{ tag_selected }}" 的结果 - <span>当前显示第
                 {{ posts.start_index }}-{{ posts.end_index }} of {{ record_n }}条记录
                 </span>
                 {% elif program %}
