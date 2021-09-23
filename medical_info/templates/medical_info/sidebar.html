@@ -20,13 +20,22 @@
     <div class="ui red vertical segment">
         <h3 class="ui header">
             标签
-            <div class="ui red label">Top20</div>
+            {% if filter_tags.count > 20 %}
+                <div class="ui red label">Top20</div>
+            {% endif %}
         </h3>
         <div class="ui labels">
             {% for tag in filter_tags|slice:20 %}
-            <a class="ui {% if tag in tag_selected %}red{% endif %} label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
-            </a>
+            {% if tag in tag_selected %}
+                <a class="ui red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
+                    {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
+                    <i class="delete icon"></i>
+                </a>
+            {% else %}
+                <a class="ui label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
+                    {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
+                </a>
+            {% endif %} 
             {% endfor %}
         </div>
     </div>

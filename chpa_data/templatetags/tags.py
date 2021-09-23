@@ -165,18 +165,30 @@ def show_programs():
     return {"programs": programs}
 
 
-# 根据参数生成url
+# 根据参数在当前url基础上追加新参数
 @register.simple_tag
 def add_query_params(request, **kwargs):
     updated = request.GET.copy()
-    
+    d_updated = dict(updated)
+
     for k, v in kwargs.items():
         if v is not None:
-            if (k, v) not in updated.items():
+            if isinstance(updated.getlist(k, 0), list):  # 判断param是否已在当前参数内
+                exists = str(v) in updated.getlist(k, 0)
+            else:
+                exists = v == updated.getlist(k, 0)
+
+            if not exists:  # 如果当前没有的参数，则加上
                 d = {k: v}
                 updated.update(MultiValueDict(d) if isinstance(v, list) else d)
-                # updated[k] = v
-        else:
-            updated.pop(k, 0)  # Remove or return 0 - aka, delete safely this key
+            else:
+                try:
+                    d_updated[k].remove(str(v))
+                except (KeyError, ValueError):
+                    pass
+                else:
+                    if not d_updated[k]:
+                        del d_updated[k]
 
     return updated.urlencode()
+
