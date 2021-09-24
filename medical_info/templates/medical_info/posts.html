@@ -32,8 +32,16 @@
                 </a>
             {% endfor %}
         {% endif %}
+        {% if nation_selected  %}
+            {% for nation in nation_selected %}
+                <a class="ui basic purple label" href="{% url 'medical_info:posts' %}?{% add_query_params request nation=nation.id %}">
+                    国家: {{ nation.name }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
         {% if program %}
-            <a class="ui basic green label" href="{% url 'medical_info:posts' %}?{% add_query_params request program=program.id %}">
+            <a class="ui basic violet label" href="{% url 'medical_info:posts' %}?{% add_query_params request program=program.id %}">
                 栏目: {{ program.name}}
                     {% if program.vol %}
                      {{ program.vol }}

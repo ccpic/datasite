@@ -1,30 +1,37 @@
 from chpa_data.templatetags.tags import highlight
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from .models import Post, Program
+from .models import Post, Program, Nation
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q, F, Count
 import Levenshtein as lev
-import json
 from django.core.serializers.json import DjangoJSONEncoder
 from taggit.models import Tag
 
 DISPLAY_LENGTH = 10
 
 
+def get_id_list(param):
+    id_list = []
+    for id in param:
+        if type(id) == int:
+            id_list.append(id)
+        else:
+            id_list.append(int(id))
+
+    return id_list
+
+
 def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
 
     tag_param = params.getlist("tag")  # tag可能多选，需要额外处理
-    tag_id_list = []
+    tag_id_list = get_id_list(tag_param)
 
-    for id in tag_param:
-        if type(id) == int:
-            tag_id_list.append(id)
-        else:
-            tag_id_list.append(int(id))
+    nation_param = params.getlist("nation")  # 国家参数
+    nation_id_list = get_id_list(nation_param)
 
-    prog_param = params.get("program")
+    prog_param = params.get("program")  # 栏目参数
 
     # 下面部分准备所有高亮关键字
     highlights = {}
@@ -43,6 +50,7 @@ def get_param(params):
     context = {
         "kw": kw_param,
         "tags": tag_id_list,
+        "nations": nation_id_list,
         "program": prog_param,
         "highlights": highlights,
     }
@@ -100,6 +108,10 @@ def posts(request):
     for id in param_dict["tags"]:
         posts = posts.filter(tags__id=id)
 
+    # Chain filter国家在以上基础上多选筛选文章
+    for id in param_dict["nations"]:
+        posts = posts.filter(nation__id=id)
+
     paginator = Paginator(posts, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
@@ -110,8 +122,21 @@ def posts(request):
     except EmptyPage:
         rows = paginator.page(paginator.num_pages)
 
+    all_tags = Tag.objects.all()
+    all_tags = all_tags.annotate(post_count=Count("post")).order_by(
+        F("post_count").desc()
+    )
     filter_tags = Tag.objects.filter(post__in=posts)  # 筛选出所有关联医学信息的tags
     filter_tags = filter_tags.annotate(post_count=Count("post")).order_by(
+        F("post_count").desc()
+    )  # 统计tag关联的医学信息数并按从高到低排序
+
+    all_nations = Nation.objects.all()
+    all_nations = all_nations.annotate(post_count=Count("post")).order_by(
+        F("post_count").desc()
+    )
+    filter_nations = Nation.objects.filter(post__in=posts)  # 筛选出所有关联医学信息的tags
+    filter_nations = filter_nations.annotate(post_count=Count("post")).order_by(
         F("post_count").desc()
     )  # 统计tag关联的医学信息数并按从高到低排序
 
@@ -121,8 +146,12 @@ def posts(request):
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
+        "all_tags": all_tags,
         "filter_tags": filter_tags,
-        "tag_selected": Post.tags.filter(pk__in=param_dict["tags"]),
+        "tag_selected": Tag.objects.filter(pk__in=param_dict["tags"]),
+        "all_nations": all_nations,
+        "filter_nations": filter_nations,
+        "nation_selected": Nation.objects.filter(pk__in=param_dict["nations"]),
         "program": Program.objects.filter(pk=program).first(),
         "highlights": param_dict["highlights"],
     }
@@ -167,9 +196,21 @@ def post_detail(request, pk):
         pk__in=list(d_distance.keys())[:5]
     )  # Levenshtein距离最高的5个posts
 
+    all_tags = Tag.objects.all()
+    all_tags = all_tags.annotate(post_count=Count("post")).order_by(
+        F("post_count").desc()
+    )
+
+    all_nations = Nation.objects.all()
+    all_nations = all_nations.annotate(post_count=Count("post")).order_by(
+        F("post_count").desc()
+    )
+
     context = {
         "post": post,
         "posts_related": posts_related,
+        "all_tags": all_tags,
+        "all_nations": all_nations,
     }
     return render(request, "medical_info/post_detail.html", context)
 
