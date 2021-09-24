@@ -95,7 +95,7 @@ def posts(request):
     program = param_dict["program"]
     if program is not None:
         posts = posts.filter(program__id=program)
-            
+
     # Chain filter标签在以上基础上多选筛选文章
     for id in param_dict["tags"]:
         posts = posts.filter(tags__id=id)
@@ -127,29 +127,6 @@ def posts(request):
         "highlights": param_dict["highlights"],
     }
 
-    return render(request, "medical_info/posts.html", context)
-
-
-@login_required
-def program(request, pk):
-    posts = Post.objects.filter(program__pk=pk)
-    paginator = Paginator(posts, DISPLAY_LENGTH)
-    page = request.GET.get("page")
-
-    try:
-        rows = paginator.page(page)
-    except PageNotAnInteger:
-        rows = paginator.page(1)
-    except EmptyPage:
-        rows = paginator.page(paginator.num_pages)
-
-    context = {
-        "posts": rows,
-        "num_pages": paginator.num_pages,
-        "record_n": paginator.count,
-        "display_length": DISPLAY_LENGTH,
-        "program": Program.objects.get(pk=pk),
-    }
     return render(request, "medical_info/posts.html", context)
 
 

@@ -14,7 +14,7 @@
     <div class="ui container">
         {% if post %}
             <div class="ui big breadcrumb">
-                <a href="{% url "medical_info:index" %}" class="section">返回首页</a>
+                <a href="{% url "medical_info:posts" %}" class="section">返回首页</a>
             </div>
             <div class="ui divider"></div>
             <div class="item">
@@ -54,7 +54,7 @@
                     <div class="extra">
                         标签：
                         {% for tag in post.tags.all %}
-                            <a class="ui label" href="{% url 'medical_info:posts'%}?tag={{ tag.pk }}">
+                            <a class="ui label" href="{% url 'medical_info:posts' %}?tag={{ tag.pk }}">
                                 {{ tag }}
                             </a>
                         {% endfor %}
@@ -64,7 +64,7 @@
                             <div class="ui pointing basic label">
                             <i class="green check icon"></i>
                             发布于
-                            <a class="detail" href="{% url 'medical_info:program' post.program.pk %}">{{ post.program }}</a>
+                            <a class="detail" href="{% url 'medical_info:posts' %}?program={{ post.program.pk }}">{{ post.program }}</a>
                             </div>
                         {% endif %}
                         <div class="ui basic label">
