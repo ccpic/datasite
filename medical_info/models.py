@@ -74,7 +74,10 @@ class Program(models.Model):
         verbose_name_plural = "发布栏目"
 
     def __str__(self):
-        return "%s %s (%s)" % (self.year, self.name, self.vol)
+        if self.vol is None:
+            return "%s %s" % (str(self.year), self.name)
+        else:
+            return "%s %s (%s)" % (str(self.year), self.name, self.vol)
 
 
 class Post(models.Model):

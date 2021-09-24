@@ -17,7 +17,7 @@
 <div class="ui container">
     {% if posts %}
     <div class="ui dividing header">
-        <a href="{% url 'medical_info:posts' %}">所有医学信息</a> -
+        <a href="{% url 'medical_info:posts' %}">所有医学信息</a>
         {% if kw %}
             <a class="ui basic blue label" href="{% url 'medical_info:posts' %}?{% add_query_params request kw=kw %}">
                 搜索关键字: {{ kw }}
@@ -33,8 +33,11 @@
             {% endfor %}
         {% endif %}
         {% if program %}
-            <a class="ui basic blue label" href="{% url 'medical_info:posts' %}?{% add_query_params request program=program.id %}">
-                栏目: {{ program.name }}{{ program.vol }}
+            <a class="ui basic green label" href="{% url 'medical_info:posts' %}?{% add_query_params request program=program.id %}">
+                栏目: {{ program.name}}
+                    {% if program.vol %}
+                     {{ program.vol }}
+                    {% endif %}
                 <i class="delete icon"></i>
             </a>
         {% endif %}

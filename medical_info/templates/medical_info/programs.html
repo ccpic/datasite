@@ -8,7 +8,11 @@
             <div class="item">
                 <i class="ellipsis vertical icon"></i>
                 <div class="content">
-                    <a href="{% url 'medical_info:posts' %}?program={{ program.pk }}">{{ program.name}} {{ program.vol }}</a>
+                    <a href="{% url 'medical_info:posts' %}?program={{ program.pk }}">{{ program.name}}
+                    {% if program.vol %}
+                     {{ program.vol }}
+                    {% endif %}
+                    </a>
                 </div>
             </div>
             {% endfor %}
