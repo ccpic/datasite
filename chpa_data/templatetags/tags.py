@@ -155,7 +155,7 @@ def highlight(text, highlights):
         rgx = compile("(%s)" % "|".join(map(rescape, highlights.keys())), IGNORECASE)
         return mark_safe(
             # rgx.sub(lambda m: '<b class="highlight">{}</b>'.format(m.group()), text)
-            rgx.sub(lambda mo: highlights[mo.string[mo.start():mo.end()]], text) 
+            rgx.sub(lambda mo: highlights[mo.string[mo.start() : mo.end()]], text)
         )
     except:
         return text
@@ -175,21 +175,25 @@ def add_query_params(request, **kwargs):
 
     for k, v in kwargs.items():
         if v is not None:
-            if isinstance(updated.getlist(k, 0), list):  # 判断param是否已在当前参数内
-                exists = str(v) in updated.getlist(k, 0)
-            else:
-                exists = v == updated.getlist(k, 0)
-
-            if not exists:  # 如果当前没有的参数，则加上
-                d = {k: v}
-                updated.update(MultiValueDict(d) if isinstance(v, list) else d)
-            else:
-                try:
-                    d_updated[k].remove(str(v))
-                except (KeyError, ValueError):
-                    pass
+            if k != "page":
+                if isinstance(updated.getlist(k, 0), list):  # 判断param是否已在当前参数内
+                    exists = str(v) in updated.getlist(k, 0)
                 else:
-                    if not d_updated[k]:
-                        del d_updated[k]
+                    exists = v == updated.getlist(k, 0)
 
+                if not exists:  # 如果当前没有的参数，则加上
+                    d = {k: v}
+                    updated.update(MultiValueDict(d) if isinstance(v, list) else d)
+                else:
+                    try:
+                        d_updated[k].remove(str(v))
+                    except (KeyError, ValueError):
+                        pass
+                    else:
+                        if not d_updated[k]:
+                            del d_updated[k]
+            else: # 如果参数是分页则不在当前url上添加，重新更新page
+                updated.pop(k, 0)
+                d = {k: v}
+                updated.update(d)
     return updated.urlencode()
