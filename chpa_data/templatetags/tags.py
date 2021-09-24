@@ -5,6 +5,7 @@ from re import IGNORECASE, compile, escape as rescape
 from django.utils.safestring import mark_safe
 from django.http import QueryDict
 from django.utils.datastructures import MultiValueDict
+from django.db.models import Q, F, Count
 
 register = template.Library()
 from vbp.models import *
@@ -163,7 +164,7 @@ def highlight(text, highlights):
 
 @register.inclusion_tag("medical_info/programs.html")
 def show_programs():
-    programs = Program.objects.all()
+    programs = Program.objects.annotate(post_count=Count("programs"))
     return {"programs": programs}
 
 
@@ -175,7 +176,7 @@ def add_query_params(request, **kwargs):
 
     for k, v in kwargs.items():
         if v is not None:
-            if k != "page":
+            if k != "page": # 如果不是分页参数
                 if isinstance(updated.getlist(k, 0), list):  # 判断param是否已在当前参数内
                     exists = str(v) in updated.getlist(k, 0)
                 else:
