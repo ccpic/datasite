@@ -24,6 +24,8 @@ def get_param(params):
         else:
             tag_id_list.append(int(id))
 
+    prog_param = params.get("program")
+
     # 下面部分准备所有高亮关键字
     highlights = {}
     try:
@@ -38,7 +40,12 @@ def get_param(params):
         tag = Tag.objects.get(pk=tag_id)
         highlights[tag.name] = '<b class="highlight_tag">{}</b>'.format(tag.name)
 
-    context = {"kw": kw_param, "tags": tag_id_list, "highlights": highlights}
+    context = {
+        "kw": kw_param,
+        "tags": tag_id_list,
+        "program": prog_param,
+        "highlights": highlights,
+    }
 
     return context
 
@@ -84,7 +91,12 @@ def posts(request):
         sr_ids = [post.id for post in search_result]
         posts = Post.objects.filter(id__in=sr_ids)
 
-    # Chain filter标签多选筛选文章
+    # 根据栏目筛选文章
+    program = param_dict["program"]
+    if program is not None:
+        posts = posts.filter(program__id=program)
+            
+    # Chain filter标签在以上基础上多选筛选文章
     for id in param_dict["tags"]:
         posts = posts.filter(tags__id=id)
 
@@ -111,32 +123,10 @@ def posts(request):
         "kw": param_dict["kw"],
         "filter_tags": filter_tags,
         "tag_selected": Post.tags.filter(pk__in=param_dict["tags"]),
-        "highlights": param_dict["highlights"]
+        "program": Program.objects.filter(pk=program).first(),
+        "highlights": param_dict["highlights"],
     }
 
-    return render(request, "medical_info/posts.html", context)
-
-
-@login_required
-def tagged(request, pk):
-    posts = Post.objects.filter(tags__pk=pk)
-    paginator = Paginator(posts, DISPLAY_LENGTH)
-    page = request.GET.get("page")
-
-    try:
-        rows = paginator.page(page)
-    except PageNotAnInteger:
-        rows = paginator.page(1)
-    except EmptyPage:
-        rows = paginator.page(paginator.num_pages)
-
-    context = {
-        "posts": rows,
-        "num_pages": paginator.num_pages,
-        "record_n": paginator.count,
-        "display_length": DISPLAY_LENGTH,
-        "tag_selected": Post.tags.filter(pk=pk).first(),
-    }
     return render(request, "medical_info/posts.html", context)
 
 
@@ -215,57 +205,3 @@ def post_mail_format(request, pk):
         "post": post,
     }
     return render(request, "medical_info/post_mail_format.html", context)
-
-
-@login_required
-def search(request):
-    print(request.GET)
-    kw = request.GET.get("kw")
-    search_result = Post.objects.filter(
-        Q(title_cn__icontains=kw)  # 搜索文章中文名
-        | Q(title_en__icontains=kw)  # 搜索文章英文名
-        | Q(pub_agent__full_name__icontains=kw)  # 搜索发布平台全称
-        | Q(pub_agent__abbr_name__icontains=kw)  # 搜索发布平台简称
-        | Q(abstract__icontains=kw)  # 搜索摘要
-        | Q(program__name__icontains=kw)  # 搜索栏目
-        | Q(tags__name__icontains=kw)  # 搜索标签
-    ).distinct()
-
-    #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
-    sr_ids = [post.id for post in search_result]
-    search_result2 = Post.objects.filter(id__in=sr_ids)
-
-    paginator = Paginator(
-        search_result2, DISPLAY_LENGTH
-    )  #  为了克服pagination bug这里的参数时search_result2
-    page = request.GET.get("page")
-
-    try:
-        rows = paginator.page(page)
-    except PageNotAnInteger:
-        rows = paginator.page(1)
-    except EmptyPage:
-        rows = paginator.page(paginator.num_pages)
-
-    context = {
-        "posts": rows,
-        "num_pages": paginator.num_pages,
-        "record_n": paginator.count,
-        "display_length": DISPLAY_LENGTH,
-        "kw": kw,
-    }
-
-    return render(request, "medical_info/posts.html", context)
-
-
-@login_required
-def filter(request):
-    tags = list(Post.tags.all().annotate(Count("post")).values())
-    filter_tags = []
-    for tag in tags:
-        filter_tags.append(
-            {"label": tag["name"], "value": tag["id"],}
-        )
-    print(tags)
-    context = {"filter_tags": json.dumps(filter_tags)}
-    return render(request, "medical_info/filter.html", context)

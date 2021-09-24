@@ -19,21 +19,24 @@
     <div class="ui dividing header">
         <a href="{% url 'medical_info:posts' %}">所有医学信息</a> -
         {% if kw %}
-        <a class="ui basic blue label" href="{% url 'medical_info:posts' %}?{% add_query_params request kw=kw %}">
-            搜索关键字: {{ kw }}
-            <i class="delete icon"></i>
-        </a>
+            <a class="ui basic blue label" href="{% url 'medical_info:posts' %}?{% add_query_params request kw=kw %}">
+                搜索关键字: {{ kw }}
+                <i class="delete icon"></i>
+            </a>
         {% endif %}
         {% if tag_selected  %}
             {% for tag in tag_selected %}
-            <a class="ui basic red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                标签: {{ tag.name }}
-                <i class="delete icon"></i>
-            </a>
+                <a class="ui basic red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
+                    标签: {{ tag.name }}
+                    <i class="delete icon"></i>
+                </a>
             {% endfor %}
         {% endif %}
         {% if program %}
-        <a href="{% url 'medical_info:posts' %}">所有医学信息</a> - 发布于栏目 "{{ program }}" 的结果
+            <a class="ui basic blue label" href="{% url 'medical_info:posts' %}?{% add_query_params request program=program.id %}">
+                栏目: {{ program.name }}{{ program.vol }}
+                <i class="delete icon"></i>
+            </a>
         {% endif %}
         <span> - 当前显示第
             {{ posts.start_index }}-{{ posts.end_index }} of {{ record_n }}条记录
@@ -124,7 +127,7 @@
                     <div class="ui pointing basic label">
                         <i class="green check icon"></i>
                         发布于
-                        <a class="detail" href="{% url 'medical_info:program' post.program.pk %}">{{ post.program }}</a>
+                        <a class="detail" href="{% url 'medical_info:posts' %}?program={{ post.program.pk }}">{{ post.program }}</a>
                     </div>
                     {% endif %}
                     <div class="ui basic label">
