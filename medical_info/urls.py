@@ -8,8 +8,8 @@ from . import views
 
 app_name = 'medical_info'
 urlpatterns = [
-    path('', views.index, name='index'),
-    path(r'posts/', views.posts, name='posts'), # 查询/筛选后的医学信息
+    path('', views.posts, name='posts'),
+    # path(r'posts/', views.posts, name='posts'), # 查询/筛选后的医学信息
     path(r'posts/<int:pk>', views.post_detail, name='post_detail'), # 文章详情页
     path(r'posts_mail_format/<int:pk>', views.post_mail_format, name='post_mail_format'), # 适合导出到邮件的文章格式
     path(r'tags/<int:pk>', views.tagged, name='tagged'), # 指定标签相关的文章

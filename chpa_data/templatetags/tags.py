@@ -149,11 +149,13 @@ def get_record(pk):
 
 
 @register.filter(name="highlight")
-def highlight(text, search):
+def highlight(text, highlights):
     try:
-        rgx = compile(rescape(search), IGNORECASE)
+        # rgx = compile(rescape(search), IGNORECASE)
+        rgx = compile("(%s)" % "|".join(map(rescape, highlights.keys())), IGNORECASE)
         return mark_safe(
-            rgx.sub(lambda m: '<b class="highlight">{}</b>'.format(m.group()), text)
+            # rgx.sub(lambda m: '<b class="highlight">{}</b>'.format(m.group()), text)
+            rgx.sub(lambda mo: highlights[mo.string[mo.start():mo.end()]], text) 
         )
     except:
         return text
@@ -191,4 +193,3 @@ def add_query_params(request, **kwargs):
                         del d_updated[k]
 
     return updated.urlencode()
-

@@ -1,3 +1,4 @@
+from chpa_data.templatetags.tags import highlight
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .models import Post, Program
@@ -10,54 +11,83 @@ from taggit.models import Tag
 
 DISPLAY_LENGTH = 10
 
-# 首页
-@login_required
-def index(request):
 
-    posts = Post.objects.all()
-    paginator = Paginator(posts, DISPLAY_LENGTH)  # 分页
-    page = request.GET.get("page")
+def get_param(params):
+    kw_param = params.get("kw")  # 根据空格拆分搜索关键字
 
+    tag_param = params.getlist("tag")  # tag可能多选，需要额外处理
+    tag_id_list = []
+
+    for id in tag_param:
+        if type(id) == int:
+            tag_id_list.append(id)
+        else:
+            tag_id_list.append(int(id))
+
+    # 下面部分准备所有高亮关键字
+    highlights = {}
     try:
-        rows = paginator.page(page)
-    except PageNotAnInteger:
-        rows = paginator.page(1)
-    except EmptyPage:
-        rows = paginator.page(paginator.num_pages)
+        kw_list = kw_param.split(" ")
+    except:
+        kw_list = []
 
-    filter_tags = Tag.objects.filter(post__in=posts)  # 筛选出所有关联医学信息的tags
-    filter_tags = filter_tags.annotate(post_count=Count("post")).order_by(
-        F("post_count").desc()
-    )  # 统计tag关联的医学信息数并按从高到低排序
+    for kw in kw_list:
+        highlights[kw] = '<b class="highlight_kw">{}</b>'.format(kw)
 
-    context = {
-        "posts": rows,
-        "num_pages": paginator.num_pages,
-        "record_n": paginator.count,
-        "display_length": DISPLAY_LENGTH,
-        "filter_tags": filter_tags,
-    }
-    return render(request, "medical_info/posts.html", context)
+    for tag_id in tag_id_list:
+        tag = Tag.objects.get(pk=tag_id)
+        highlights[tag.name] = '<b class="highlight_tag">{}</b>'.format(tag.name)
+
+    context = {"kw": kw_param, "tags": tag_id_list, "highlights": highlights}
+
+    return context
 
 
-# 查询/筛选后的内容页
+# 首页
 @login_required
 def posts(request):
     print(request.GET)
-    tag_id = request.GET.getlist("tag")
-    tag_id2 = []
-    for id in tag_id:
-        if type(id) == int:
-            tag_id2.append(id)
-        else:
-            tag_id2.append(int(id))
+    param_dict = get_param(request.GET)
 
-    # Chain filter筛选文章
+    # 所有医学信息
     posts = Post.objects.all()
-    for id in tag_id2:
+
+    # 根据搜索筛选文章
+    kw = param_dict["kw"]
+    if kw is not None:
+        kw_list = kw.split(" ")
+
+        search_condition = (
+            Q(title_cn__icontains=kw_list[0])  # 搜索文章中文名
+            | Q(title_en__icontains=kw_list[0])  # 搜索文章英文名
+            | Q(pub_agent__full_name__icontains=kw_list[0])  # 搜索发布平台全称
+            | Q(pub_agent__abbr_name__icontains=kw_list[0])  # 搜索发布平台简称
+            | Q(abstract__icontains=kw_list[0])  # 搜索摘要
+            | Q(program__name__icontains=kw_list[0])  # 搜索栏目
+            | Q(tags__name__icontains=kw_list[0])  # 搜索标签
+        )
+        for k in kw_list[1:]:
+            search_condition.add(
+                Q(title_cn__icontains=k)  # 搜索文章中文名
+                | Q(title_en__icontains=k)  # 搜索文章英文名
+                | Q(pub_agent__full_name__icontains=k)  # 搜索发布平台全称
+                | Q(pub_agent__abbr_name__icontains=k)  # 搜索发布平台简称
+                | Q(abstract__icontains=k)  # 搜索摘要
+                | Q(program__name__icontains=k)  # 搜索栏目
+                | Q(tags__name__icontains=k),  # 搜索标签
+                Q.AND,
+            )
+
+        search_result = posts.filter(search_condition).distinct()
+
+        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
+        sr_ids = [post.id for post in search_result]
+        posts = Post.objects.filter(id__in=sr_ids)
+
+    # Chain filter标签多选筛选文章
+    for id in param_dict["tags"]:
         posts = posts.filter(tags__id=id)
-        
-    print(posts)
+
     paginator = Paginator(posts, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
@@ -73,15 +103,15 @@ def posts(request):
         F("post_count").desc()
     )  # 统计tag关联的医学信息数并按从高到低排序
 
-    print(filter_tags)
-
     context = {
         "posts": rows,
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
+        "kw": param_dict["kw"],
         "filter_tags": filter_tags,
-        "tag_selected": Post.tags.filter(pk__in=tag_id2),
+        "tag_selected": Post.tags.filter(pk__in=param_dict["tags"]),
+        "highlights": param_dict["highlights"]
     }
 
     return render(request, "medical_info/posts.html", context)

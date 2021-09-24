@@ -2,12 +2,11 @@
 {% load tags %}
 
 <div class="ui container">
-    {% comment %} {% if request.path == '/medical_info/' %} {% endcomment %}
     <div class="ui blue vertical segment">
         <h3 class="ui header">
             搜索
         </h3>
-        <form method="get" action="{% url 'medical_info:search' %}" class="ui fluid form">
+        <form method="get" action="{% url 'medical_info:posts' %}" class="ui fluid form">
             {% csrf_token %}
             <div class="field">
                 <div class="ui action input">
@@ -21,21 +20,21 @@
         <h3 class="ui header">
             标签
             {% if filter_tags.count > 20 %}
-                <div class="ui red label">Top20</div>
+            <div class="ui red label">Top20</div>
             {% endif %}
         </h3>
         <div class="ui labels">
             {% for tag in filter_tags|slice:20 %}
             {% if tag in tag_selected %}
-                <a class="ui red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                    {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
-                    <i class="delete icon"></i>
-                </a>
+            <a class="ui red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
+                {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
+                <i class="delete icon"></i>
+            </a>
             {% else %}
-                <a class="ui label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                    {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
-                </a>
-            {% endif %} 
+            <a class="ui label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
+                {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
+            </a>
+            {% endif %}
             {% endfor %}
         </div>
     </div>
@@ -45,29 +44,4 @@
         </h3>
         {% show_programs %}
     </div>
-    {% comment %} {% else %}
-    {% get_taglist as tags %}
-
-    <form class="ui form">
-        <div class="field">
-            <label>标签 {{tag_selected.pk}} </label>
-            <div class="field">
-                <select name="tag_select" id="tag_select" multiple="" class="ui fluid tiny search dropdown">
-                    {% for tag in tags %}
-                        
-                        <option value="{{ tag.pk }}" {% if tag.pk == tag_selected.pk %}selected{% else %}{% endif %}>{{ tag }} ({{ tag.num_times }})</option>
-
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-    </form>
-
-    <script>
-        $('.ui.fluid.search.dropdown')
-            .dropdown({
-                fullTextSearch: true
-            });
-    </script>
-    {% endif %} {% endcomment %}
 </div>
