@@ -70,6 +70,14 @@
                         <div class="ui basic label">
                         <i class="eye icon"></i> {{ post.views }}
                         </div>
+                        {% if request.user.is_staff %}
+                            <a class="ui red basic label" href="{% url 'medical_info:post_mail_format' post.pk %}">
+                                邮件格式
+                            </a>
+                            <a class="ui red basic label" href="{% url 'admin:medical_info_post_change' post.pk %}">
+                                编辑
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
