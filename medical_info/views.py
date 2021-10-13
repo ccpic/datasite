@@ -95,7 +95,7 @@ def posts(request):
 
         search_result = posts.filter(search_condition).distinct()
 
-        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
+        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
         sr_ids = [post.id for post in search_result]
         posts = Post.objects.filter(id__in=sr_ids)
 
@@ -123,23 +123,26 @@ def posts(request):
         rows = paginator.page(paginator.num_pages)
 
     all_tags = Tag.objects.all()
-    all_tags = all_tags.annotate(post_count=Count("post")).order_by(
+    all_tags = all_tags.annotate(post_count=Count("post")).distinct().order_by(
         F("post_count").desc()
     )
+    print(len(all_tags))
     filter_tags = Tag.objects.filter(post__in=posts)  # 筛选出所有关联医学信息的tags
-    filter_tags = filter_tags.annotate(post_count=Count("post")).order_by(
+    filter_tags = filter_tags.annotate(post_count=Count("post")).distinct().order_by(
         F("post_count").desc()
     )  # 统计tag关联的医学信息数并按从高到低排序
-
+    print(len(filter_tags))
     all_nations = Nation.objects.all()
     all_nations = all_nations.annotate(post_count=Count("post")).order_by(
         F("post_count").desc()
     )
+    print(len(all_nations))
     filter_nations = Nation.objects.filter(post__in=posts)  # 筛选出所有关联医学信息的tags
     filter_nations = filter_nations.annotate(post_count=Count("post")).order_by(
         F("post_count").desc()
     )  # 统计tag关联的医学信息数并按从高到低排序
-
+    print(len(filter_nations))
+          
     context = {
         "posts": rows,
         "num_pages": paginator.num_pages,
