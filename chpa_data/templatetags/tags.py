@@ -97,7 +97,10 @@ def region_std_volume(tender, region):
     qs = Volume.objects.filter(tender=tender, region=region)
     if qs.exists():
         winner = qs.first().winner
-        volume = winner.std_volume_win(region=region)
+        if winner is not None:
+            volume = winner.std_volume_win(region=region)
+        else:
+            volume = 0
         return "{0:,.1f}".format(volume)
     else:
         return None
@@ -176,7 +179,7 @@ def add_query_params(request, **kwargs):
 
     for k, v in kwargs.items():
         if v is not None:
-            if k != "page": # 如果不是分页参数
+            if k != "page":  # 如果不是分页参数
                 if isinstance(updated.getlist(k, 0), list):  # 判断param是否已在当前参数内
                     exists = str(v) in updated.getlist(k, 0)
                 else:
@@ -193,7 +196,7 @@ def add_query_params(request, **kwargs):
                     else:
                         if not d_updated[k]:
                             del d_updated[k]
-            else: # 如果参数是分页则不在当前url上添加，重新更新page
+            else:  # 如果参数是分页则不在当前url上添加，重新更新page
                 updated.pop(k, 0)
                 d = {k: v}
                 updated.update(d)

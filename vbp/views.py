@@ -105,12 +105,23 @@ def index(request):
         if kw in [None, ""]:
             kw = current_kw
 
-        search_result = Tender.objects.filter(
-            Q(target__icontains=kw)  # 搜索标的名称
-            | Q(bids__bidder__full_name__icontains=kw)  # 搜索竞标公司全称
-            | Q(bids__bidder__abbr_name__icontains=kw)  # 搜索竞标公司简称
-            | Q(vol__icontains=kw)  # 搜索批次
-        ).distinct()
+        kw_list = kw.split(" ")
+
+        search_condition = (
+            Q(target__icontains=kw_list[0])  # 搜索标的名称
+            | Q(bids__bidder__full_name__icontains=kw_list[0])  # 搜索竞标公司全称
+            | Q(bids__bidder__abbr_name__icontains=kw_list[0])  # 搜索竞标公司简称
+            | Q(vol__icontains=kw_list[0])  # 搜索批次
+        )
+        for k in kw_list[1:]:
+            search_condition.add(
+                Q(target__icontains=k)  # 搜索标的名称
+                | Q(bids__bidder__full_name__icontains=k)  # 搜索竞标公司全称
+                | Q(bids__bidder__abbr_name__icontains=k)  # 搜索竞标公司简称
+                | Q(vol__icontains=k),  # 搜索批次
+                Q.OR,
+            )
+        search_result = Tender.objects.all().filter(search_condition).distinct()
 
         #  下方两行代码为了克服MSSQL数据库和Django pagination在distinc(),order_by()等queryset时出现重复对象的bug
         sr_ids = [tender.id for tender in search_result]
