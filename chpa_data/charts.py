@@ -2,6 +2,7 @@ from pyecharts.charts import Line, Pie, Bar, Geo, Scatter
 from pyecharts import options as opts
 import numpy as np
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.font_manager as fm
@@ -236,46 +237,46 @@ def mpl_bubble(
     http://nbviewer.ipython.org/github/demotu/BMC/blob/master/notebooks/CurveFitting.ipynb
     https://stackoverflow.com/questions/27164114/show-confidence-limits-and-prediction-limits-in-scatter-plot
     """
-    # n = y.size  # 观察例数
-    # if n > 2:  # 数据点必须大于cov矩阵的scale
-    #     p, cov = np.polyfit(x, y, 1, cov=True)  # 简单线性回归返回parameter和covariance
-    #     poly1d_fn = np.poly1d(p)  # 拟合方程
-    #     y_model = poly1d_fn(x)  # 拟合的y值
-    #     m = p.size  # 参数个数
+    n = y.size  # 观察例数
+    if n > 2:  # 数据点必须大于cov矩阵的scale
+        p, cov = np.polyfit(x, y, 1, cov=True)  # 简单线性回归返回parameter和covariance
+        poly1d_fn = np.poly1d(p)  # 拟合方程
+        y_model = poly1d_fn(x)  # 拟合的y值
+        m = p.size  # 参数个数
 
-    #     dof = n - m  # degrees of freedom
-    #     t = stats.t.ppf(0.975, dof)  # 显著性检验t值
+        dof = n - m  # degrees of freedom
+        t = stats.t.ppf(0.975, dof)  # 显著性检验t值
 
-    #     # 拟合结果绘图
-    #     ax.plot(x, y_model, "-", color="0.1", linewidth=1.5, alpha=0.5, label="Fit")
+        # 拟合结果绘图
+        ax.plot(x, y_model, "-", color="0.1", linewidth=1.5, alpha=0.5, label="Fit")
 
-    #     # 误差估计
-    #     resid = y - y_model  # 残差
-    #     s_err = np.sqrt(np.sum(resid ** 2) / dof)  # 标准误差
+        # 误差估计
+        resid = y - y_model  # 残差
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)  # 标准误差
 
-    #     # 拟合CI和PI
-    #     x2 = np.linspace(np.min(x), np.max(x), 100)
-    #     y2 = poly1d_fn(x2)
+        # 拟合CI和PI
+        x2 = np.linspace(np.min(x), np.max(x), 100)
+        y2 = poly1d_fn(x2)
 
-    #     # CI计算和绘图
-    #     ci = (
-    #         t
-    #         * s_err
-    #         * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
-    #     )
-    #     ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", edgecolor="", alpha=0.5)
+        # CI计算和绘图
+        ci = (
+            t
+            * s_err
+            * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+        )
+        ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", edgecolor="", alpha=0.5)
 
-    #     # Pi计算和绘图
-    #     pi = (
-    #         t
-    #         * s_err
-    #         * np.sqrt(
-    #             1 + 1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2)
-    #         )
-    #     )
-    #     ax.fill_between(x2, y2 + pi, y2 - pi, color="None", linestyle="--")
-    #     ax.plot(x2, y2 - pi, "--", color="0.5", label="95% Prediction Limits")
-    #     ax.plot(x2, y2 + pi, "--", color="0.5")
+        # Pi计算和绘图
+        pi = (
+            t
+            * s_err
+            * np.sqrt(
+                1 + 1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2)
+            )
+        )
+        ax.fill_between(x2, y2 + pi, y2 - pi, color="None", linestyle="--")
+        ax.plot(x2, y2 - pi, "--", color="0.5", label="95% Prediction Limits")
+        ax.plot(x2, y2 + pi, "--", color="0.5")
 
     # 保存到字符串
     sio = BytesIO()
