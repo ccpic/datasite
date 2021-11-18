@@ -81,7 +81,7 @@ class Program(models.Model):
 
 
 class Post(models.Model):
-    title_en = models.CharField(verbose_name="英文标题", max_length=300)
+    title_en = models.CharField(verbose_name="英文标题", max_length=300, blank=True)
     title_cn = models.CharField(verbose_name="中文标题", max_length=300)
     pub_agent = models.ForeignKey(
         PubAgent,
