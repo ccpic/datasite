@@ -14,7 +14,7 @@ DISPLAY_LENGTH = 10
 def get_id_list(param):
     id_list = []
     for id in param:
-        if type(id) == int:
+        if isinstance(id, int) == int:
             id_list.append(id)
         else:
             id_list.append(int(id))
@@ -123,13 +123,17 @@ def posts(request):
         rows = paginator.page(paginator.num_pages)
 
     all_tags = Tag.objects.all()
-    all_tags = all_tags.annotate(post_count=Count("post")).distinct().order_by(
-        F("post_count").desc()
+    all_tags = (
+        all_tags.annotate(post_count=Count("post"))
+        .distinct()
+        .order_by(F("post_count").desc())
     )
     print(len(all_tags))
     filter_tags = Tag.objects.filter(post__in=posts)  # 筛选出所有关联医学信息的tags
-    filter_tags = filter_tags.annotate(post_count=Count("post")).distinct().order_by(
-        F("post_count").desc()
+    filter_tags = (
+        filter_tags.annotate(post_count=Count("post"))
+        .distinct()
+        .order_by(F("post_count").desc())
     )  # 统计tag关联的医学信息数并按从高到低排序
     print(len(filter_tags))
     all_nations = Nation.objects.all()
@@ -142,7 +146,7 @@ def posts(request):
         F("post_count").desc()
     )  # 统计tag关联的医学信息数并按从高到低排序
     print(len(filter_nations))
-          
+
     context = {
         "posts": rows,
         "num_pages": paginator.num_pages,

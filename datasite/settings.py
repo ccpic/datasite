@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "rdpac",
     "medical_info",
     "potential",
+    "policy_feed",
 ]
 
 MIDDLEWARE = [
