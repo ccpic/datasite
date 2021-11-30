@@ -44,7 +44,7 @@ JS_TEXT = """
 
 
 D_SOURCE = {
-    "天津市阳光采购_政策法规": {
+    "天津阳光采购_政策法规": {
         "region": "天津",
         "page1_url": "https://www.tjmpc.cn/website/home/ListPage?NEWSCOLUMNID=c0c5ab23e7a448c4a520ac03473ad95f",
         "page_url": "",
@@ -55,7 +55,7 @@ D_SOURCE = {
         "xp_url": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/@href',
         "date_format": "",
     },
-    "天津市阳光采购_药品公告": {
+    "天津阳光采购_药品公告": {
         "region": "天津",
         "page1_url": "https://www.tjmpc.cn/website/home/ListPage?NEWSCOLUMNID=aece0662d48f49b4b178a149c464e4ba",
         "page_url": "",
@@ -66,7 +66,7 @@ D_SOURCE = {
         "xp_url": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/@href',
         "date_format": "",
     },
-    "天津市阳光采购_耗材公告": {
+    "天津阳光采购_耗材公告": {
         "region": "天津",
         "page1_url": "https://www.tjmpc.cn/website/home/ListPage?NEWSCOLUMNID=1d597a6a11e546a2bc09e68e3a53bb85",
         "page_url": "",
