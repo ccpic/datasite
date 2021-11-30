@@ -8,7 +8,8 @@ class Announce(models.Model):
     source = models.CharField(verbose_name="来源", max_length=30)
     pub_date = models.DateField(verbose_name="发布日期")
     fetch_date = models.DateField(verbose_name="爬取日期")
-
+    region = models.CharField(verbose_name="区域", max_length=10)
+    
     class Meta:
         verbose_name = "政策公告"
         verbose_name_plural = "政策公告"

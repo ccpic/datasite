@@ -23,8 +23,6 @@ def get_id_list(param):
 def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
 
-    source_param = params.getlist("source")  # source可能多选，需要额外处理
-
     # 下面部分准备所有高亮关键字
     highlights = {}
     try:
@@ -41,7 +39,8 @@ def get_param(params):
 
     context = {
         "kw": kw_param,
-        "sources": source_param,
+        "sources": params.getlist("source"),  # source可能多选
+        "regions": params.getlist("region"),  # region可能多选
         "highlights": highlights,
     }
 
@@ -77,9 +76,20 @@ def feeds(request):
         sr_ids = [announce.id for announce in search_result]
         announces = Announce.objects.filter(id__in=sr_ids)
 
+    # 筛选区域，多源之间是或的关系
+    regions = param_dict["regions"]
+    if regions is not None and len(regions) != 0:
+        region_condition = Q(region=regions[0])
+        for region in regions[1:]:
+            region_condition.add(Q(region=region), Q.OR)
+        region_result = announces.filter(region_condition).distinct()
+
+        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+        sr_ids = [announce.id for announce in region_result]
+        announces = Announce.objects.filter(id__in=sr_ids)
+
     # 筛选公告源，多源之间是或的关系
     sources = param_dict["sources"]
-    print(sources)
     if sources is not None and len(sources) != 0:
         source_condition = Q(source=sources[0])
         for source in sources[1:]:
@@ -89,7 +99,7 @@ def feeds(request):
         #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
         sr_ids = [announce.id for announce in source_result]
         announces = Announce.objects.filter(id__in=sr_ids)
-
+        
     # 爬取时间，取最早值
     fetch_date = Announce.objects.all().aggregate(Min("fetch_date"))
 
@@ -110,7 +120,14 @@ def feeds(request):
     filter_sources = (
         announces.order_by().values_list("source", flat=True).distinct()
     )  # 筛选出所有关联公告的源
-    print(filter_sources)
+    
+    all_regions = (
+        Announce.objects.order_by().values_list("region", flat=True).distinct()
+    )  # 所有公告源
+    filter_regions = (
+        announces.order_by().values_list("region", flat=True).distinct()
+    )  # 筛选出所有关联公告的源
+    
     context = {
         "announces": rows,
         "num_pages": paginator.num_pages,
@@ -121,6 +138,9 @@ def feeds(request):
         "all_sources": all_sources,
         "filter_sources": filter_sources,
         "sources_selected": param_dict["sources"],
+        "all_regions": all_regions,
+        "filter_regions": filter_regions,
+        "regions_selected": param_dict["regions"],
         "fetch_date": fetch_date,
     }
     return render(request, "policy_feed/feeds.html", context)

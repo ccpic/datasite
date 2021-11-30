@@ -15,7 +15,6 @@
 <div class="ui hidden divider"></div>
 
 <div class="ui container">
-    {% if announces %}
     <div class="ui dividing header">
         <a href="{% url 'policy_feed:feeds' %}">所有政策公告</a>
         {% if kw %}
@@ -24,9 +23,17 @@
             <i class="delete icon"></i>
         </a>
         {% endif %}
+        {% if regions_selected  %}
+        {% for region in regions_selected %}
+        <a class="ui basic red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request region=region %}">
+            标签: {{ region }}
+            <i class="delete icon"></i>
+        </a>
+        {% endfor %}
+        {% endif %}
         {% if sources_selected  %}
         {% for source in sources_selected %}
-        <a class="ui basic red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
+        <a class="ui basic purple label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
             标签: {{ source }}
             <i class="delete icon"></i>
         </a>
@@ -36,7 +43,7 @@
             {{ announces.start_index }}-{{ announces.end_index }} of {{ record_n }}条记录
         </span>
     </div>
-
+    {% if announces %}
     <div class="ui divided items">
         {% for announce in announces %}
         <div class="item" id="medical_posts">
@@ -85,7 +92,7 @@
     </div>
     {% else %}
     <div class="ui error message">
-        没有搜索到符合条件的记录, 返回<a href="{% url 'policy_feed:feeds' %}">所有政策公告</a>
+        没有搜索到符合条件的记录
     </div>
     {% endif %}
 </div>

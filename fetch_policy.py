@@ -45,6 +45,7 @@ JS_TEXT = """
 
 D_SOURCE = {
     "广东省药品交易中心": {
+        "region": "广东",
         "page1_url": "https://www.gdmede.com.cn/announcement/?page=1",
         "page_url": "https://www.gdmede.com.cn/announcement/?page=%s",
         "page_num_adjust": 0,
@@ -55,6 +56,7 @@ D_SOURCE = {
         "date_format": "%Y年%m月%d日",
     },
     "广东省医保局": {
+        "region": "广东",
         "page1_url": "http://hsa.gd.gov.cn/zwdt/snkb/index.html",
         "page_url": "http://hsa.gd.gov.cn/zwdt/snkb/index_%s.html",
         "page_num_adjust": 0,
@@ -64,7 +66,19 @@ D_SOURCE = {
         "xp_url": "//html/body/div[4]/div[2]/ul/li/a/@href",
         "date_format": "",
     },
+    "北京市医保局_政策文件": {
+        "region": "北京",
+        "page1_url": "http://ybj.beijing.gov.cn/zwgk/2020_zcwj/index.html",
+        "page_url": "http://ybj.beijing.gov.cn/zwgk/2020_zcwj/index_%s.html",
+        "page_num_adjust": -1,
+        "xp_pageend": "",
+        "xp_pub_date": "//html/body/div[4]/div/div[2]/ul/li/text()",
+        "xp_title": "/html/body/div[4]/div/div[2]/ul/li/a/text()",
+        "xp_url": "/html/body/div[4]/div/div[2]/ul/li/a/@href",
+        "date_format": "",
+    },
     "北京市医保局_药品公告": {
+        "region": "北京",
         "page1_url": "http://ybj.beijing.gov.cn/zczxs/2020_ycgga/index.html",
         "page_url": "http://ybj.beijing.gov.cn/zczxs/2020_ycgga/index_%s.html",
         "page_num_adjust": -1,
@@ -74,7 +88,19 @@ D_SOURCE = {
         "xp_url": "/html/body/div[4]/div/div[2]/ul/li/a/@href",
         "date_format": "",
     },
+    "北京市医保局_耗材公告": {
+        "region": "北京",
+        "page1_url": "http://ybj.beijing.gov.cn/zczxs/2020_hcgga//index.html",
+        "page_url": "http://ybj.beijing.gov.cn/zczxs/2020_hcgga/index_%s.html",
+        "page_num_adjust": -1,
+        "xp_pageend": "",
+        "xp_pub_date": "//html/body/div[4]/div/div[2]/ul/li/text()",
+        "xp_title": "/html/body/div[4]/div/div[2]/ul/li/a/text()",
+        "xp_url": "/html/body/div[4]/div/div[2]/ul/li/a/@href",
+        "date_format": "",
+    },
     "福建省医保局": {
+        "region": "福建",
         "page1_url": "https://ybj.fujian.gov.cn/ztzl/yxcg/ggtz/",
         "page_url": "",
         "page_num_adjust": None,
@@ -110,6 +136,7 @@ def extract_announce(
         xp_title = xp["xp_title"]
         xp_url = xp["xp_url"]
 
+    region = xp["region"]
     date_format = xp["date_format"]
 
     try:
@@ -125,6 +152,7 @@ def extract_announce(
             columns=["公告日期", "公告标题", "公告链接"],
         )
 
+        df["区域"] = region
         df["公告源"] = source
         df["爬取日期"] = src_date
         df["域名"] = domain
@@ -228,7 +256,7 @@ async def get_announce_df(source: str, param: dict) -> list:
 
 
 def import_django(df):
-    df = df.reindex(columns=["公告日期", "公告标题", "公告源", "公告链接", "域名", "爬取地址", "爬取日期"])
+    df = df.reindex(columns=["公告日期", "公告标题", "公告源", "公告链接", "域名", "爬取地址", "爬取日期", "区域"])
 
     l = []
     for item in df.values:
@@ -256,6 +284,7 @@ def import_django(df):
                 source=item[2],
                 url=url,
                 fetch_date=item[6],
+                region=item[7],
             )
         )
 

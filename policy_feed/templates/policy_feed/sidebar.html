@@ -18,12 +18,31 @@
     </div>
     <div class="ui red vertical segment">
         <h3 class="ui header">
-            信息源
+            筛选区域
+        </h3>
+        <div class="ui labels">
+            {% for region in all_regions %}
+            {% if region in filter_regions %}
+            <a class="ui red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request region=region %}">
+                {{ region }}
+                <i class="delete icon"></i>
+            </a>
+            {% else %}
+            <a class="ui label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request region=region %}">
+                {{ region }}
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="ui purple vertical segment">
+        <h3 class="ui header">
+            筛选信息源
         </h3>
         <div class="ui labels">
             {% for source in all_sources %}
-            {% if source in sources_selected %}
-            <a class="ui red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
+            {% if source in filter_sources %}
+            <a class="ui purple label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
                 {{ source }}
                 <i class="delete icon"></i>
             </a>
@@ -35,7 +54,7 @@
             {% endfor %}
         </div>
     </div>
-    <div class="ui purple vertical segment">
+    <div class="ui violet vertical segment">
         <h3 class="ui header">
             信息采集时间
         </h3>
