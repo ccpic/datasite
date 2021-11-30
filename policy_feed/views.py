@@ -74,16 +74,25 @@ def feeds(request):
         search_result = announces.filter(search_condition).distinct()
 
         #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
-        sr_ids = [post.id for post in search_result]
+        sr_ids = [announce.id for announce in search_result]
         announces = Announce.objects.filter(id__in=sr_ids)
 
-    # Chain filter源在以上基础上多选筛选公告
-    for source in param_dict["sources"]:
-        announces = announces.filter(source=source)
+    # 筛选公告源，多源之间是或的关系
+    sources = param_dict["sources"]
+    print(sources)
+    if sources is not None and len(sources) != 0:
+        source_condition = Q(source=sources[0])
+        for source in sources[1:]:
+            source_condition.add(Q(source=source), Q.OR)
+        source_result = announces.filter(source_condition).distinct()
+
+        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+        sr_ids = [announce.id for announce in source_result]
+        announces = Announce.objects.filter(id__in=sr_ids)
 
     # 爬取时间，取最早值
     fetch_date = Announce.objects.all().aggregate(Min("fetch_date"))
-    
+
     # 分页
     paginator = Paginator(announces, DISPLAY_LENGTH)
     page = request.GET.get("page")
@@ -112,7 +121,7 @@ def feeds(request):
         "all_sources": all_sources,
         "filter_sources": filter_sources,
         "sources_selected": param_dict["sources"],
-        "fetch_date": fetch_date
+        "fetch_date": fetch_date,
     }
     return render(request, "policy_feed/feeds.html", context)
 

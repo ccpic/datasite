@@ -21,7 +21,7 @@
             信息源
         </h3>
         <div class="ui labels">
-            {% for source in filter_sources %}
+            {% for source in all_sources %}
             {% if source in sources_selected %}
             <a class="ui red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
                 {{ source }}
