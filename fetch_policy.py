@@ -44,6 +44,72 @@ JS_TEXT = """
 
 
 D_SOURCE = {
+    "天津市阳光采购_政策法规": {
+        "region": "天津",
+        "page1_url": "https://www.tjmpc.cn/website/home/ListPage?NEWSCOLUMNID=c0c5ab23e7a448c4a520ac03473ad95f",
+        "page_url": "",
+        "page_num_adjust": None,
+        "xp_pageend": '//a[contains(., "下一页")]',
+        "xp_pub_date": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td/text()',
+        "xp_title": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/text()',
+        "xp_url": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/@href',
+        "date_format": "",
+    },
+    "天津市阳光采购_药品公告": {
+        "region": "天津",
+        "page1_url": "https://www.tjmpc.cn/website/home/ListPage?NEWSCOLUMNID=aece0662d48f49b4b178a149c464e4ba",
+        "page_url": "",
+        "page_num_adjust": None,
+        "xp_pageend": '//a[contains(., "下一页")]',
+        "xp_pub_date": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td/text()',
+        "xp_title": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/text()',
+        "xp_url": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/@href',
+        "date_format": "",
+    },
+    "天津市阳光采购_耗材公告": {
+        "region": "天津",
+        "page1_url": "https://www.tjmpc.cn/website/home/ListPage?NEWSCOLUMNID=1d597a6a11e546a2bc09e68e3a53bb85",
+        "page_url": "",
+        "page_num_adjust": None,
+        "xp_pageend": '//a[contains(., "下一页")]',
+        "xp_pub_date": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td/text()',
+        "xp_title": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/text()',
+        "xp_url": '//html/body/div[6]/div/div/div[2]/div[2]/table/tbody/tr[*]/td[1]/div/nobr/a/@href',
+        "date_format": "",
+    },
+    "上海阳光采购_政策法规": {
+        "region": "上海",
+        "page1_url": "http://www.smpaa.cn/xxgk/zczsk/index_fg.shtml",
+        "page_url": "http://www.smpaa.cn/xxgk/zczsk/index_fg%s.shtml",
+        "page_num_adjust": 0,
+        "xp_pageend": "/html/body/div[4]/table/tbody/tr/td[2]/div[2]/div/div/div/div",
+        "xp_pub_date": '//div[@class="list_list_con"]/ul/li/a/span/text()',
+        "xp_title": '//div[@class="list_list_con"]/ul/li/a/text()[1]',
+        "xp_url": '//div[@class="list_list_con"]/ul/li/a/@href',
+        "date_format": "",
+    },
+    "上海阳光采购_公告公示": {
+        "region": "上海",
+        "page1_url": "http://www.smpaa.cn/xxgk/gggs/index_zhaobiao.shtml",
+        "page_url": "http://www.smpaa.cn/xxgk/gggs/index_zhaobiao%s.shtml",
+        "page_num_adjust": 0,
+        "xp_pageend": "/html/body/div[4]/table/tbody/tr/td[2]/div[2]/div/div/div/div",
+        "xp_pub_date": '//div[@class="list_list_con"]/ul/li/a/span/text()',
+        "xp_title": '//div[@class="list_list_con"]/ul/li/a/text()[1]',
+        "xp_url": '//div[@class="list_list_con"]/ul/li/a/@href',
+        "date_format": "",
+    },
+    "上海阳光采购_中标结果": {
+        "region": "上海",
+        "page1_url": "http://www.smpaa.cn/xxgk/gggs/index_zhongbiao.shtml",
+        "page_url": "http://www.smpaa.cn/xxgk/gggs/index_zhongbiao%s.shtml",
+        "page_num_adjust": 0,
+        "xp_pageend": "/html/body/div[4]/table/tbody/tr/td[2]/div[2]/div/div/div/div",
+        "xp_pub_date": '//div[@class="list_list_con"]/ul/li/a/span/text()',
+        "xp_title": '//div[@class="list_list_con"]/ul/li/a/text()[1]',
+        "xp_url": '//div[@class="list_list_con"]/ul/li/a/@href',
+        "date_format": "",
+    },
     "广东省药品交易中心": {
         "region": "广东",
         "page1_url": "https://www.gdmede.com.cn/announcement/?page=1",
@@ -145,6 +211,7 @@ def extract_announce(
 
         list_pub_date = strip_list(slc.xpath(xp_pub_date), date_format=date_format,)
         list_title = strip_list(slc.xpath(xp_title))
+        print(list_title)
         list_url = strip_list(slc.xpath(xp_url))
 
         df = pd.DataFrame(
@@ -196,7 +263,7 @@ async def get_announce_df(source: str, param: dict) -> list:
     page_num = 1
     df_combined = pd.DataFrame()
 
-    if param["page_url"] == "":  # 翻页没哟体现在url上的解决方法，模拟点击下一页按钮后抓取内容
+    if param["page_url"] == "":  # 翻页没有体现在url上的解决方法，模拟点击下一页按钮后抓取内容
         page_url = param["page1_url"]
         await page.goto(page_url)
         xp_for_pageend = param["xp_pageend"]

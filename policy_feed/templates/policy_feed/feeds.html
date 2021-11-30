@@ -26,7 +26,7 @@
         {% if regions_selected  %}
         {% for region in regions_selected %}
         <a class="ui basic red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request region=region %}">
-            标签: {{ region }}
+            区域: {{ region }}
             <i class="delete icon"></i>
         </a>
         {% endfor %}
@@ -34,7 +34,7 @@
         {% if sources_selected  %}
         {% for source in sources_selected %}
         <a class="ui basic purple label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
-            标签: {{ source }}
+            信息源: {{ source }}
             <i class="delete icon"></i>
         </a>
         {% endfor %}

@@ -70,11 +70,11 @@ def feeds(request):
                 Q.AND,
             )
 
-        search_result = announces.filter(search_condition).distinct()
+        announces = announces.filter(search_condition).distinct()
 
-        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
-        sr_ids = [announce.id for announce in search_result]
-        announces = Announce.objects.filter(id__in=sr_ids)
+        # #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+        # sr_ids = [announce.id for announce in search_result]
+        # announces = Announce.objects.filter(id__in=sr_ids)
 
     # 筛选区域，多源之间是或的关系
     regions = param_dict["regions"]
@@ -82,11 +82,11 @@ def feeds(request):
         region_condition = Q(region=regions[0])
         for region in regions[1:]:
             region_condition.add(Q(region=region), Q.OR)
-        region_result = announces.filter(region_condition).distinct()
+        announces = announces.filter(region_condition).distinct()
 
-        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
-        sr_ids = [announce.id for announce in region_result]
-        announces = Announce.objects.filter(id__in=sr_ids)
+        # #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+        # sr_ids = [announce.id for announce in region_result]
+        # announces = Announce.objects.filter(id__in=sr_ids)
 
     # 筛选公告源，多源之间是或的关系
     sources = param_dict["sources"]
@@ -94,11 +94,11 @@ def feeds(request):
         source_condition = Q(source=sources[0])
         for source in sources[1:]:
             source_condition.add(Q(source=source), Q.OR)
-        source_result = announces.filter(source_condition).distinct()
+        announces = announces.filter(source_condition).distinct()
 
-        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
-        sr_ids = [announce.id for announce in source_result]
-        announces = Announce.objects.filter(id__in=sr_ids)
+        # #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+        # sr_ids = [announce.id for announce in source_result]
+        # announces = Announce.objects.filter(id__in=sr_ids)
         
     # 爬取时间，取最早值
     fetch_date = Announce.objects.all().aggregate(Min("fetch_date"))
@@ -115,17 +115,17 @@ def feeds(request):
         rows = paginator.page(paginator.num_pages)
 
     all_sources = (
-        Announce.objects.order_by().values_list("source", flat=True).distinct()
+        Announce.objects.order_by("source").values_list("source", flat=True).distinct()
     )  # 所有公告源
     filter_sources = (
-        announces.order_by().values_list("source", flat=True).distinct()
+        announces.order_by("source").values_list("source", flat=True).distinct()
     )  # 筛选出所有关联公告的源
     
     all_regions = (
-        Announce.objects.order_by().values_list("region", flat=True).distinct()
+        Announce.objects.order_by("region").values_list("region", flat=True).distinct()
     )  # 所有公告源
     filter_regions = (
-        announces.order_by().values_list("region", flat=True).distinct()
+        announces.order_by("region").values_list("region", flat=True).distinct()
     )  # 筛选出所有关联公告的源
     
     context = {

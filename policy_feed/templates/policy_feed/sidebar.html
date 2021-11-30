@@ -22,7 +22,7 @@
         </h3>
         <div class="ui labels">
             {% for region in all_regions %}
-            {% if region in filter_regions %}
+            {% if region in regions_selected %}
             <a class="ui red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request region=region %}">
                 {{ region }}
                 <i class="delete icon"></i>
@@ -41,7 +41,7 @@
         </h3>
         <div class="ui labels">
             {% for source in all_sources %}
-            {% if source in filter_sources %}
+            {% if source in sources_selected %}
             <a class="ui purple label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
                 {{ source }}
                 <i class="delete icon"></i>
