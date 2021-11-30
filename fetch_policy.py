@@ -43,89 +43,92 @@ JS_TEXT = """
     """
 
 
-SOURCE_LIST = ["广东省药品交易中心", "广东省医保局", "福建省医保局"]
+D_SOURCE = {
+    "广东省药品交易中心": {
+        "page1_url": "https://www.gdmede.com.cn/announcement/?page=1",
+        "page_url": "https://www.gdmede.com.cn/announcement/?page=%s",
+        "page_num_adjust": 0,
+        "xp_pageend": "/html/body/div[1]/div/div/div[1]/div[2]/div[1]/div/div[3]/div/ul/li[1]",
+        "xp_pub_date": '//div[@class="date"]/text()',
+        "xp_title": '//div[@class="title"]/span/text()',
+        "xp_url": '//a[@class="item-wrap"]/@href',
+        "date_format": "%Y年%m月%d日",
+    },
+    "广东省医保局": {
+        "page1_url": "http://hsa.gd.gov.cn/zwdt/snkb/index.html",
+        "page_url": "http://hsa.gd.gov.cn/zwdt/snkb/index_%s.html",
+        "page_num_adjust": 0,
+        "xp_pageend": "/html/body/div[4]/div[2]/div[2]/a[3]",
+        "xp_pub_date": "//html/body/div[4]/div[2]/ul/li/i/text()",
+        "xp_title": "//html/body/div[4]/div[2]/ul/li/a/@title",
+        "xp_url": "//html/body/div[4]/div[2]/ul/li/a/@href",
+        "date_format": "",
+    },
+    "北京市医保局_药品公告": {
+        "page1_url": "http://ybj.beijing.gov.cn/zczxs/2020_ycgga/index.html",
+        "page_url": "http://ybj.beijing.gov.cn/zczxs/2020_ycgga/index_%s.html",
+        "page_num_adjust": -1,
+        "xp_pageend": "",
+        "xp_pub_date": "//html/body/div[4]/div/div[2]/ul/li/text()",
+        "xp_title": "/html/body/div[4]/div/div[2]/ul/li/a/text()",
+        "xp_url": "/html/body/div[4]/div/div[2]/ul/li/a/@href",
+        "date_format": "",
+    },
+    "福建省医保局": {
+        "page1_url": "https://ybj.fujian.gov.cn/ztzl/yxcg/ggtz/",
+        "page_url": "",
+        "page_num_adjust": None,
+        "xp_pageend": '//a[contains(., "下一页")]',
+        "xp_pub_date": "",
+        "xp_title": "",
+        "xp_url": "",
+        "date_format": "",
+    },
+}
 
 
-def extract_announce(page_url: str, html: str, source: str, page_num: str) -> list:
-    slc = etree.HTML(html)
+def extract_announce(
+    page_url: str, html: str, source: str, xp: dict, page_num: str
+) -> list:
+    slc = etree.HTML(html)  # 解析树
+
+    if source == "福建省医保局":  # 福建医保局网页的特殊情况
+        if page_num == 1:
+            xp_pub_date = "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[*]/div[*]/ul/li/span/text()"
+            xp_title = "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[*]/div[*]/ul/li/a/@title"
+            xp_url = (
+                "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[*]/div[*]/ul/li/a/@href"
+            )
+        else:
+            xp_pub_date = "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[2]/div[*]/ul/li/span/text()"
+            xp_title = "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[2]/div[*]/ul/li/a/@title"
+            xp_url = (
+                "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[2]/div[*]/ul/li/a/@href"
+            )
+    else:  # 一般情况
+        xp_pub_date = xp["xp_pub_date"]
+        xp_title = xp["xp_title"]
+        xp_url = xp["xp_url"]
+
+    date_format = xp["date_format"]
+
     try:
         src_date = time.strftime("%Y-%m-%d", time.localtime())  # 爬取日期
         domain = urlparse(page_url).netloc  # 域名
-        if source == "广东省药品交易中心":
-            tree_xp = "//html/body/div[1]/div/div/div[1]/div[2]/div[1]/div/div/a"
-            tree = [e for e in slc.xpath(tree_xp)]  # 当页所有公告
 
-            df = pd.DataFrame()
-            for e in tree:
-                title = e[0][0].text  # 公告标题
-                pub_date = time.strftime(
-                    "%Y-%m-%d",
-                    time.strptime(xp(e, "//div[@class='date']"), "%Y年%m月%d日"),
-                )  # 公告日期
-                url = e.attrib["href"]  # 公告链接
-                df = df.append(
-                    {
-                        "公告源": source,
-                        "爬取日期": src_date,
-                        "公告日期": pub_date,
-                        "公告标题": title,
-                        "域名": domain,
-                        "爬取地址": page_url,
-                        "公告链接": url,
-                    },
-                    ignore_index=True,
-                )
-        elif source == "广东省医保局":
-            tree_xp = "/html/body/div[4]/div[2]/ul/li"
-            tree = [e for e in slc.xpath(tree_xp)]  # 当页所有公告
-            df = pd.DataFrame()
-            for e in tree:
-                title = e[0].attrib["title"]  # 公告标题
-                pub_date = time.strftime(
-                    "%Y-%m-%d", time.strptime(e[1].text, "%Y-%m-%d")
-                )  # 公告日期
-                url = e[0].attrib["href"]  # 公告链接
-                df = df.append(
-                    {
-                        "公告源": source,
-                        "爬取日期": src_date,
-                        "公告日期": pub_date,
-                        "公告标题": title,
-                        "域名": domain,
-                        "爬取地址": page_url,
-                        "公告链接": url,
-                    },
-                    ignore_index=True,
-                )
-        elif source == "福建省医保局":
-            if page_num == 1:
-                tree_xp = (
-                    "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[*]/div[*]/ul/li"
-                )
-            else:
-                tree_xp = (
-                    "/html/body/div[1]/div[3]/div/div[2]/div[2]/div[2]/div[*]/ul/li"
-                )
-            tree = [e for e in slc.xpath(tree_xp)]  # 当页所有公告
-            df = pd.DataFrame()
-            for e in tree:
-                title = e[1].attrib["title"]  # 公告标题
-                pub_date = time.strftime(
-                    "%Y-%m-%d", time.strptime(e[0].text, "%Y-%m-%d")
-                )  # 公告日期
-                url = e[1].attrib["href"]  # 公告链接
-                df = df.append(
-                    {
-                        "公告源": source,
-                        "爬取日期": src_date,
-                        "公告日期": pub_date,
-                        "公告标题": title,
-                        "域名": domain,
-                        "爬取地址": page_url,
-                        "公告链接": url,
-                    },
-                    ignore_index=True,
-                )
+        list_pub_date = strip_list(slc.xpath(xp_pub_date), date_format=date_format,)
+        list_title = strip_list(slc.xpath(xp_title))
+        list_url = strip_list(slc.xpath(xp_url))
+
+        df = pd.DataFrame(
+            list(zip(list_pub_date, list_title, list_url)),
+            columns=["公告日期", "公告标题", "公告链接"],
+        )
+
+        df["公告源"] = source
+        df["爬取日期"] = src_date
+        df["域名"] = domain
+        df["爬取地址"] = page_url
 
         return df
     except Exception as e:
@@ -133,18 +136,28 @@ def extract_announce(page_url: str, html: str, source: str, page_num: str) -> li
         pass
 
 
-def xp(slc, exp: str) -> str:
-    """Extract by XPATH"""
-    text = slc.xpath(exp)[0].text
+def strip_list(list_text: list, date_format: str = "") -> list:
+    list_new = []
+    for text in list_text:
+        text = strip(text)
+        if date_format != "":
+            text = time.strftime(
+                "%Y-%m-%d", time.strptime(text, date_format),
+            )  # 根据格式日期文本标准化
+        list_new.append(text)
+    return list_new
+
+
+def strip(text: str) -> str:
     if text and (text != ""):
         text = text.replace("\n", "")
-        text = re.sub(r"s+", " ", text)
+        text = re.sub(r"\s+", " ", text)
         return text.strip()
     else:
         return ""
 
 
-async def get_announce_df(source: str) -> list:
+async def get_announce_df(source: str, param: dict) -> list:
     global BROWSER
     BROWSER = await launch(
         args=PARMS["args"], handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False,
@@ -155,67 +168,24 @@ async def get_announce_df(source: str) -> list:
     page_num = 1
     df_combined = pd.DataFrame()
 
-    if source == "广东省药品交易中心":
-        while True:
-            try:
-                page_url = "https://www.gdmede.com.cn/announcement/?page=%s" % page_num
-                await page.goto(page_url)
-                xp_for_pageend = "/html/body/div[1]/div/div/div[1]/div[2]/div[1]/div/div[3]/div/ul/li[1]"
-                await page.waitForXPath(
-                    xp_for_pageend, timeout=5000,
-                )  # 等待底部元素加载
-                result = await page.content()
-                df = extract_announce(page_url, result, source, page_num)
-                if df.empty:
-                    break
-                else:
-                    df_combined = pd.concat([df_combined, df], axis=0)
-                    print("%s-page%s-%s条公告" % (source, page_num, df_combined.shape[0]))
-                    page_num += 1  # 翻页
-            except Exception as e:
-                cprint(f"翻页循环出现错误: {e}", "white", "on_red")
-                break
-    elif source == "广东省医保局":
-        while True:
-            try:
-                if page_num == 1:
-                    page_url = "http://hsa.gd.gov.cn/zwdt/snkb/index.html"
-                else:
-                    page_url = "http://hsa.gd.gov.cn/zwdt/snkb/index_%s.html" % page_num
-                await page.goto(page_url)
-                xp_for_pageend = "/html/body/div[4]/div[2]/div[2]/a[3]"
-                await page.waitForXPath(
-                    xp_for_pageend, timeout=5000,
-                )  # 等待底部元素加载
-                result = await page.content()
-                df = extract_announce(page_url, result, source, page_num)
-                if df.empty:
-                    break
-                else:
-                    df_combined = pd.concat([df_combined, df], axis=0)
-                    print("%s-page%s-%s条公告" % (source, page_num, df_combined.shape[0]))
-                    page_num += 1  # 翻页
-            except Exception as e:
-                cprint(f"翻页循环出现错误: {e}", "white", "on_red")
-                break
-    elif source == "福建省医保局":
-        page_url = "https://ybj.fujian.gov.cn/ztzl/yxcg/ggtz/"
+    if param["page_url"] == "":  # 翻页没哟体现在url上的解决方法，模拟点击下一页按钮后抓取内容
+        page_url = param["page1_url"]
         await page.goto(page_url)
-        xp_for_pageend = '//a[contains(., "下一页")]'
+        xp_for_pageend = param["xp_pageend"]
         await page.waitForXPath(
             xp_for_pageend, timeout=5000,
-        )  # 等待底部元素加载
+        )  # 等待底部元素加载，本场景下底部元素设置为翻页按钮，之后同时用于点击翻页
         result = await page.content()
-        df_combined = extract_announce(page_url, result, source, page_num)
+        df_combined = extract_announce(page_url, result, source, param, page_num)
         print("%s-page%s-%s条公告" % (source, 1, df_combined.shape[0]))
         while True:
             try:
-                btn_nextpage = await page.xpath('//a[contains(., "下一页")]')
+                btn_nextpage = await page.xpath(param["xp_pageend"])  # 翻页按钮
                 await btn_nextpage[0].click()
                 page_num += 1  # 翻页
                 await asyncio.sleep(1)
                 result = await page.content()
-                df = extract_announce(page_url, result, source, page_num)
+                df = extract_announce(page_url, result, source, param, page_num)
                 if df.empty:
                     break
                 else:
@@ -225,24 +195,60 @@ async def get_announce_df(source: str) -> list:
             except Exception as e:
                 cprint(f"翻页循环出现错误: {e}", "white", "on_red")
                 break
-
+    else:  # 翻页体现在url上的解决方法，根据页码循环即可
+        while True:
+            try:
+                if page_num == 1:
+                    page_url = param["page1_url"]
+                else:
+                    page_url = param["page_url"] % (page_num + param["page_num_adjust"])
+                await page.goto(page_url)  # 跳转页面
+                if param["xp_pageend"] == "":
+                    await asyncio.sleep(1)
+                else:
+                    await page.waitForXPath(
+                        param["xp_pageend"], timeout=5000,
+                    )  # 等待底部元素加载
+                result = await page.content()  # 爬取内容
+                df = extract_announce(
+                    page_url, result, source, param, page_num
+                )  # 调用解析函数
+                if df.empty:
+                    break
+                else:
+                    df_combined = pd.concat([df_combined, df], axis=0)
+                    print("%s-page%s-%s条公告" % (source, page_num, df_combined.shape[0]))
+                    page_num += 1  # 翻页
+            except Exception as e:
+                cprint(f"翻页循环出现错误: {e}", "white", "on_red")
+                break
     await BROWSER.close()
 
     return df_combined
 
 
 def import_django(df):
+    df = df.reindex(columns=["公告日期", "公告标题", "公告源", "公告链接", "域名", "爬取地址", "爬取日期"])
+
     l = []
     for item in df.values:
-        if item[4] in item[3]:
-            url = item[3]
+        prefix = item[5].split("://")[0]
+        domain = item[4]
+        target_url = item[3]
+        if item[5][-1] == "/":
+            page_url = item[5]
         else:
-            if item[3][:4] == "http":
-                url = item[3]
-            elif item[3][:2] == "./":
-                url = item[5] + item[3][2:]
+            page_url = item[5].rsplit("/", 1)[0] + "/"
+
+        if domain in target_url:
+            url = target_url
+        else:
+            if target_url[:4] == "http":
+                url = target_url
+            elif target_url[:2] == "./":
+                url = page_url + target_url[2:]
             else:
-                url = item[5].split("://")[0] + "://" + item[4] + item[3]
+                url = prefix + "://" + domain + target_url
         l.append(
             Announce(
                 pub_date=item[0],
@@ -263,8 +269,10 @@ if __name__ == "__main__":
         cprint("Start running...", "white", "on_green")
 
         df_combined = pd.DataFrame()
-        for source in SOURCE_LIST:
-            df = asyncio.get_event_loop().run_until_complete(get_announce_df(source))
+        for key, value in D_SOURCE.items():
+            df = asyncio.get_event_loop().run_until_complete(
+                get_announce_df(source=key, param=value)
+            )
             df_combined = pd.concat([df_combined, df])
         print(df_combined)
         import_django(df_combined)
@@ -277,6 +285,3 @@ if __name__ == "__main__":
         cprint(f"Total time: {str(time_end-time_start)[:5]}s.", "white", "on_green")
     except KeyboardInterrupt as k:
         cprint("\nKey pressed to interrupt...", "white", "on_red")
-
-    # df = pd.read_excel("./test.xlsx")
-    # import_django(df)

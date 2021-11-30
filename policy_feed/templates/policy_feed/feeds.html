@@ -1,0 +1,103 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "policy_feed/index.html" %}
+{% load humanize %}
+{% load tags %}
+{% load taggit_templatetags2_tags %}
+
+{% block title %}政策公告聚合{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block display %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    {% if announces %}
+    <div class="ui dividing header">
+        <a href="{% url 'policy_feed:feeds' %}">所有政策公告</a>
+        {% if kw %}
+        <a class="ui basic blue label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request kw=kw %}">
+            搜索关键字: {{ kw }}
+            <i class="delete icon"></i>
+        </a>
+        {% endif %}
+        {% if sources_selected  %}
+        {% for source in sources_selected %}
+        <a class="ui basic red label" href="{% url 'policy_feed:feeds' %}?{% add_query_params request source=source %}">
+            标签: {{ source }}
+            <i class="delete icon"></i>
+        </a>
+        {% endfor %}
+        {% endif %}
+        <span> - 当前显示第
+            {{ announces.start_index }}-{{ announces.end_index }} of {{ record_n }}条记录
+        </span>
+    </div>
+
+    <div class="ui divided items">
+        {% for announce in announces %}
+        <div class="item" id="medical_posts">
+            <div class="content">
+                <h3 class="ui header">
+                    <div class="content">
+                        <a href="{{ announce.url }}" target="_blank">{{ announce.title|highlight:highlights }}</a>
+                    </div>
+                </h3>
+                <div class="extra">
+                    <a class="ui horizontal label" href="{% url 'policy_feed:feeds' %}?source={{ announce.source }}">
+                    <span>{{ announce.source|highlight:highlights }}</span>
+                    </a>
+                    <span class="ui right floated text">{{ announce.pub_date|date:"Y-m-d" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="ui divider"></div>
+    <div class="ui pagination menu">
+        <a class="item" href="{% url 'policy_feed:feeds' %}?{% add_query_params request page=1 %}">&lt;&lt;</a>
+
+        {% if announces.number|add:'-4' > 1 %}
+        <a class="item"
+            href="{% url 'policy_feed:feeds' %}?{% add_query_params request page=announces.number|add:'-5' %}">&hellip;</a>
+        {% endif %}
+
+
+        {% for n in num_pages|times %}
+        {% if n == announces.number %}
+        <span class="active item"
+            href="{% url 'policy_feed:feeds' %}?{% add_query_params request page=n %}">{{ n }}</span>
+        {% elif n > announces.number|add:'-5' and n < announces.number|add:'5' %}
+        <a class="item" href="{% url 'policy_feed:feeds' %}?{% add_query_params request page=n %}">{{ n }}</a>
+        {% endif %}
+        {% endfor %}
+
+
+        {% if num_pages > announces.number|add:'4' %}
+        <a class="item"
+            href="{% url 'policy_feed:feeds' %}?{% add_query_params request page=announces.number|add:'5' %}">&hellip;</a>
+        {% endif %}
+
+        <a class="item" href="{% url 'policy_feed:feeds' %}?{% add_query_params request page=num_pages %}">&gt;&gt;</a>
+    </div>
+    {% else %}
+    <div class="ui error message">
+        没有搜索到符合条件的记录, 返回<a href="{% url 'policy_feed:feeds' %}">所有政策公告</a>
+    </div>
+    {% endif %}
+</div>
+<div class="ui hidden divider"></div>
+
+<style>
+    .highlight_kw {
+        background-color: #FFEFC5;
+    }
+
+    .highlight_tag {
+        background-color: #BEF3D8;
+    }
+</style>
+{% endblock display %}

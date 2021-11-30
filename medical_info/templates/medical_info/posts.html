@@ -193,7 +193,7 @@
     </div>
     {% else %}
     <div class="ui error message">
-        没有搜索到符合条件的记录
+        没有搜索到符合条件的记录，返回<a href="{% url 'medical_info:posts' %}">所有医学信息</a>
     </div>
     {% endif %}
 </div>
