@@ -64,20 +64,19 @@ class PubAgent(models.Model):
 
 class Program(models.Model):
     name = models.CharField(verbose_name="名称", max_length=50)
-    year = models.IntegerField(
-        verbose_name="年份", validators=[MinValueValidator(2020), max_value_current_year]
-    )
+    create_date = models.DateField(verbose_name="创建日期")
     vol = models.CharField(verbose_name="期数", max_length=50, blank=True, null=True)
 
     class Meta:
         verbose_name = "发布栏目"
         verbose_name_plural = "发布栏目"
+        ordering = ["-create_date"]
 
     def __str__(self):
         if self.vol is None:
-            return "%s %s" % (str(self.year), self.name)
+            return "%s %s" % (str(self.create_date), self.name)
         else:
-            return "%s %s (%s)" % (str(self.year), self.name, self.vol)
+            return "%s %s (%s)" % (str(self.create_date), self.name, self.vol)
 
 
 class Post(models.Model):
