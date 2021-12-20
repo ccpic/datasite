@@ -141,20 +141,25 @@
                         阅读PDF原文
                         <i class="right chevron icon"></i>
                     </a>
-                    {% if post.program %}
+                    
                     <div class="ui pointing basic label">
                         <i class="green check icon"></i>
+                        {{ post.pub_user.username }}
+                        {% if post.program %}
                         发布于
-                        <a class="detail" href="{% url 'medical_info:posts' %}?program={{ post.program.pk }}">{{ post.program }}</a>
+                        <a class="detail" href="{% url 'medical_info:posts' %}?program={{ post.program.pk }}">{{ post.program.name }}{{ post.program.vol }}</a>
+                        {% else %}
+                        发布
+                        {% endif %}
                     </div>
-                    {% endif %}
+                    
                     <div class="ui basic label">
                         <i class="eye icon"></i> {{ post.views }}
                     </div>
-                    {% if request.user.is_staff %}
-                        <a class="ui red basic label" href="{% url 'medical_info:post_mail_format' post.pk %}">
+                    {% if perms.medical_info.change_post %}
+                        {% comment %} <a class="ui red basic label" href="{% url 'medical_info:post_mail_format' post.pk %}">
                             邮件格式
-                        </a>
+                        </a> {% endcomment %}
                         <a class="ui red basic label" href="{% url 'admin:medical_info_post_change' post.pk %}">
                             编辑
                         </a>

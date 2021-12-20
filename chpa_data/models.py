@@ -75,28 +75,28 @@ class TC_IV(models.Model):
 
 
 class Molecule(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=250)
 
     def __str__(self):
         return self.name
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=250)
 
     def __str__(self):
         return self.name
 
 
 class Package(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=250)
 
     def __str__(self):
         return self.name
 
 
 class Corporation(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=250)
 
     def __str__(self):
         return self.name

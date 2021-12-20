@@ -6,6 +6,7 @@ import os
 import datetime
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 def get_filename(instance, filename):
@@ -92,7 +93,7 @@ class Post(models.Model):
     pub_identifier = models.CharField(verbose_name="识别码", max_length=100)
     nation = models.ManyToManyField(to=Nation, verbose_name="涉及国家", blank=True)
     abstract = models.TextField(verbose_name="摘要")
-    link = models.CharField(verbose_name="原平台链接", max_length=100, unique=True)
+    link = models.CharField(verbose_name="文献来源链接", max_length=100, unique=True)
     program = models.ForeignKey(
         Program,
         on_delete=models.CASCADE,
@@ -106,6 +107,9 @@ class Post(models.Model):
     url_slug = models.SlugField(editable=False)
     tags = TaggableManager()
     views = models.IntegerField(verbose_name="阅读量", default=0)
+    pub_user = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = "医学信息"
