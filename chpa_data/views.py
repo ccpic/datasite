@@ -383,6 +383,7 @@ def get_kpi(df):
 
     # 按列求和为市场总值的Series
     market_total = df.sum(axis=1)
+    print(market_total)
     # 最后一行（最后一个DATE）就是最新的市场规模
     market_size = market_total.iloc[-1]
     # 市场按列求和，倒数第5行（倒数第5个DATE）就是同比的市场规模，可以用来求同比增长率

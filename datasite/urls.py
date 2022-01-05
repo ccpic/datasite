@@ -31,7 +31,6 @@ urlpatterns = [
     path("policy_feed/", include("policy_feed.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
-    path("taggit_autosuggest/", include("taggit_autosuggest.urls")),
 ]
 
 # 配置url 当我们访问 settings.MEDIA_URL中的路径时，static会通过document_root去寻找对应的文件
