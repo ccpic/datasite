@@ -110,7 +110,7 @@
                     <div class="ui hidden divider"></div>
                     <div class="wrapper" id="wrapper{{ forloop.counter0|add:1 }}">
                         <object width="100%" height="768" type="application/pdf" data="{{ doc.file.url }}">
-                            <p>如PDF不可见，请尝试使用其他浏览器</p>
+                            <embed src="{{ doc.file.url }}" type="application/pdf">
                         </object>
                     </div>
                 </div>

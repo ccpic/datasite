@@ -15,7 +15,7 @@ pd.set_option("display.width", 5000)
 
 engine = create_engine("mssql+pymssql://(local)/Internal_sales")
 
-df = pd.read_excel(open("三合一销售报表/三合一表11月终版.xlsx", "rb"), sheet_name="三合一表_导出版")  # 从Excel读取数
+df = pd.read_excel(open("三合一销售报表/2022/三合一表一月初版.xlsx", "rb"), sheet_name="三合一表_导出版")  # 从Excel读取数
 print("Finished data reading...")
 
 df.columns = [
@@ -58,6 +58,7 @@ df.columns = [
     "RSP_NOTE",
     # "PRODUCT_GROUP", # 2021年2月终版时OA原始数据文件删除了此字段
     "GPO",
+    "HP_TYPE",
 ]
 
 mask = df["IF_COMMUNITY"] == "Y"
@@ -129,6 +130,7 @@ df.to_sql(
         "RSP_NOTE": t.NVARCHAR(length=20),
         # "PRODUCT_GROUP": t.NVARCHAR(length=10), # 2021年2月终版时OA原始数据文件删除了此字段
         "GPO": t.NVARCHAR(length=20),
+        "HP_TYPE": t.NVARCHAR(length=20),
     },
 )
 

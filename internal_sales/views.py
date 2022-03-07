@@ -17,7 +17,7 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-date = datetime.datetime(year=2021, month=11, day=1) # 目标分析月份
+date = datetime.datetime(year=2022, month=1, day=1) # 目标分析月份
 date_ya = date.replace(year=date.year - 1)  # 同比月份
 date_year_begin = date.replace(month=1)  # 本年度开头
 date_ya_begin = date_ya.replace(month=1)  # 去年开头
@@ -29,6 +29,7 @@ D_MODEL = {
     "CITY": City,
     "COUNTY": County,
     "HOSPITAL": Hospital,
+    "HP_TYPE": HP_TYPE,
     "LEVEL": Level,
     "PRODUCT": Product,
     "BU": BU,
@@ -45,6 +46,7 @@ D_MULTI_SELECT = {
     "省份": "PROVINCE",
     "城市": "CITY",
     "区县": "COUNTY",
+    "医院类型": "HP_TYPE",
     "医院等级": "LEVEL",
     "医院": "HOSPITAL",
     "南北中国": "BU",
