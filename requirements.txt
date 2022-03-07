@@ -31,7 +31,7 @@ et-xmlfile==1.1.0
 idna==2.10
 importlib-metadata==4.8.2
 itypes==1.2.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 kiwisolver==1.2.0
 lxml==4.6.1
 Markdown==3.2.2
