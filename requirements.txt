@@ -42,7 +42,7 @@ openpyxl==3.0.7
 pandas @ file:///D:/pandas-1.0.5-cp38-cp38-win_amd64.whl
 pathspec==0.8.0
 patsy==0.5.1
-Pillow==8.2.0
+Pillow==9.0.0
 prettytable==0.7.2
 pyecharts==1.8.1
 pyee==8.2.2
