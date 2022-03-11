@@ -123,6 +123,13 @@ def query(request):
         user=request.user,  # 查询用户，直接关联系统用户
     )
 
+    # 检查查询是否有数据，如没有，返回null;如有，继续可视化
+    if pivoted.empty:
+        return HttpResponse(
+        json.dumps(None),
+        content_type="application/json charset=utf-8",
+    )  # 返回结果必须是json格式
+    
     # KPI
     kpi = get_kpi(pivoted)
 
