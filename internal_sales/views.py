@@ -9,6 +9,7 @@ import six
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
+from datasite.commons import format_table, get_distinct_list, sql_extent
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -17,7 +18,7 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-date = datetime.datetime(year=2022, month=1, day=1) # 目标分析月份
+date = datetime.datetime(year=2022, month=1, day=1)  # 目标分析月份
 date_ya = date.replace(year=date.year - 1)  # 同比月份
 date_year_begin = date.replace(month=1)  # 本年度开头
 date_ya_begin = date_ya.replace(month=1)  # 去年开头
@@ -78,7 +79,7 @@ def index(request):
     for key, value in D_MULTI_SELECT.items():
         mselect_dict[key] = {}
         mselect_dict[key]["select"] = value
-        mselect_dict[key]["options"] = get_distinct_list(value, DB_TABLE)
+        mselect_dict[key]["options"] = get_distinct_list(value, DB_TABLE, ENGINE)
 
     context = {
         "date": date,
@@ -88,14 +89,6 @@ def index(request):
     }
 
     return render(request, "internal_sales/display.html", context)
-
-
-def get_distinct_list(column, db_table):
-    sql = "Select DISTINCT " + column + " From " + db_table
-    df = pd.read_sql_query(sql, ENGINE)
-    df.dropna(inplace=True)
-    l = df.values.flatten().tolist()
-    return l
 
 
 @login_required
@@ -492,18 +485,6 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
     return kpi
 
 
-def format_table(df, id):
-    formatters = build_formatters_by_col(df=df, table_id=id)
-
-    table_formatted = df.to_html(
-        escape=False,
-        formatters=formatters,  # 逐列调整表格内数字格式
-        classes="ui selectable celled table",  # 指定表格css class为Semantic UI主题
-        table_id=id,  # 指定表格id
-    )
-    return table_formatted
-
-
 def date_mask(df, period):
     if period == "ytd":
         mask = (df.index >= date_year_begin) & (df.index <= date)
@@ -536,7 +517,7 @@ def date_mask(df, period):
 
 
 def get_df(form_dict, is_pivoted=True):
-    sql = sqlparse(form_dict)  # sql拼接
+    sql = sqlparse(context=form_dict)  # sql拼接
     print(sql)
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
@@ -619,7 +600,7 @@ def sqlparse(context):
     print(context)
     sql = "Select * from %s WHERE 1=1" % DB_TABLE  # 先处理单选部分
     print(context["customized_sql"])
-    if context["customized_sql"][0] == "":
+    if context["customized_sql"]== "":
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
             if k not in [
@@ -637,18 +618,7 @@ def sqlparse(context):
                 selected = v  # 选择项
                 sql = sql_extent(sql, field_name, selected)  # 未来可以通过进一步拼接字符串动态扩展sql语句
     else:
-        sql = context["customized_sql"][0]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
-    return sql
-
-
-def sql_extent(sql, field_name, selected, operator=" AND "):
-    if selected is not None:
-        statement = ""
-        for data in selected:
-            statement = statement + "'" + data + "', "
-        statement = statement[:-2]
-        if statement != "":
-            sql = sql + operator + field_name + " in (" + statement + ")"
+        sql = context["customized_sql"]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
     return sql
 
 
@@ -684,42 +654,6 @@ def search(request, column, kw):
         json.dumps(res, ensure_ascii=False),
         content_type="application/json charset=utf-8",
     )  # 返回结果必须是json格式
-
-
-def build_formatters_by_col(df, table_id):
-    format_abs = lambda x: "{:,.0f}".format(x)
-    format_share = lambda x: "{:.1%}".format(x)
-    format_gr = lambda x: "{:+.1%}".format(x)
-    format_currency = lambda x: "¥{:,.1f}".format(x)
-
-    d = {}
-    if table_id == "ptable_comm_ratio_monthly":
-        for column in df.columns:
-            d[column] = format_share
-    else:
-        for column in df.columns:
-            if (
-                "同比增长" in str(column)
-                or "增长率" in str(column)
-                or "CAGR" in str(column)
-                or "同比变化" in str(column)
-            ):
-                d[column] = format_gr
-            elif (
-                "份额" in str(column)
-                or "贡献" in str(column)
-                or "达成" in str(column)
-                or "占比" in str(column)
-            ):
-                d[column] = format_share
-            elif "价格" in str(column) or "单价" in str(column):
-                d[column] = format_currency
-            elif "趋势" in str(column):
-                d[column] = None
-            else:
-                d[column] = format_abs
-
-    return d
 
 
 def prepare_chart(

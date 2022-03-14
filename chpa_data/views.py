@@ -1,3 +1,4 @@
+import imp
 from os import stat
 from django.shortcuts import render, HttpResponseRedirect
 from sqlalchemy import create_engine
@@ -10,6 +11,8 @@ from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 import datetime
 from .models import *
+from datasite.commons import sql_extent
+
 
 try:
     import six  # for modern Django
@@ -299,19 +302,6 @@ def sqlparse(context):
         sql = context["customized_sql"]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
     return sql
 
-
-def sql_extent(sql, field_name, selected, operator=" AND "):
-    if selected is not None:
-        statement = ""
-        if isinstance(selected,list):
-            for data in selected:
-                statement = statement + "'" + data + "', "
-            statement = statement[:-2]
-        else:
-            statement = "'" + selected + "'" 
-        if statement != "":
-            sql = sql + operator + field_name + " in (" + statement + ")"
-    return sql
 
 
 def get_df(form_dict, is_pivoted=True):

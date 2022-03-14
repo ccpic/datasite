@@ -9,6 +9,8 @@ import six
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
+from datasite.commons import format_table, get_distinct_list, sql_extent
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -19,18 +21,17 @@ except ImportError:
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "potential"
 SALES_VOL = "MAT202107"
+PRODUCTS_HAVE_TARGET = ["信立坦", "欣复泰"]
 
 # 该字典key为前端准备显示的所有多选字段名, value为数据库对应的字段名
 D_MULTI_SELECT = {
     "医院类型": "HP_TYPE",
     "省份": "PROVINCE",
     "城市": "CITY",
-    "潜力分位": "DECILE",
+    "区县": "COUNTY",
+    "潜力分位（等级、社区各自内部）": "DECILE",
+    "潜力分位（合并计算）": "DECILE_TOTAL",
     "医院": "HOSPITAL",
-    "南北中国": "BU",
-    "区域": "RD",
-    "大区经理": "RM",
-    "地区经理": "DSM",
 }
 
 
@@ -40,7 +41,7 @@ def index(request):
     for key, value in D_MULTI_SELECT.items():
         mselect_dict[key] = {}
         mselect_dict[key]["select"] = value
-        mselect_dict[key]["options"] = get_distinct_list(value, DB_TABLE)
+        mselect_dict[key]["options"] = get_distinct_list(value, DB_TABLE, ENGINE)
 
     context = {
         "date": SALES_VOL,
@@ -50,112 +51,101 @@ def index(request):
     return render(request, "potential/display.html", context)
 
 
-def get_distinct_list(column, db_table):
-    sql = "Select DISTINCT " + column + " From " + db_table
-    df = pd.read_sql_query(sql, ENGINE)
-    df.dropna(inplace=True)
-    l = df.values.flatten().tolist()
-    return l
-
-
 @login_required
 def query(request):
     form_dict = dict(six.iterlists(request.GET))
-    # df = get_df(form_dict)
+    df = get_df(form_dict)
+    df = df.head(500)
 
-    sql = sqlparse(form_dict)  # sql拼接
-    print(sql)
-    df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+    context = {"ptable": format_table(df=df, id="ptable")}
 
-    df["HOSPITAL"] = df["HOSPITAL"].str[11:]  # 因医院全名太长，去除医院10位编码
+    # dimension_selected = form_dict["DIMENSION_select"][0]  # 分析维度
 
-    dimension_selected = form_dict["DIMENSION_select"][0]  # 分析维度
+    # # 潜力部分
+    # pivoted_potential = pd.pivot_table(
+    #     data=df,
+    #     values="POTENTIAL_DOT",
+    #     index=dimension_selected,
+    #     columns=None,
+    #     aggfunc=[len, sum],
+    #     fill_value=0,
+    # )
 
-    # 潜力部分
-    pivoted_potential = pd.pivot_table(
-        data=df,
-        values="POTENTIAL_DOT",
-        index=dimension_selected,
-        columns=None,
-        aggfunc=[len, sum],
-        fill_value=0,
-    )
+    # pivoted_potential = pd.DataFrame(
+    #     pivoted_potential.to_records()
+    # )  # pivot table对象转为默认df
+    # pivoted_potential.set_index(dimension_selected, inplace=True)
+    # # pivoted_potential.reset_index(axis=1, inplace=True)
+    # pivoted_potential.columns = ["终端数量", "潜力(DOT)"]
+    # pivoted_potential["潜力贡献"] = (
+    #     pivoted_potential["潜力(DOT)"] / pivoted_potential["潜力(DOT)"].sum()
+    # )
 
-    pivoted_potential = pd.DataFrame(
-        pivoted_potential.to_records()
-    )  # pivot table对象转为默认df
-    pivoted_potential.set_index(dimension_selected, inplace=True)
-    # pivoted_potential.reset_index(axis=1, inplace=True)
-    pivoted_potential.columns = ["终端数量", "潜力(DOT)"]
-    pivoted_potential["潜力贡献"] = (
-        pivoted_potential["潜力(DOT)"] / pivoted_potential["潜力(DOT)"].sum()
-    )
+    # # 覆盖部分
+    # pivoted_access = pd.pivot_table(
+    #     data=df,
+    #     values="POTENTIAL_DOT",
+    #     index=dimension_selected,
+    #     columns="SALES_COND",
+    #     aggfunc=[len, sum],
+    #     fill_value=0,
+    # )
+    # pivoted_access = pd.DataFrame(pivoted_access.to_records())  # pivot table对象转为默认df
+    # pivoted_access.set_index(dimension_selected, inplace=True)
+    # # pivoted_access.reset_index(axis=1, inplace=True)
+    # pivoted_access.columns = [
+    #     "无销量目标医院终端数量",
+    #     "有销量目标医院终端数量",
+    #     "非目标医院终端数量",
+    #     "无销量目标医院潜力(DOT)",
+    #     "有销量目标医院潜力(DOT)",
+    #     "非目标医院潜力(DOT)",
+    # ]
+    # pivoted_access["信立坦目标覆盖终端数量"] = (
+    #     pivoted_access["无销量目标医院终端数量"] + pivoted_access["有销量目标医院终端数量"]
+    # )
+    # pivoted_access["信立坦目标覆盖潜力(DOT)"] = (
+    #     pivoted_access["有销量目标医院潜力(DOT)"] + pivoted_access["无销量目标医院潜力(DOT)"]
+    # )
+    # pivoted_access["信立坦目标覆盖潜力(DOT %)"] = pivoted_access[
+    #     "信立坦目标覆盖潜力(DOT)"
+    # ] / pivoted_access.sum(axis=1)
+    # pivoted_access["信立坦销售覆盖终端数量"] = pivoted_access["有销量目标医院终端数量"]
+    # pivoted_access["信立坦销售覆盖潜力(DOT %)"] = pivoted_access[
+    #     "有销量目标医院潜力(DOT)"
+    # ] / pivoted_access.sum(axis=1)
 
-    # 覆盖部分
-    pivoted_access = pd.pivot_table(
-        data=df,
-        values="POTENTIAL_DOT",
-        index=dimension_selected,
-        columns="SALES_COND",
-        aggfunc=[len, sum],
-        fill_value=0,
-    )
-    pivoted_access = pd.DataFrame(pivoted_access.to_records())  # pivot table对象转为默认df
-    pivoted_access.set_index(dimension_selected, inplace=True)
-    # pivoted_access.reset_index(axis=1, inplace=True)
-    pivoted_access.columns = [
-        "无销量目标医院终端数量",
-        "有销量目标医院终端数量",
-        "非目标医院终端数量",
-        "无销量目标医院潜力(DOT)",
-        "有销量目标医院潜力(DOT)",
-        "非目标医院潜力(DOT)",
-    ]
-    pivoted_access["信立坦目标覆盖终端数量"] = (
-        pivoted_access["无销量目标医院终端数量"] + pivoted_access["有销量目标医院终端数量"]
-    )
-    pivoted_access["信立坦目标覆盖潜力(DOT)"] = (
-        pivoted_access["有销量目标医院潜力(DOT)"] + pivoted_access["无销量目标医院潜力(DOT)"]
-    )
-    pivoted_access["信立坦目标覆盖潜力(DOT %)"] = pivoted_access[
-        "信立坦目标覆盖潜力(DOT)"
-    ] / pivoted_access.sum(axis=1)
-    pivoted_access["信立坦销售覆盖终端数量"] = pivoted_access["有销量目标医院终端数量"]
-    pivoted_access["信立坦销售覆盖潜力(DOT %)"] = pivoted_access[
-        "有销量目标医院潜力(DOT)"
-    ] / pivoted_access.sum(axis=1)
+    # # 内部销售部分
+    # pivoted_sales = pd.pivot_table(
+    #     data=df,
+    #     values="SALES_MAT",
+    #     index=dimension_selected,
+    #     columns=None,
+    #     aggfunc=sum,
+    #     fill_value=0,
+    # )
+    # pivoted_sales = pd.DataFrame(
+    #     pivoted_sales.to_records()
+    # )  # pivot table对象转为默认df
+    # pivoted_sales.set_index(dimension_selected, inplace=True)
+    # pivoted_sales.columns = ["信立坦MAT销量(DOT)"]
+    # pivoted_sales["信立坦销售贡献"] = (
+    #     pivoted_sales["信立坦MAT销量(DOT)"] / pivoted_sales["信立坦MAT销量(DOT)"].sum()
+    # )
 
-    # 内部销售部分
-    pivoted_sales = pd.pivot_table(
-        data=df,
-        values="SALES_MAT",
-        index=dimension_selected,
-        columns=None,
-        aggfunc=sum,
-        fill_value=0,
-    )
-    pivoted_sales = pd.DataFrame(
-        pivoted_sales.to_records()
-    )  # pivot table对象转为默认df
-    pivoted_sales.set_index(dimension_selected, inplace=True)
-    pivoted_sales.columns = ["信立坦MAT销量(DOT)"]
-    pivoted_sales["信立坦销售贡献"] = (
-        pivoted_sales["信立坦MAT销量(DOT)"] / pivoted_sales["信立坦MAT销量(DOT)"].sum()
-    )
-
-    kpi = {
-        "潜力汇总(DOT)": int(pivoted_potential["潜力(DOT)"].sum()),
-        "有潜力值的终端数量": int(pivoted_potential["终端数量"].sum()),
-        "信立坦目标终端覆盖潜力(DOT %)": pivoted_access["信立坦目标覆盖潜力(DOT)"].sum()
-        / pivoted_potential["潜力(DOT)"].sum(),
-        "信立坦目标终端数量": int(pivoted_access["信立坦目标覆盖终端数量"].sum()),
-        "信立坦有量终端覆盖潜力(DOT %)": pivoted_access["有销量目标医院潜力(DOT)"].sum()
-        / pivoted_potential["潜力(DOT)"].sum(),
-        "信立坦有量终端数量": int(pivoted_access["信立坦销售覆盖终端数量"].sum()),
-        "信立坦所有终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_potential["潜力(DOT)"].sum(),
-        "信立坦目标终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_access["信立坦目标覆盖潜力(DOT)"].sum(),
-        "信立坦有量终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_access["有销量目标医院潜力(DOT)"].sum(),
-    }
+    # kpi = {
+    #     "潜力汇总(DOT)": int(pivoted_potential["潜力(DOT)"].sum()),
+    #     "有潜力值的终端数量": int(pivoted_potential["终端数量"].sum()),
+    #     "信立坦目标终端覆盖潜力(DOT %)": pivoted_access["信立坦目标覆盖潜力(DOT)"].sum()
+    #     / pivoted_potential["潜力(DOT)"].sum(),
+    #     "信立坦目标终端数量": int(pivoted_access["信立坦目标覆盖终端数量"].sum()),
+    #     "信立坦有量终端覆盖潜力(DOT %)": pivoted_access["有销量目标医院潜力(DOT)"].sum()
+    #     / pivoted_potential["潜力(DOT)"].sum(),
+    #     "信立坦有量终端数量": int(pivoted_access["信立坦销售覆盖终端数量"].sum()),
+    #     "信立坦所有终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_potential["潜力(DOT)"].sum(),
+    #     "信立坦目标终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_access["信立坦目标覆盖潜力(DOT)"].sum(),
+    #     "信立坦有量终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_access["有销量目标医院潜力(DOT)"].sum(),
+    # }
 
     # # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     # show_limit_results = form_dict["toggle_limit_show"][0]
@@ -235,9 +225,9 @@ def query(request):
     # )
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
-    context = {}
+    # context = {}
 
-    context = dict(context, **kpi)
+    # context = dict(context, **kpi)
     # context = dict(context, **ptable_monthly)
     # context = dict(context, **ptable_comm_monthly)
 
@@ -247,38 +237,158 @@ def query(request):
     )  # 返回结果必须是json格式
 
 
+@login_required()
+def table_hp(request):
+    print(request.POST)
+    form_dict = json.loads(request.POST.get("formdata")) # filter栏表单数据
+    df = get_df(form_dict)
+    
+    # 查询常数设置
+    ORDER_DICT = {
+        0: "bu",
+        # 1: "rd",
+        1: "rm",
+        2: "dsm",
+        3: "rsp",
+        4: "hospital",
+        5: "hp_level",
+        6: "name",
+        7: "dept",
+        8: "title",
+        9: "consulting_times",
+        10: "patients_half_day",
+        11: "target_prop",
+        12: "note",
+        13: "monthly_target_patients",
+        14: "potential_level",
+    }
+
+    dataTable = {}
+    aodata = json.loads(request.POST.get("aodata"))
+
+    for item in aodata:
+        if item["name"] == "sEcho":
+            sEcho = int(item["value"])  # 客户端发送的标识
+        if item["name"] == "iDisplayStart":
+            start = int(item["value"])  # 起始索引
+        if item["name"] == "iDisplayLength":
+            length = int(item["value"])  # 每页显示的行数
+        if item["name"] == "iSortCol_0":
+            sort_column = int(item["value"])  # 按第几列排序
+        if item["name"] == "sSortDir_0":
+            sort_order = item["value"].lower()  # 正序还是反序
+        if item["name"] == "sSearch":
+            search_key = item["value"]  # 搜索关键字
+
+    # # 根据前端返回筛选参数筛选
+    # context = get_context_from_form(request)
+
+    # # 根据用户权限，前端参数，搜索关键字返回client objects
+    # # user_auth = ast.literal_eval(request.POST.get("user_auth"))
+    # clients = get_clients(user_auth, context, search_key)
+
+    # # 排序
+    # result_length = clients.count()
+    # if sort_column < 43:
+    #     if sort_order == "asc":
+    #         clients = sorted(
+    #             clients, key=lambda a: getattr(a, ORDER_DICT[sort_column])
+    #         )
+    #     elif sort_order == "desc":
+    #         clients = sorted(
+    #             clients,
+    #             key=lambda a: getattr(a, ORDER_DICT[sort_column]),
+    #             reverse=True,
+    #         )
+    # elif sort_column == 14:
+    #     if sort_order == "asc":
+    #         clients = sorted(clients, key=lambda a: a.monthly_patients)
+    #     elif sort_order == "desc":
+    #         clients = sorted(
+    #             clients, key=lambda a: a.monthly_patients, reverse=True
+    #         )
+    # elif sort_column == 15:
+    #     if sort_order == "asc":
+    #         clients = sorted(clients, key=lambda a: a.potential_level)
+    #     elif sort_order == "desc":
+    #         clients = sorted(clients, key=lambda a: a.potential_level, reverse=True)
+
+    # 对list进行分页
+    paginator = Paginator(df.apply(lambda df: df.values, axis=1), length)
+    # 把数据分成10个一页。
+    try:
+        hps = paginator.page(start / 10 + 1)
+    # 请求页数错误
+    except PageNotAnInteger:
+        hps = paginator.page(1)
+    except EmptyPage:
+        hps = paginator.page(paginator.num_pages)
+    data = []
+    for item in hps:
+        row = {
+            "hp_id": item.hp_id
+            # "bu": item.bu,
+            # # "rd": item.rd,
+            # "rm": item.rm,
+            # "dsm": item.dsm,
+            # "rsp": item.rsp,
+            # # "xlt_id": item.xlt_id,
+            # "hospital": item.hospital,
+            # # "province": item.province,
+            # # "dual_call": item.dual_call,
+            # "hp_level": item.hp_level,
+            # # "hp_access": item.hp_access,
+            # "name": '<a href="/clientfile/clients/%s">%s</a>'
+            # % (item.pk, item.name),
+            # "dept": item.dept,
+            # "title": item.title,
+            # "consulting_times": item.consulting_times,
+            # "patients_half_day": item.patients_half_day,
+            # "target_prop": "{:.0%}".format(item.target_prop / 100),
+            # "note": item.note,
+            # "monthly_target_patients": item.monthly_patients,
+            # "potential_level": potential_level,
+        }
+        data.append(row)
+    dataTable["iTotalRecords"] = df.shape[0]  # 数据总条数
+    dataTable["sEcho"] = sEcho + 1
+    dataTable["iTotalDisplayRecords"] = df.shape[0]  # 显示的条数
+    dataTable["aaData"] = data
+
+    return HttpResponse(json.dumps(dataTable, ensure_ascii=False))
+
+
 def get_df(form_dict, is_pivoted=True):
     sql = sqlparse(form_dict)  # sql拼接
-    print(sql)
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
-    df["HOSPITAL"] = df["HOSPITAL"].str[11:]  # 因医院全名太长，去除医院10位编码
+    # df["HOSPITAL"] = df["HOSPITAL"].str[11:]  # 因医院全名太长，去除医院10位编码
 
-    if is_pivoted is True:
-        return {
-            "销售": pivot(df=df[df.TAG != "指标"], form_dict=form_dict),
-            "社区销售": pivot(
-                df=df[(df.TAG != "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
-                form_dict=form_dict,
-            ),
-            "带指标销售": pivot(
-                df=df[(df.TAG != "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
-                form_dict=form_dict,
-            ),
-            "指标": pivot(
-                df=df[(df.TAG == "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
-                form_dict=form_dict,
-            ),
-            "社区指标": pivot(
-                df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
-                form_dict=form_dict,
-            ),
-            "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
-            "代表数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_rsp"),
-        }
+    # if is_pivoted is True:
+    #     return {
+    #         "销售": pivot(df=df[df.TAG != "指标"], form_dict=form_dict),
+    #         "社区销售": pivot(
+    #             df=df[(df.TAG != "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
+    #             form_dict=form_dict,
+    #         ),
+    #         "带指标销售": pivot(
+    #             df=df[(df.TAG != "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
+    #             form_dict=form_dict,
+    #         ),
+    #         "指标": pivot(
+    #             df=df[(df.TAG == "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
+    #             form_dict=form_dict,
+    #         ),
+    #         "社区指标": pivot(
+    #             df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
+    #             form_dict=form_dict,
+    #         ),
+    #         "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
+    #         "代表数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_rsp"),
+    #     }
 
-    else:
-        return df
+    # else:
+    return df
 
 
 def pivot(df, form_dict, type="sales"):
@@ -326,10 +436,8 @@ def pivot(df, form_dict, type="sales"):
 
 
 def sqlparse(context):
-    print(context)
     sql = "Select * from %s WHERE 1=1" % DB_TABLE  # 先处理单选部分
-    print(context["customized_sql"])
-    if context["customized_sql"][0] == "":
+    if context["customized_sql"] == "":
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
             if k not in [
@@ -347,18 +455,7 @@ def sqlparse(context):
                 selected = v  # 选择项
                 sql = sql_extent(sql, field_name, selected)  # 未来可以通过进一步拼接字符串动态扩展sql语句
     else:
-        sql = context["customized_sql"][0]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
-    return sql
-
-
-def sql_extent(sql, field_name, selected, operator=" AND "):
-    if selected is not None:
-        statement = ""
-        for data in selected:
-            statement = statement + "'" + data + "', "
-        statement = statement[:-2]
-        if statement != "":
-            sql = sql + operator + field_name + " in (" + statement + ")"
+        sql = context["customized_sql"]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
     return sql
 
 
