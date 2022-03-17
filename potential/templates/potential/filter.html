@@ -110,6 +110,7 @@
 
         // 获取交互表单数据
         var form_data = getForm();
+        
         $("#table_hp").DataTable(
             initDataTable(urlParam, columnsParam, form_data)
         )
@@ -214,9 +215,13 @@
     // table初始化方法
     function initDataTable(urlParam, columnsParam, form_data) {
         return {
+            order: [[8, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
+            pageLength: 25, // 前端分页，初始每页显示25条记录
+            destroy: true, //每次初始化前会先摧毁已经存在的表格对象
             sPaginationType: "full_numbers", //分页风格，full_number会把所有页码显示出来
             searching: true, //搜索
             ordering: true, //是否启用排序
+            autoWidth: false, // 关闭自动调整表格宽度
             bProcessing: true, //是否显示加载
             sAjaxSource: urlParam, //请求资源路径
             serverSide: true, //开启服务器处理模式
@@ -243,7 +248,7 @@
             "oLanguage": { //语言设置
                 "sLengthMenu": '<select class="form-control" style="width:150px">' +
                     '<option value="10" selected>每页显示10条</option>' +
-                    '<option value="20">每页显示20条</option>' +
+                    '<option value="25">每页显示25条</option>' +
                     '<option value="50">每页显示50条</option>' +
                     '<option value="100">每页显示100条</option>' +
                     '</select>',
@@ -265,6 +270,10 @@
                     "sLast": "末页"
                 },
             },
+            columnDefs: [
+                {"width": "5%", "targets": [6, 7]}, // 保持表格相对列宽度固定
+                {"width": "10%", "targets": [0, 5, 8]}, // 保持表格相对列宽度固定
+            ],
             "bServerSide": true, //开启服务器模式，使用服务器端处理配置datatable。
             "columns": columnsParam,
         }
@@ -272,8 +281,40 @@
 
     var urlParam = '{% url 'potential:table_hp' %}'
     var columnsParam = [{
-            title: "南北东中国",
-            data: "bu"
+            title: "医院编码",
+            data: "hp_id"
+        },
+        {
+            title: "医院名称",
+            data: "hp_name"
+        },
+        {
+            title: "省份",
+            data: "province"
+        },
+        {
+            title: "城市",
+            data: "city"
+        },
+        {
+            title: "区县",
+            data: "county"
+        },
+        {
+            title: "医院类型",
+            data: "hp_type"
+        },
+        {
+            title: "等级/社区医院内部潜力分级",
+            data: "decile"
+        },
+        {
+            title: "所有终端合并计算潜力分级",
+            data: "decile_total"
+        },
+        {
+            title: "潜力值(DOT)",
+            data: "potential_dot"
         },
     ];
 </script>

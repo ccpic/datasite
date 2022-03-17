@@ -9,7 +9,7 @@ import six
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
-from datasite.commons import format_table, get_distinct_list, sql_extent
+from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 try:
@@ -53,7 +53,7 @@ def index(request):
 
 @login_required
 def query(request):
-    form_dict = dict(six.iterlists(request.GET))
+    form_dict = qdict_to_dict(request.GET)
     df = get_df(form_dict)
     df = df.head(500)
 
@@ -148,7 +148,7 @@ def query(request):
     # }
 
     # # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
-    # show_limit_results = form_dict["toggle_limit_show"][0]
+    # show_limit_results = form_dict["toggle_limit_show"]
 
     # # 综合表现指标汇总
     # ptable = format_table(
@@ -239,28 +239,21 @@ def query(request):
 
 @login_required()
 def table_hp(request):
-    print(request.POST)
-    form_dict = json.loads(request.POST.get("formdata")) # filter栏表单数据
-    df = get_df(form_dict)
-    
+    form_dict = json.loads(request.POST.get("formdata"))  # filter栏表单数据
+    sql = sqlparse(form_dict)  # sql拼接
+    df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+
     # 查询常数设置
     ORDER_DICT = {
-        0: "bu",
-        # 1: "rd",
-        1: "rm",
-        2: "dsm",
-        3: "rsp",
-        4: "hospital",
-        5: "hp_level",
-        6: "name",
-        7: "dept",
-        8: "title",
-        9: "consulting_times",
-        10: "patients_half_day",
-        11: "target_prop",
-        12: "note",
-        13: "monthly_target_patients",
-        14: "potential_level",
+        0: "HP_ID",
+        1: "HP_NAME",
+        2: "PROVINCE",
+        3: "CITY",
+        4: "COUNTY",
+        5: "HP_TYPE",
+        6: "DECILE",
+        7: "DECILE_TOTAL",
+        8: "POTENTIAL_DOT",
     }
 
     dataTable = {}
@@ -280,38 +273,16 @@ def table_hp(request):
         if item["name"] == "sSearch":
             search_key = item["value"]  # 搜索关键字
 
-    # # 根据前端返回筛选参数筛选
-    # context = get_context_from_form(request)
+    # 根据用户权限，前端参数，搜索关键字filter df
+    mask = np.column_stack(
+        [df[col].astype(str).str.contains(search_key, na=False) for col in df]
+    )
+    df = df.loc[mask.any(axis=1)]
 
-    # # 根据用户权限，前端参数，搜索关键字返回client objects
-    # # user_auth = ast.literal_eval(request.POST.get("user_auth"))
-    # clients = get_clients(user_auth, context, search_key)
-
-    # # 排序
-    # result_length = clients.count()
-    # if sort_column < 43:
-    #     if sort_order == "asc":
-    #         clients = sorted(
-    #             clients, key=lambda a: getattr(a, ORDER_DICT[sort_column])
-    #         )
-    #     elif sort_order == "desc":
-    #         clients = sorted(
-    #             clients,
-    #             key=lambda a: getattr(a, ORDER_DICT[sort_column]),
-    #             reverse=True,
-    #         )
-    # elif sort_column == 14:
-    #     if sort_order == "asc":
-    #         clients = sorted(clients, key=lambda a: a.monthly_patients)
-    #     elif sort_order == "desc":
-    #         clients = sorted(
-    #             clients, key=lambda a: a.monthly_patients, reverse=True
-    #         )
-    # elif sort_column == 15:
-    #     if sort_order == "asc":
-    #         clients = sorted(clients, key=lambda a: a.potential_level)
-    #     elif sort_order == "desc":
-    #         clients = sorted(clients, key=lambda a: a.potential_level, reverse=True)
+    # 排序
+    df = df.sort_values(
+        by=ORDER_DICT[sort_column], ascending=True if sort_order == "asc" else False
+    )
 
     # 对list进行分页
     paginator = Paginator(df.apply(lambda df: df.values, axis=1), length)
@@ -326,28 +297,15 @@ def table_hp(request):
     data = []
     for item in hps:
         row = {
-            "hp_id": item.hp_id
-            # "bu": item.bu,
-            # # "rd": item.rd,
-            # "rm": item.rm,
-            # "dsm": item.dsm,
-            # "rsp": item.rsp,
-            # # "xlt_id": item.xlt_id,
-            # "hospital": item.hospital,
-            # # "province": item.province,
-            # # "dual_call": item.dual_call,
-            # "hp_level": item.hp_level,
-            # # "hp_access": item.hp_access,
-            # "name": '<a href="/clientfile/clients/%s">%s</a>'
-            # % (item.pk, item.name),
-            # "dept": item.dept,
-            # "title": item.title,
-            # "consulting_times": item.consulting_times,
-            # "patients_half_day": item.patients_half_day,
-            # "target_prop": "{:.0%}".format(item.target_prop / 100),
-            # "note": item.note,
-            # "monthly_target_patients": item.monthly_patients,
-            # "potential_level": potential_level,
+            "hp_id": item[0],
+            "hp_name": item[1],
+            "province": item[2],
+            "city": item[3],
+            "county": item[4],
+            "hp_type": item[8],
+            "decile": item[11],
+            "decile_total": item[12],
+            "potential_dot": "{:,.0f}".format(item[5]),
         }
         data.append(row)
     dataTable["iTotalRecords"] = df.shape[0]  # 数据总条数

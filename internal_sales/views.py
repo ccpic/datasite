@@ -5,11 +5,10 @@ import pandas as pd
 import json
 import numpy as np
 from .models import *
-import six
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
-from datasite.commons import format_table, get_distinct_list, sql_extent
+from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -18,7 +17,7 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-date = datetime.datetime(year=2022, month=1, day=1)  # 目标分析月份
+date = datetime.datetime(year=2022, month=2, day=1)  # 目标分析月份
 date_ya = date.replace(year=date.year - 1)  # 同比月份
 date_year_begin = date.replace(month=1)  # 本年度开头
 date_ya_begin = date_ya.replace(month=1)  # 去年开头
@@ -93,14 +92,14 @@ def index(request):
 
 @login_required
 def query(request):
-    form_dict = dict(six.iterlists(request.GET))
+    form_dict = qdict_to_dict(request.GET)
     df = get_df(form_dict)
 
     # KPI字典
     kpi = get_kpi(df["销售"], df["带指标销售"], df["指标"])
 
     # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
-    show_limit_results = form_dict["toggle_limit_show"][0]
+    show_limit_results = form_dict["toggle_limit_show"]
 
     # 综合表现指标汇总
     ptable = format_table(
@@ -202,7 +201,7 @@ def query(request):
 
 @login_required
 def export(request, type):
-    form_dict = dict(six.iterlists(request.GET))
+    form_dict = qdict_to_dict(request.GET)
 
     excel_file = IO()
     xlwriter = pd.ExcelWriter(excel_file, engine="xlsxwriter")
@@ -256,7 +255,9 @@ def get_ratio_monthly(
             df.fillna(0, inplace=True)
             df = df.T
             df.columns = df.columns.strftime("%Y-%m")
-            df.sort_values(by=df.columns.tolist()[-1], ascending=False, inplace=True)
+            if df.empty is False:
+                print(df.columns.tolist())
+                df.sort_values(by=df.columns.tolist()[-1], ascending=False, inplace=True)
 
             if show_limit_results == "true":
                 df = df.iloc[:200, :]
@@ -553,12 +554,9 @@ def get_df(form_dict, is_pivoted=True):
 
 
 def pivot(df, form_dict, type="sales"):
-    dimension_selected = form_dict["DIMENSION_select"][0]  # 分析维度
-    unit_selected = form_dict["UNIT_select"][0]  # 单位（盒数、标准盒数、金额）
-    if dimension_selected[0] == "[":
-        column = dimension_selected[1:][:-1]
-    else:
-        column = dimension_selected
+    column = form_dict["DIMENSION_select"]  # 分析维度
+    unit_selected = form_dict["UNIT_select"]  # 单位（盒数、标准盒数、金额）
+
 
     if type == "sales":
         pivoted = pd.pivot_table(
@@ -663,9 +661,8 @@ def prepare_chart(
     form_dict,  # 前端表单字典，用来获得一些变量作为图表的标签如单位
 ):
     SERIES_LIMIT = 10  # 折线图等系列限制
-    show_limit_results = form_dict["toggle_limit_show"][
-        0
-    ]  # 散点图等是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
+    show_limit_results = form_dict["toggle_limit_show"]
+    # 散点图等是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     # label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
     if df_sales.empty is False:
         if chart_type == "bar_total_monthly_trend":

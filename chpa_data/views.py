@@ -11,7 +11,7 @@ from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 import datetime
 from .models import *
-from datasite.commons import sql_extent
+from datasite.commons import sql_extent, qdict_to_dict
 
 
 try:
@@ -283,14 +283,14 @@ def sqlparse(context):
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
             if k not in [
-                "csrfmiddlewaretoken",
-                "DIMENSION_select",
-                "PERIOD_select",
-                "UNIT_select",
-                "lang",
-                "toggle_bubble_perf",
-                "toggle_treemap_share",
-                "customized_sql",
+                "csrfmiddlewaretoken", # CSRF
+                "DIMENSION_select", # 分析维度单选
+                "PERIOD_select", # 分析周期单选
+                "UNIT_select", # 分析单位单选
+                "lang", # 语言单选
+                "toggle_bubble_perf", # 是否启用高级绘图1
+                "toggle_treemap_share", # 是否启用高级绘图2
+                "customized_sql", # 自定义SQL语句
             ]:
                 if k[-2:] == "[]":
                     field_name = k[:-9]  # 如果键以[]结尾，删除_select[]取原字段名
@@ -607,13 +607,3 @@ def prepare_chart(
         )
 
         return chart
-
-
-def qdict_to_dict(qdict):
-    """Convert a Django QueryDict to a Python dict.
-
-    Single-value fields are put in directly, and for multi-value fields, a list
-    of all values is stored at the field's key.
-
-    """
-    return {k: v[0] if len(v) == 1 else v for k, v in qdict.lists()}
