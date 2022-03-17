@@ -256,7 +256,6 @@ def get_ratio_monthly(
             df = df.T
             df.columns = df.columns.strftime("%Y-%m")
             if df.empty is False:
-                print(df.columns.tolist())
                 df.sort_values(by=df.columns.tolist()[-1], ascending=False, inplace=True)
 
             if show_limit_results == "true":
@@ -595,9 +594,7 @@ def pivot(df, form_dict, type="sales"):
 
 
 def sqlparse(context):
-    print(context)
     sql = "Select * from %s WHERE 1=1" % DB_TABLE  # 先处理单选部分
-    print(context["customized_sql"])
     if context["customized_sql"]== "":
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
@@ -629,7 +626,6 @@ def search(request, column, kw):
         m = D_MODEL[column]
         results = m.objects.filter(name__contains=kw)
         l = results.values_list("name")
-        print(l)
         results_list = []
         for item in l:
             option_dict = {

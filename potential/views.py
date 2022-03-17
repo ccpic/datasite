@@ -9,7 +9,7 @@ import six
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
-from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict
+from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict, html_label
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 try:
@@ -250,10 +250,14 @@ def table_hp(request):
         2: "PROVINCE",
         3: "CITY",
         4: "COUNTY",
-        5: "HP_TYPE",
-        6: "DECILE",
-        7: "DECILE_TOTAL",
-        8: "POTENTIAL_DOT",
+        5: "AM",
+        6: "RSP",
+        7: "HP_TYPE",
+        8: "DECILE",
+        9: "DECILE_TOTAL",
+        10: "POTENTIAL_DOT",
+        11: "MAT_SALES",
+        12: "SHARE",
     }
 
     dataTable = {}
@@ -302,10 +306,14 @@ def table_hp(request):
             "province": item[2],
             "city": item[3],
             "county": item[4],
-            "hp_type": item[8],
-            "decile": item[11],
-            "decile_total": item[12],
+            "am": item[16],
+            "rsp": item[11],
+            "hp_type": html_label(item[8]),
+            "decile": html_label(item[21]),
+            "decile_total": html_label(item[22]),
             "potential_dot": "{:,.0f}".format(item[5]),
+            "mat_sales": "{:,.0f}".format(item[10]),
+            "share": "{:.1%}".format(item[18]),
         }
         data.append(row)
     dataTable["iTotalRecords"] = df.shape[0]  # 数据总条数

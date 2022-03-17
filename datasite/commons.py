@@ -3,6 +3,27 @@ import pandas as pd
 from typing import List, Union
 
 
+# 根据数字返回动态颜色的Semantic UI label标签
+def html_label(text: Union[str,int, float]) -> str:
+    COLOR_DICT = {
+        "10": "red",
+        "9": "orange",
+        "8": "yellow",
+        "7": "olive",
+        "6": "green",
+        "5": "teal",
+        "4": "blue",
+        "3": "violet",
+        "2": "purple",
+        "1": "brown",
+        "等级医院": "blue",
+        "社区医院":"green",
+    }
+    color = COLOR_DICT.get(str(text), "black")
+    html_str = '<div class="ui %s basic label">%s</div>' % (color, text)
+    return html_str
+
+
 def qdict_to_dict(qdict: QueryDict) -> dict:
     """Convert a Django QueryDict to a Python dict.
 
