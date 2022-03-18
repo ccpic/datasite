@@ -276,7 +276,8 @@ def import_data(
     df["RSP"] = df["RSP"].apply(
         lambda x: ",".join(x.tolist()) if type(x) != str and type(x) != float else x
     )  # RSP字段转为字符串存储
-
+    df.loc[:, ["POTENTIAL_DOT", "MAT_SALES", "SHARE"]].fillna(0)  # 数值字段的空值都替换为0
+    
     df.to_sql(
         table,
         con=engine,

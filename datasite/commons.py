@@ -1,10 +1,53 @@
 from django.http import QueryDict
 import pandas as pd
 from typing import List, Union
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+import numpy as np
+
+
+# 根据前端Datatables返回的aodata对原始df处理并分页
+def get_dt_page(df: pd.DataFrame, aodata: dict, dict_order: dict) -> Paginator.page:
+    for item in aodata:
+        if item["name"] == "sEcho":
+            sEcho = int(item["value"])  # 客户端发送的标识
+        if item["name"] == "iDisplayStart":
+            start = int(item["value"])  # 起始索引
+        if item["name"] == "iDisplayLength":
+            length = int(item["value"])  # 每页显示的行数
+        if item["name"] == "iSortCol_0":
+            sort_column = int(item["value"])  # 按第几列排序
+        if item["name"] == "sSortDir_0":
+            sort_order = item["value"].lower()  # 正序还是反序
+        if item["name"] == "sSearch":
+            search_key = item["value"]  # 搜索关键字
+
+    # 根据用户权限，前端参数，搜索关键字filter df
+    mask = np.column_stack(
+        [df[col].astype(str).str.contains(search_key, na=False) for col in df]
+    )
+    df = df.loc[mask.any(axis=1)]
+
+    # 排序
+    df = df.sort_values(
+        by=dict_order[sort_column], ascending=True if sort_order == "asc" else False
+    )
+
+    # 对list进行分页
+    paginator = Paginator(df.to_dict("records"), length)
+    # 把数据分成10个一页。
+    try:
+        page = paginator.page(start / length + 1)
+    # 请求页数错误
+    except PageNotAnInteger:
+        page = paginator.page(1)
+    except EmptyPage:
+        page = paginator.page(paginator.num_pages)
+
+    return page
 
 
 # 根据数字返回动态颜色的Semantic UI label标签
-def html_label(text: Union[str,int, float]) -> str:
+def html_label(text: Union[str, int, float]) -> str:
     COLOR_DICT = {
         "10": "red",
         "9": "orange",
@@ -17,7 +60,7 @@ def html_label(text: Union[str,int, float]) -> str:
         "2": "purple",
         "1": "brown",
         "等级医院": "blue",
-        "社区医院":"green",
+        "社区医院": "green",
     }
     color = COLOR_DICT.get(str(text), "black")
     html_str = '<div class="ui %s basic label">%s</div>' % (color, text)

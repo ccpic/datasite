@@ -112,10 +112,105 @@
         // 获取交互表单数据
         var form_data = getForm();
 
+        // 根据参数生成服务器端dt表格
+        var url_table_hp = '{% url 'potential:table_hp' %}';
+        var columns_table_hp = [{
+                title: "医院编码",
+                data: "hp_id"
+            },
+            {
+                title: "医院名称",
+                data: "hp_name"
+            },
+            {
+                title: "省份",
+                data: "province"
+            },
+            {
+                title: "城市",
+                data: "city"
+            },
+            {
+                title: "区县",
+                data: "county"
+            },
+            {
+                title: "地区经理",
+                data: "am"
+            },
+            {
+                title: "负责代表",
+                data: "rsp"
+            },
+            {
+                title: "医院类型",
+                data: "hp_type"
+            },
+            {
+                title: "等级/社区医院内部潜力分级",
+                data: "decile"
+            },
+            {
+                title: "所有终端合并计算潜力分级",
+                data: "decile_total"
+            },
+            {
+                title: "潜力值(DOT)",
+                data: "potential_dot"
+            },
+            {
+                title: "信立坦MAT销售(DOT)",
+                data: "mat_sales"
+            },
+            {
+                title: "信立坦份额(%)",
+                data: "share"
+            },
+        ];
+        var columnDefs_table_hp = [{
+                "width": "5%",
+                "targets": [8, 9, 12]
+            }, // 保持表格相对列宽度固定
+            {
+                "width": "10%",
+                "targets": [0, 5, 7, 10, 11]
+            }, // 保持表格相对列宽度固定
+            {
+                "targets": [12],
+                "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') 
+            },// 根据一定的色彩方案初始化条形图
+        ];
         $("#table_hp").DataTable(
-            initDataTable(urlParam, columnsParam, form_data)
+            initDataTable(url_table_hp, columns_table_hp, form_data, 10 ,columnDefs_table_hp)
         )
 
+        var url_table_pivot = '{% url 'potential:table_pivot' %}';
+        var columns_table_pivot = [
+            {
+                title: form_data["DIMENSION_select"],
+                data: form_data["DIMENSION_select"]
+            },
+            {
+                title: "终端数量",
+                data: "HP_NUMBER"
+            },
+            {
+                title: "潜力值(DOT)",
+                data: "POTENTIAL_DOT"
+            },
+            {
+                title: "潜力贡献",
+                data: "POTENTIAL_CONTRIB"
+            },
+        ];
+        var columnDefs_table_pivot = [{
+            "targets": [3],
+            "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') 
+        },// 根据一定的色彩方案初始化条形图
+        ];
+        $("#table_pivot").DataTable(
+            initDataTable(url_table_pivot, columns_table_pivot, form_data, 2 ,columnDefs_table_pivot)
+        )
         $.ajax({
             // 请求的url
             url: '{% url 'potential:query' %}',
@@ -128,6 +223,8 @@
                 // 去除加载遮罩（去掉active）
                 dimmer_dummy.attr('class', 'ui dimmer');
                 $("#dimmer").attr('class', 'ui dimmer');
+
+                
 {% comment %} 
 
                 $("#potential_total").html(ret["潜力汇总(DOT)"].toLocaleString())
@@ -217,10 +314,10 @@
 
 <script>
     // table初始化方法
-    function initDataTable(urlParam, columnsParam, form_data) {
+    function initDataTable(urlParam, columnsParam, form_data, orderBy, columnDefs) {
         return {
             order: [
-                [10, "desc"]
+                [orderBy, "desc"]
             ], // 初始以第2列（注意第一列索引为0）由高到低排序
             pageLength: 25, // 前端分页，初始每页显示25条记录
             destroy: true, //每次初始化前会先摧毁已经存在的表格对象
@@ -276,76 +373,10 @@
                     "sLast": "末页"
                 },
             },
-            columnDefs: [{
-                    "width": "5%",
-                    "targets": [8, 9, 12]
-                }, // 保持表格相对列宽度固定
-                {
-                    "width": "10%",
-                    "targets": [0, 5, 7, 10, 11]
-                }, // 保持表格相对列宽度固定
-                {
-                    targets: [12],
-                    render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') 
-                },// 根据一定的色彩方案初始化条形图
-            ],
+            "columnDefs": columnDefs,
             "bServerSide": true, //开启服务器模式，使用服务器端处理配置datatable。
             "columns": columnsParam,
         }
     }
-
-    var urlParam = '{% url 'potential:table_hp' %}'
-    var columnsParam = [{
-            title: "医院编码",
-            data: "hp_id"
-        },
-        {
-            title: "医院名称",
-            data: "hp_name"
-        },
-        {
-            title: "省份",
-            data: "province"
-        },
-        {
-            title: "城市",
-            data: "city"
-        },
-        {
-            title: "区县",
-            data: "county"
-        },
-        {
-            title: "地区经理",
-            data: "am"
-        },
-        {
-            title: "负责代表",
-            data: "rsp"
-        },
-        {
-            title: "医院类型",
-            data: "hp_type"
-        },
-        {
-            title: "等级/社区医院内部潜力分级",
-            data: "decile"
-        },
-        {
-            title: "所有终端合并计算潜力分级",
-            data: "decile_total"
-        },
-        {
-            title: "潜力值(DOT)",
-            data: "potential_dot"
-        },
-        {
-            title: "信立坦MAT销售(DOT)",
-            data: "mat_sales"
-        },
-        {
-            title: "信立坦份额(%)",
-            data: "share"
-        },
-    ];
+    
 </script>

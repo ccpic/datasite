@@ -9,7 +9,14 @@ import six
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
-from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict, html_label
+from datasite.commons import (
+    format_table,
+    get_distinct_list,
+    get_dt_page,
+    sql_extent,
+    qdict_to_dict,
+    html_label,
+)
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 try:
@@ -55,31 +62,28 @@ def index(request):
 def query(request):
     form_dict = qdict_to_dict(request.GET)
     df = get_df(form_dict)
-    df = df.head(500)
 
-    context = {"ptable": format_table(df=df, id="ptable")}
+    dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
 
-    # dimension_selected = form_dict["DIMENSION_select"][0]  # 分析维度
+    # 潜力部分
+    pivoted_potential = pd.pivot_table(
+        data=df,
+        values="POTENTIAL_DOT",
+        index=dimension_selected,
+        columns=None,
+        aggfunc=[len, sum],
+        fill_value=0,
+    )
 
-    # # 潜力部分
-    # pivoted_potential = pd.pivot_table(
-    #     data=df,
-    #     values="POTENTIAL_DOT",
-    #     index=dimension_selected,
-    #     columns=None,
-    #     aggfunc=[len, sum],
-    #     fill_value=0,
-    # )
-
-    # pivoted_potential = pd.DataFrame(
-    #     pivoted_potential.to_records()
-    # )  # pivot table对象转为默认df
-    # pivoted_potential.set_index(dimension_selected, inplace=True)
-    # # pivoted_potential.reset_index(axis=1, inplace=True)
-    # pivoted_potential.columns = ["终端数量", "潜力(DOT)"]
-    # pivoted_potential["潜力贡献"] = (
-    #     pivoted_potential["潜力(DOT)"] / pivoted_potential["潜力(DOT)"].sum()
-    # )
+    pivoted_potential = pd.DataFrame(
+        pivoted_potential.to_records()
+    )  # pivot table对象转为默认df
+    pivoted_potential.set_index(dimension_selected, inplace=True)
+    # pivoted_potential.reset_index(axis=1, inplace=True)
+    pivoted_potential.columns = ["终端数量", "潜力(DOT)"]
+    pivoted_potential["潜力贡献"] = (
+        pivoted_potential["潜力(DOT)"] / pivoted_potential["潜力(DOT)"].sum()
+    )
 
     # # 覆盖部分
     # pivoted_access = pd.pivot_table(
@@ -231,6 +235,9 @@ def query(request):
     # context = dict(context, **ptable_monthly)
     # context = dict(context, **ptable_comm_monthly)
 
+    ptable = format_table(pivoted_potential, "ptable")
+    context = {"ptable": ptable}
+
     return HttpResponse(
         json.dumps(context, ensure_ascii=False),
         content_type="application/json charset=utf-8",
@@ -243,8 +250,13 @@ def table_hp(request):
     sql = sqlparse(form_dict)  # sql拼接
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
-    # 查询常数设置
-    ORDER_DICT = {
+    aodata = json.loads(request.POST.get("aodata"))
+    for item in aodata:
+        if item["name"] == "sEcho":
+            sEcho = int(item["value"])  # 客户端发送的标识
+
+    # 排序字典，前端点击排序的列索引映射到df字段名
+    dict_order = {
         0: "HP_ID",
         1: "HP_NAME",
         2: "PROVINCE",
@@ -260,65 +272,104 @@ def table_hp(request):
         12: "SHARE",
     }
 
-    dataTable = {}
-    aodata = json.loads(request.POST.get("aodata"))
+    result = get_dt_page(df, aodata, dict_order)
 
-    for item in aodata:
-        if item["name"] == "sEcho":
-            sEcho = int(item["value"])  # 客户端发送的标识
-        if item["name"] == "iDisplayStart":
-            start = int(item["value"])  # 起始索引
-        if item["name"] == "iDisplayLength":
-            length = int(item["value"])  # 每页显示的行数
-        if item["name"] == "iSortCol_0":
-            sort_column = int(item["value"])  # 按第几列排序
-        if item["name"] == "sSortDir_0":
-            sort_order = item["value"].lower()  # 正序还是反序
-        if item["name"] == "sSearch":
-            search_key = item["value"]  # 搜索关键字
-
-    # 根据用户权限，前端参数，搜索关键字filter df
-    mask = np.column_stack(
-        [df[col].astype(str).str.contains(search_key, na=False) for col in df]
-    )
-    df = df.loc[mask.any(axis=1)]
-
-    # 排序
-    df = df.sort_values(
-        by=ORDER_DICT[sort_column], ascending=True if sort_order == "asc" else False
-    )
-
-    # 对list进行分页
-    paginator = Paginator(df.apply(lambda df: df.values, axis=1), length)
-    # 把数据分成10个一页。
-    try:
-        hps = paginator.page(start / 10 + 1)
-    # 请求页数错误
-    except PageNotAnInteger:
-        hps = paginator.page(1)
-    except EmptyPage:
-        hps = paginator.page(paginator.num_pages)
     data = []
-    for item in hps:
+    for item in result:
         row = {
-            "hp_id": item[0],
-            "hp_name": item[1],
-            "province": item[2],
-            "city": item[3],
-            "county": item[4],
-            "am": item[16],
-            "rsp": item[11],
-            "hp_type": html_label(item[8]),
-            "decile": html_label(item[21]),
-            "decile_total": html_label(item[22]),
-            "potential_dot": "{:,.0f}".format(item[5]),
-            "mat_sales": "{:,.0f}".format(item[10]),
-            "share": "{:.1%}".format(item[18]),
+            "hp_id": item["HP_ID"],
+            "hp_name": item["HP_NAME"],
+            "province": item["PROVINCE"],
+            "city": item["CITY"],
+            "county": item["COUNTY"],
+            "am": item["AM"],
+            "rsp": item["RSP"],
+            "hp_type": html_label(item["HP_TYPE"]),
+            "decile": html_label(item["DECILE"]),
+            "decile_total": html_label(item["DECILE_TOTAL"]),
+            "potential_dot": "{:,.0f}".format(item["POTENTIAL_DOT"])
+            if item["POTENTIAL_DOT"] is not None
+            else "0",
+            "mat_sales": "{:,.0f}".format(item["MAT_SALES"])
+            if item["MAT_SALES"] is not None
+            else "0",
+            "share": "{:.1%}".format(item["SHARE"])
+            if item["SHARE"] is not None
+            else "0.0%",
         }
         data.append(row)
+
+    dataTable = {}
     dataTable["iTotalRecords"] = df.shape[0]  # 数据总条数
     dataTable["sEcho"] = sEcho + 1
     dataTable["iTotalDisplayRecords"] = df.shape[0]  # 显示的条数
+    dataTable["aaData"] = data
+
+    return HttpResponse(json.dumps(dataTable, ensure_ascii=False))
+
+
+@login_required()
+def table_pivot(request):
+    form_dict = json.loads(request.POST.get("formdata"))  # filter栏表单数据
+    sql = sqlparse(form_dict)  # sql拼接
+    df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+
+    dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
+
+    # 潜力部分
+    pivoted_potential = pd.pivot_table(
+        data=df,
+        values="POTENTIAL_DOT",
+        index=dimension_selected,
+        columns=None,
+        aggfunc=[len, sum],
+        fill_value=0,
+    )
+
+    pivoted_potential = pd.DataFrame(
+        pivoted_potential.to_records()
+    )  # pivot table对象转为默认df
+    pivoted_potential.set_index(dimension_selected, inplace=True)
+    pivoted_potential.reset_index(inplace=True)
+    pivoted_potential.columns = [dimension_selected, "HP_NUMBER", "POTENTIAL_DOT"]
+    pivoted_potential["POTENTIAL_CONTRIB"] = (
+        pivoted_potential["POTENTIAL_DOT"] / pivoted_potential["POTENTIAL_DOT"].sum()
+    )
+
+    aodata = json.loads(request.POST.get("aodata"))
+    for item in aodata:
+        if item["name"] == "sEcho":
+            sEcho = int(item["value"])  # 客户端发送的标识
+
+    # 排序字典，前端点击排序的列索引映射到df字段名
+    dict_order = {
+        0: dimension_selected,
+        1: "HP_NUMBER",
+        2: "POTENTIAL_DOT",
+        3: "POTENTIAL_CONTRIB",
+    }
+
+    result = get_dt_page(pivoted_potential, aodata, dict_order)
+
+    data = []
+    for item in result:
+        print(item)
+        row = {
+            dimension_selected: item[dimension_selected],
+            "HP_NUMBER": item["HP_NUMBER"],
+            "POTENTIAL_DOT": "{:,.0f}".format(item["POTENTIAL_DOT"])
+            if item["POTENTIAL_DOT"] is not None
+            else "0",
+            "POTENTIAL_CONTRIB": "{:.1%}".format(item["POTENTIAL_CONTRIB"])
+            if item["POTENTIAL_CONTRIB"] is not None
+            else "0.0%",
+        }
+        data.append(row)
+
+    dataTable = {}
+    dataTable["iTotalRecords"] = pivoted_potential.shape[0]  # 数据总条数
+    dataTable["sEcho"] = sEcho + 1
+    dataTable["iTotalDisplayRecords"] = pivoted_potential.shape[0]  # 显示的条数
     dataTable["aaData"] = data
 
     return HttpResponse(json.dumps(dataTable, ensure_ascii=False))

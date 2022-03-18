@@ -14,14 +14,8 @@
 <!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
 <div class="ui pointing secondary menu">
     <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
+    <a class="item" data-tab="cross_table"><i class="signal icon"></i>覆盖 vs. 渗透</a>
     <a class="item" data-tab="hps"><i class="building icon"></i>终端潜力</a>
-    <a class="item" data-tab="trend"><i class="signal icon"></i>月度明细</a>
-    <a class="item" data-tab="productivity"><i class="bolt icon"></i>生产力分析</a>
-    <a class="item" data-tab="community"><i class="viadeo icon"></i>社区指标汇总</a>
-    <a class="item" data-tab="comm_trend"><i class="signal icon"></i>社区月度明细</a>
-{#    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>#}
-    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
-{#    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>#}
 </div>
 <div class="ui tab segment active" data-tab="total">
     <h3 class="ui header">
@@ -110,6 +104,28 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="cross_table">
+    <h3 class="ui header">
+        <div class="content">
+            终端潜力
+            <div class="sub header">数据表格
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('table_pivot') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='table_pivot_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+        <table cellpadding="0" cellspacing="0" border="0" id="table_pivot" class="ui celled table">
+        </table>
     </div>
 </div>
 <div class="ui tab segment" data-tab="hps">
