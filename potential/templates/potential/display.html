@@ -161,6 +161,16 @@
     <div class="ui container">
         <img id="plot_bubble_allocation" style="width: 100%" alt="" />
     </div>
+    <h3 class="ui header">
+        <div class="content">
+            覆盖 versus 上量
+            <div class="sub header">气泡图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <img id="plot_bubble_allocation2" style="width: 100%" alt="" />
+    </div>
 </div>
 <div class="ui tab segment" data-tab="hps">
     <h3 class="ui header">
@@ -194,10 +204,8 @@
     <div class="content">
         <div class="ui form">
             <div class="field">
-                <div class="ui toggle checkbox" id="toggle_limit_show">
-                    <input type="checkbox" name="output" checked>
-                    <label>只显示前200的结果</label>
-                </div>
+                <label>限制气泡图最多显示的项目数（0为不限制）</label>
+                <div class="ui bottom aligned labeled slider"></div>
             </div>
             <div class="ui hidden divider"></div>
             <div class="ui hidden divider"></div>
@@ -223,6 +231,14 @@
     $('.pointing.secondary.menu .item').tab();
     $('.ui.radio.checkbox')
       .checkbox()
+    ;
+    $('.ui.slider')
+        .slider({
+            min: 0,
+            max: 100,
+            start: 25,
+            step: 25
+        })
     ;
 </script>
 <script>

@@ -128,7 +128,9 @@ def query(request: request) -> HttpResponse:
     # 散点图 - 潜力贡献（所有终端） versus 信立坦销量贡献
     fmt = [".1%"]
     plot_data = df.loc[:, ["潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
-    plot_data.sort_values(by="潜力(DOT)", ascending=False, inplace=True)
+    plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(
+        int(form_dict["plot_item_limit"])
+    )
 
     plot_bubble_contrib = plt.figure(
         FigureClass=PlotBubble,
@@ -144,7 +146,10 @@ def query(request: request) -> HttpResponse:
     # 散点图 - 潜力贡献（有量终端） versus 信立坦销量贡献
     fmt = [".1%"]
     plot_data = df.loc[:, ["信立坦有量终端潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
-    plot_data.sort_values(by="信立坦有量终端潜力贡献(DOT %)", ascending=False, inplace=True)
+    plot_data = plot_data.sort_values(by="信立坦有量终端潜力贡献(DOT %)", ascending=False).head(
+        int(form_dict["plot_item_limit"])
+    )
+
     plot_bubble_contrib2 = plt.figure(
         FigureClass=PlotBubble,
         width=12,
@@ -159,12 +164,14 @@ def query(request: request) -> HttpResponse:
         save_to_str=True,
     ).plot(label_limit=30, show_reg=True)
 
-    # 散点图 - 信立坦有量终端覆盖潜力 versus 信立坦有量终端份额
+    # 散点图 - 信立坦有量终端覆盖潜力 versus 信立坦有量终端份额 （按信立坦销量排序）
     fmt = [".1%"]
     plot_data = df.loc[
         :, ["信立坦有量终端覆盖潜力(DOT %)", "信立坦有量终端份额(DOT %)", "信立坦MAT销量(DOT)"]
     ].fillna(0)
-    plot_data.sort_values(by="信立坦MAT销量(DOT)", ascending=False, inplace=True)
+    plot_data = plot_data.sort_values(by="信立坦MAT销量(DOT)", ascending=False).head(
+        int(form_dict["plot_item_limit"])
+    )
 
     plot_bubble_allocation = plt.figure(
         FigureClass=PlotBubble,
@@ -188,97 +195,46 @@ def query(request: request) -> HttpResponse:
         y_avg_label="平均:%s" % "{:.1%}".format(kpi["信立坦有量终端份额(DOT %)"]),
     )
 
+    # 散点图 - 信立坦有量终端覆盖潜力 versus 信立坦有量终端份额 （按潜力排序）
+    fmt = [".1%"]
+    plot_data = df.loc[:, ["信立坦有量终端覆盖潜力(DOT %)", "信立坦有量终端份额(DOT %)", "潜力(DOT)"]].fillna(
+        0
+    )
+    plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(
+        int(form_dict["plot_item_limit"])
+    )
+
+    plot_bubble_allocation2 = plt.figure(
+        FigureClass=PlotBubble,
+        width=12,
+        height=7,
+        fmt=fmt,
+        data=plot_data,
+        fontsize=10,
+        style={
+            "xlabel": "信立坦有量终端覆盖潜力(DOT %)\n气泡大小: 潜力(DOT)",
+            "ylabel": "信立坦有量终端份额(DOT %)",
+        },
+        save_to_str=True,
+    ).plot(
+        label_limit=30,
+        x_avg_line=True,
+        x_avg_value=kpi["信立坦有量终端覆盖潜力(DOT %)"],
+        x_avg_label="平均:%s" % "{:.1%}".format(kpi["信立坦有量终端覆盖潜力(DOT %)"]),
+        y_avg_line=True,
+        y_avg_value=kpi["信立坦有量终端份额(DOT %)"],
+        y_avg_label="平均:%s" % "{:.1%}".format(kpi["信立坦有量终端份额(DOT %)"]),
+    )
     # # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     # show_limit_results = form_dict["toggle_limit_show"]
 
-    # # 综合表现指标汇总
-    # ptable = format_table(
-    #     get_ptable(
-    #         df_sales=df["销售"], df_target=df["指标"], show_limit_results=show_limit_results
-    #     ),
-    #     "ptable",
-    # )
-    # ptable_comm = format_table(
-    #     get_ptable_comm(
-    #         df_sales=df["销售"],
-    #         df_sales_comm=df["社区销售"],
-    #         df_target_comm=df["社区指标"],
-    #         show_limit_results=show_limit_results,
-    #     ),
-    #     "ptable_comm",
-    # )
-
-    # # 月度表现趋势表格
-    # ptable_monthly = get_ptable_monthly(
-    #     df_sales=df["销售"], show_limit_results=show_limit_results
-    # )
-    # ptable_comm_monthly = {}
-    # temp = get_ptable_monthly(
-    #     df_sales=df["社区销售"], show_limit_results=show_limit_results
-    # )
-    # for k, v in temp.items():
-    #     ptable_comm_monthly[
-    #         k.replace("ptable_monthly", "ptable_comm_monthly")
-    #     ] = v.replace("ptable_monthly", "ptable_comm_monthly")
-
-    # # 月度社区销售占比趋势
-    # ptable_comm_ratio_monthly = format_table(
-    #     get_ratio_monthly(
-    #         df1=df["社区销售"],
-    #         df2=df["销售"],
-    #         table_name="社区销售占比趋势",
-    #         show_limit_results=show_limit_results,
-    #     ),
-    #     "ptable_comm_ratio_monthly",
-    # )
-
-    # # 开户医院单产趋势
-    # ptable_hppdt_monthly = format_table(
-    #     get_ratio_monthly(
-    #         df1=df["销售"],
-    #         df2=df["开户医院数"],
-    #         table_name="开户医院单产趋势",
-    #         show_limit_results=show_limit_results,
-    #     ),
-    #     "ptable_hppdt_monthly",
-    # )
-
-    # # 代表单产趋势
-    # ptable_rsppdt_monthly = format_table(
-    #     get_ratio_monthly(
-    #         df1=df["销售"],
-    #         df2=df["代表数"],
-    #         table_name="代表单产趋势",
-    #         show_limit_results=show_limit_results,
-    #     ),
-    #     "ptable_rsppdt_monthly",
-    # )
-
-    # # Pyecharts交互图表
-    # bar_total_monthly_trend = prepare_chart(
-    #     df["销售"], df["指标"], "bar_total_monthly_trend", form_dict
-    # )
-    # scatter_sales_abs_diff = prepare_chart(
-    #     df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict
-    # )
-    # scatter_sales_comm_abs_diff = prepare_chart(
-    #     df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict
-    # )
-    # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
-
-    # context = {}
-
-    # context = dict(context, **kpi)
-    # context = dict(context, **ptable_monthly)
-    # context = dict(context, **ptable_comm_monthly)
-
-    # ptable = format_table(pivoted_potential, "ptable")
     context = {
         "kpi": kpi,
         "table_pivot": table_pivot,
         "plot_bubble_contrib": plot_bubble_contrib,
         "plot_bubble_contrib2": plot_bubble_contrib2,
         "plot_bubble_allocation": plot_bubble_allocation,
+        "plot_bubble_allocation2": plot_bubble_allocation2,
     }
 
     return HttpResponse(
@@ -704,6 +660,7 @@ def sqlparse(context):
                 "UNIT_select",
                 "toggle_limit_show",
                 "customized_sql",
+                "plot_item_limit",
             ]:
                 if k[-2:] == "[]":
                     field_name = k[:-9]  # 如果键以[]结尾，删除_select[]取原字段名

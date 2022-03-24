@@ -59,6 +59,7 @@
             fullTextSearch: true
         });
 </script>
+
 <script>
     $("#show_options").click(function () {
         $("#modal_options").modal({
@@ -245,6 +246,7 @@
                 $("#plot_bubble_contrib").attr('src', ret['plot_bubble_contrib']);
                 $("#plot_bubble_contrib2").attr('src', ret['plot_bubble_contrib2']);
                 $("#plot_bubble_allocation").attr('src', ret['plot_bubble_allocation']);
+                $("#plot_bubble_allocation2").attr('src', ret['plot_bubble_allocation2']);
             },
             error: function () { //失败
                 console.log('失败');
@@ -281,7 +283,8 @@
         }
 
         // 获取输出选项modal的值
-        form_data['customized_sql'] = $('#customized_sql').val();
+        form_data["plot_item_limit"] = $('.ui.slider').slider('get value');
+        form_data["customized_sql"] = $("#customized_sql").val();
 
         return form_data
     }

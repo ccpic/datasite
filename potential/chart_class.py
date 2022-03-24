@@ -1562,7 +1562,7 @@ class PlotBubble(GridFigure):
             df = self.data[j]
             x = df.iloc[:, 0].tolist()
             y = df.iloc[:, 1].tolist()
-            z = (df.iloc[:, 2] / df.iloc[:, 2].max() * 100) ** 2
+            z = (df.iloc[:, 2] / df.iloc[:, 2].max() * 100) ** 1.8
             z = z.tolist()
             labels = df.index
 
