@@ -193,6 +193,10 @@
                 targets: [3, 5, 7, 9, 10, 11, 12]
             },
             {
+                targets: [0,1],
+                className: 'dt-center'
+            },
+            {
                 targets: [3],
                 render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6',
                     1, 'ridge') // 根据一定的色彩方案初始化条形图
@@ -247,6 +251,15 @@
                 $("#plot_bubble_contrib2").attr('src', ret['plot_bubble_contrib2']);
                 $("#plot_bubble_allocation").attr('src', ret['plot_bubble_allocation']);
                 $("#plot_bubble_allocation2").attr('src', ret['plot_bubble_allocation2']);
+
+                // 动态修改label
+                if (ret["limit_works"] === true){
+                    $(".ui.orange.basic.label").html("Top" + ret["plot_item_limit"])
+                }
+                else {
+                    $(".ui.orange.basic.label").remove()
+                }
+
             },
             error: function () { //失败
                 console.log('失败');
@@ -283,7 +296,7 @@
         }
 
         // 获取输出选项modal的值
-        form_data["plot_item_limit"] = $('.ui.slider').slider('get value');
+        form_data["plot_item_limit"] = $("#txtNum").val();
         form_data["customized_sql"] = $("#customized_sql").val();
 
         return form_data

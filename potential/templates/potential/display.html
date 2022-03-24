@@ -132,6 +132,7 @@
     <h3 class="ui header">
         <div class="content">
             潜力贡献（所有终端） versus 信立坦销售贡献
+            <div class="ui orange basic label"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
     </h3>
@@ -142,6 +143,7 @@
     <h3 class="ui header">
         <div class="content">
             潜力贡献（信立坦有量终端） versus 信立坦销售贡献
+            <div class="ui orange basic label"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
     </h3>
@@ -153,8 +155,9 @@
 <div class="ui tab segment" data-tab="plot_bubble_allocation">
     <h3 class="ui header">
         <div class="content">
-            覆盖 versus 上量
-            <div class="sub header">气泡图</div>
+            覆盖 versus 上量（按信立坦销量排序）
+            <div class="ui orange basic label"></div>
+            <div class="sub header">气泡图（气泡大小=信立坦MAT销量）</div>
         </div>
     </h3>
     <div class="ui divider"></div>
@@ -163,8 +166,9 @@
     </div>
     <h3 class="ui header">
         <div class="content">
-            覆盖 versus 上量
-            <div class="sub header">气泡图</div>
+            覆盖 versus 上量（按潜力排序）
+            <div class="ui orange basic label"></div>
+            <div class="sub header">气泡图（气泡大小=潜力）</div>
         </div>
     </h3>
     <div class="ui divider"></div>
@@ -205,7 +209,17 @@
         <div class="ui form">
             <div class="field">
                 <label>限制气泡图最多显示的项目数（0为不限制）</label>
-                <div class="ui bottom aligned labeled slider"></div>
+                <div class="ui right labeled input">
+                    <input type="text" id="txtNum" value="30" disabled="">
+                    <div class="ui mini vertical buttons">
+                        <button class="ui icon button" command="Up"> <i class="up chevron icon"></i>
+                
+                        </button>
+                        <button class="ui icon button" command="Down"> <i class="down chevron icon"></i>
+                
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="ui hidden divider"></div>
             <div class="ui hidden divider"></div>
@@ -236,8 +250,8 @@
         .slider({
             min: 0,
             max: 100,
-            start: 25,
-            step: 25
+            start: 30,
+            step: 5,
         })
     ;
 </script>
@@ -286,5 +300,43 @@
         var downloadUrl = '{% url 'internal_sales:export' 'raw' %}'+ '?' + $.param(form_data, true);
         window.location.href = downloadUrl;
     })
+</script>
+<script>
+    // Constants
+    var KEY_UP = 38,
+    KEY_DOWN = 40;
+
+    // Variables
+    var min = 0,
+    max = 200,
+    step = 5;
+
+    $('.ui.icon.button').click(function () {
+    var command = $(this).attr('command');
+    HandleUpDown(command);
+    });
+
+    $('#txtNum').keypress(function (e) {
+    var code = e.keyCode;
+    if (code != KEY_UP && code != KEY_DOWN) return;
+    var command = code == KEY_UP ? 'Up' : code == KEY_DOWN ? 'Down' : '';
+    HandleUpDown(command);
+    });
+
+    function HandleUpDown(command) {
+    var val = $('#txtNum').val().trim();
+    var num = val !== '' ? parseInt(val) : 0;
+
+    switch (command) {
+        case 'Up':
+            if (num < max) num += step;
+            break;
+        case 'Down':
+            if (num > min) num -= step;
+            break;
+    }
+
+    $('#txtNum').val(num);
+    }
 </script>
 {% endblock display %}

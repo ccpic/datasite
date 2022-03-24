@@ -89,8 +89,15 @@ def query(request: request) -> HttpResponse:
     """
 
     form_dict = qdict_to_dict(request.GET)
+    # 透视过的数据
     df = get_df(form_dict)
-    print(df.columns)
+    # 气泡图展示的数量限制，如为0则不设限
+    plot_item_limit = (
+        int(form_dict["plot_item_limit"])
+        if int(form_dict["plot_item_limit"]) != 0
+        else df.shape[0]
+    )
+    print(df.columns, plot_item_limit)
 
     # KPIs
     kpi = {
@@ -123,13 +130,12 @@ def query(request: request) -> HttpResponse:
         ]
     )
     table_pivot = format_table(df=table_pivot, id="table_pivot")
-    print(table_pivot)
 
     # 散点图 - 潜力贡献（所有终端） versus 信立坦销量贡献
     fmt = [".1%"]
     plot_data = df.loc[:, ["潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
     plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(
-        int(form_dict["plot_item_limit"])
+        plot_item_limit
     )
 
     plot_bubble_contrib = plt.figure(
@@ -147,7 +153,7 @@ def query(request: request) -> HttpResponse:
     fmt = [".1%"]
     plot_data = df.loc[:, ["信立坦有量终端潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
     plot_data = plot_data.sort_values(by="信立坦有量终端潜力贡献(DOT %)", ascending=False).head(
-        int(form_dict["plot_item_limit"])
+        plot_item_limit
     )
 
     plot_bubble_contrib2 = plt.figure(
@@ -170,7 +176,7 @@ def query(request: request) -> HttpResponse:
         :, ["信立坦有量终端覆盖潜力(DOT %)", "信立坦有量终端份额(DOT %)", "信立坦MAT销量(DOT)"]
     ].fillna(0)
     plot_data = plot_data.sort_values(by="信立坦MAT销量(DOT)", ascending=False).head(
-        int(form_dict["plot_item_limit"])
+        plot_item_limit
     )
 
     plot_bubble_allocation = plt.figure(
@@ -201,7 +207,7 @@ def query(request: request) -> HttpResponse:
         0
     )
     plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(
-        int(form_dict["plot_item_limit"])
+        plot_item_limit
     )
 
     plot_bubble_allocation2 = plt.figure(
@@ -229,6 +235,8 @@ def query(request: request) -> HttpResponse:
     # show_limit_results = form_dict["toggle_limit_show"]
 
     context = {
+        "plot_item_limit": plot_item_limit,
+        "limit_works": plot_item_limit < df.shape[0],
         "kpi": kpi,
         "table_pivot": table_pivot,
         "plot_bubble_contrib": plot_bubble_contrib,
