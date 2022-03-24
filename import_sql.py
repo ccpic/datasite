@@ -17,7 +17,7 @@ engine = create_engine("mssql+pymssql://(local)/CHPA_1806")
 
 df = pd.read_excel(open("data.xlsx", "rb"), sheet_name="全国")  # 从Excel读取数
 print("Finished data reading...")
-df = df.fillna(0)
+df.fillna(0, inplace=True)
 
 df.set_index(
     [

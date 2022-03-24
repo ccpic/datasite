@@ -177,40 +177,42 @@
             }, // 保持表格相对列宽度固定
             {
                 "targets": [12],
-                "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') 
-            },// 根据一定的色彩方案初始化条形图
+                "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff',
+                    '#E6E6E6', 1, 'ridge')
+            }, // 根据一定的色彩方案初始化条形图
         ];
+
+        // 终端明细表格太大，采用Ajax服务器端更新数据的方法，因此单独与后端通信
         $("#table_hp").DataTable(
-            initDataTable(url_table_hp, columns_table_hp, form_data, 10 ,columnDefs_table_hp)
+            initAjaxDataTable(url_table_hp, columns_table_hp, form_data, 10, columnDefs_table_hp)
         )
 
-        var url_table_pivot = '{% url 'potential:table_pivot' %}';
-        var columns_table_pivot = [
-            {
-                title: form_data["DIMENSION_select"],
-                data: form_data["DIMENSION_select"]
-            },
-            {
-                title: "终端数量",
-                data: "HP_NUMBER"
-            },
-            {
-                title: "潜力值(DOT)",
-                data: "POTENTIAL_DOT"
-            },
-            {
-                title: "潜力贡献",
-                data: "POTENTIAL_CONTRIB"
-            },
-        ];
         var columnDefs_table_pivot = [{
-            "targets": [3],
-            "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6', 1, 'ridge') 
-        },// 根据一定的色彩方案初始化条形图
+                type: 'percent',
+                targets: [3, 5, 7, 9, 10, 11, 12]
+            },
+            {
+                targets: [3],
+                render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6',
+                    1, 'ridge') // 根据一定的色彩方案初始化条形图
+            },
+            {
+                targets: [5, 7],
+                render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFD700', '#E6E6E6',
+                    1, 'ridge') // 根据一定的色彩方案初始化条形图
+            },
+            {
+                targets: [9],
+                render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#CAB1F5', '#E6E6E6',
+                    1, 'ridge') // 根据一定的色彩方案初始化条形图
+            },
+            {
+                targets: [10, 11, 12],
+                render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFABD1', '#E6E6E6',
+                    1, 'ridge') // 根据一定的色彩方案初始化条形图
+            },
         ];
-        $("#table_pivot").DataTable(
-            initDataTable(url_table_pivot, columns_table_pivot, form_data, 2 ,columnDefs_table_pivot)
-        )
+
         $.ajax({
             // 请求的url
             url: '{% url 'potential:query' %}',
@@ -224,20 +226,25 @@
                 dimmer_dummy.attr('class', 'ui dimmer');
                 $("#dimmer").attr('class', 'ui dimmer');
 
-                
-{% comment %} 
+                // 总体指标
+                var kpi = ret["kpi"]
+                $("#potential_total").html(kpi["潜力(DOT)"].toLocaleString())
+                $("#number_total").html(kpi["终端数量"].toLocaleString())
+                $("#share_total").html(toPercent(kpi["信立坦所有终端份额(DOT %)"]))
+                $("#potential_target").html(toPercent(kpi["信立坦目标终端覆盖潜力(DOT %)"]))
+                $("#number_target").html(kpi["信立坦目标终端数"].toLocaleString())
+                $("#share_target").html(toPercent(kpi["信立坦目标终端份额(DOT %)"]))
+                $("#potential_sales").html(toPercent(kpi["信立坦有量终端覆盖潜力(DOT %)"]))
+                $("#number_sales").html(kpi["信立坦有量终端数"].toLocaleString())
+                $("#share_sales").html(toPercent(kpi["信立坦有量终端份额(DOT %)"]))
 
-                $("#potential_total").html(ret["潜力汇总(DOT)"].toLocaleString())
-                $("#number_total").html(ret["有潜力值的终端数量"].toLocaleString())
-                $("#share_total").html(toPercent(ret["信立坦所有终端份额"]))
-                $("#potential_target").html(toPercent(ret["信立坦目标终端覆盖潜力(DOT %)"]))
-                $("#number_target").html(ret["信立坦目标终端数量"].toLocaleString())
-                $("#share_target").html(toPercent(ret["信立坦目标终端份额"]))
-                $("#potential_sales").html(toPercent(ret["信立坦有量终端覆盖潜力(DOT %)"]))
-                $("#number_sales").html(ret["信立坦有量终端数量"].toLocaleString())
-                $("#share_sales").html(toPercent(ret["信立坦有量终端份额"]))  {% endcomment %}
-
-
+                // 展示datatables表格
+                $("#table_pivot_div").html(ret['table_pivot']);
+                initTable($("#table_pivot"), 2, columnDefs_table_pivot);
+                // 展示Matplotlib气泡图
+                $("#plot_bubble_contrib").attr('src', ret['plot_bubble_contrib']);
+                $("#plot_bubble_contrib2").attr('src', ret['plot_bubble_contrib2']);
+                $("#plot_bubble_allocation").attr('src', ret['plot_bubble_allocation']);
             },
             error: function () { //失败
                 console.log('失败');
@@ -266,7 +273,7 @@
         };
 
         // 获取多选下拉框的值
-        var dict = {{mselect_dict|safe}};
+        var dict = {{ mselect_dict|safe }};
         for (key in dict) {
             var form_name = dict[key]['select'] + "_select";
             jquery_selector_id = "[id='" + form_name + "']"; //因为我们的部分多选框id有空格，要用这种写法
@@ -312,9 +319,59 @@
     });
 </script>
 
+
 <script>
-    // table初始化方法
-    function initDataTable(urlParam, columnsParam, form_data, orderBy, columnDefs) {
+    function initTable(table, orderBy, columnDefs) {
+        table.DataTable({
+            order: [
+                [orderBy, "desc"]
+            ], // 初始以第2列（注意第一列索引为0）由高到低排序
+            pageLength: 25, // 前端分页，初始每页显示25条记录
+            autoWidth: false, // 不自动调整表格宽度
+            oLanguage: { // UI Label本地化
+                "sLengthMenu": "显示 _MENU_ 项结果",
+                "sProcessing": "处理中...",
+                "sZeroRecords": "没有匹配结果",
+                "sInfo": "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
+                "sInfoEmpty": "没有数据",
+                "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
+                "sInfoPostFix": "",
+                "sSearch": "搜索:",
+                "sUrl": "",
+                "sEmptyTable": "未查询到数据",
+                "sLoadingRecords": "载入中...",
+                "sInfoThousands": ",",
+                "oPaginate": {
+                    "sFirst": "首页",
+                    "sPrevious": "上页",
+                    "sNext": "下页",
+                    "sLast": "末页"
+                },
+            },
+            "columnDefs": columnDefs,
+        });
+        jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+            "percent-pre": function (a) {
+
+                var x = (a == "+nan%" || a === 'nan%' || a === '-nan%' || a === 'inf%' || a === '+inf%' ||
+                    a === '-inf%') ? 0 : a.replace(/%/, "");
+                return parseFloat(x);
+            },
+
+            "percent-asc": function (a, b) {
+                return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+            },
+
+            "percent-desc": function (a, b) {
+                return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+            }
+        });
+    }
+</script>
+
+<script>
+    // Ajax table初始化方法
+    function initAjaxDataTable(urlParam, columnsParam, form_data, orderBy, columnDefs) {
         return {
             order: [
                 [orderBy, "desc"]
@@ -329,11 +386,11 @@
             sAjaxSource: urlParam, //请求资源路径
             serverSide: true, //开启服务器处理模式
             /*
-                   使用ajax，在服务端处理数据
-                   sSource:即是"sAjaxSource"
-                   aoData:要传递到服务端的参数
-                   fnCallback:处理返回数据的回调函数
-                   */
+                 使用ajax，在服务端处理数据
+                 sSource:即是"sAjaxSource"
+                 aoData:要传递到服务端的参数
+                 fnCallback:处理返回数据的回调函数
+            */
             fnServerData: function (sSource, aoData, fnCallback) {
                 $.ajax({
                     'type': 'POST',
@@ -378,5 +435,4 @@
             "columns": columnsParam,
         }
     }
-    
 </script>

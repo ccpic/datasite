@@ -3,7 +3,7 @@ import pandas as pd
 from typing import List, Union
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import numpy as np
-
+import math
 
 # 根据前端Datatables返回的aodata对原始df处理并分页
 def get_dt_page(df: pd.DataFrame, aodata: dict, dict_order: dict) -> Paginator.page:
@@ -93,11 +93,19 @@ def sql_extent(
     return sql
 
 
-def format_numbers(num_str: str, format_str: str) -> str:
-    try:
-        num_str = format_str.format(num_str)
-    except ValueError:
-        pass
+def format_numbers(
+    num_str: str, format_str: str, else_str: Union[str, None] = None, ignore_nan=False,
+) -> str:
+    if ignore_nan and math.isnan(float(num_str)):
+        if else_str is not None:
+            num_str = else_str
+    else:
+        try:
+            num_str = format_str.format(num_str)
+        except ValueError:
+            pass
+            if else_str is not None:
+                num_str = else_str
     return num_str
 
 
@@ -121,21 +129,20 @@ def build_formatters_by_col(df: pd.DataFrame, table_id: str = None) -> dict:
             d[column] = format_share
     else:
         for column in df.columns:
-            if (
-                "同比增长" in str(column)
-                or "增长率" in str(column)
-                or "CAGR" in str(column)
-                or "同比变化" in str(column)
-            ):
+            if any(x in str(column) for x in ["同比增长", "增长率", "CAGR", "同比变化"]):
                 d[column] = format_gr
-            elif (
-                "份额" in str(column)
-                or "贡献" in str(column)
-                or "达成" in str(column)
-                or "占比" in str(column)
+            elif any(
+                x in str(column) for x in ["份额", "贡献", "达成", "占比", "覆盖率", "DOT %"]
             ):
+                # elif (
+                #     "份额" in str(column)
+                #     or "贡献" in str(column)
+                #     or "达成" in str(column)
+                #     or "占比" in str(column)
+                #     or "覆盖率" in str(column)
+                # ):
                 d[column] = format_share
-            elif "价格" in str(column) or "单价" in str(column):
+            elif any(x in str(column) for x in ["价格", "单价"]):
                 d[column] = format_currency
             elif "趋势" in str(column):
                 d[column] = None

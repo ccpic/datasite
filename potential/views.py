@@ -1,4 +1,5 @@
 from django.shortcuts import render, HttpResponse
+from django.http import request
 from django.contrib.auth.decorators import login_required
 from sqlalchemy import create_engine
 import pandas as pd
@@ -9,7 +10,9 @@ import six
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
+from .chart_class import PlotBubble
 from datasite.commons import (
+    format_numbers,
     format_table,
     get_distinct_list,
     get_dt_page,
@@ -43,7 +46,19 @@ D_MULTI_SELECT = {
 
 
 @login_required
-def index(request):
+def index(request: request) -> HttpResponse:
+    """app静态首页
+
+    Parameters
+    ----------
+    request : request
+        django前端默认request，无额外信息
+
+    Returns
+    -------
+    HttpResponse
+        主要包含生成前端控件多选的字段字典
+    """
     mselect_dict = {}
     for key, value in D_MULTI_SELECT.items():
         mselect_dict[key] = {}
@@ -59,97 +74,119 @@ def index(request):
 
 
 @login_required
-def query(request):
+def query(request: request) -> HttpResponse:
+    """根据前端控件的输入使用Ajax异步通信返回主要的查询内容
+
+    Parameters
+    ----------
+    request : request
+        前端控件的输入选择
+
+    Returns
+    -------
+    HttpResponse
+        返回json格式的数据和图表
+    """
+
     form_dict = qdict_to_dict(request.GET)
     df = get_df(form_dict)
+    print(df.columns)
 
-    dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
+    # KPIs
+    kpi = {
+        "潜力(DOT)": int(df["潜力(DOT)"].sum()),
+        "终端数量": int(df["终端数量"].sum()),
+        "信立坦目标终端覆盖潜力(DOT %)": df["信立坦目标终端潜力(DOT)"].sum() / df["潜力(DOT)"].sum(),
+        "信立坦目标终端数": int(df["信立坦目标终端数"].sum()),
+        "信立坦有量终端覆盖潜力(DOT %)": df["信立坦有量终端潜力(DOT)"].sum() / df["潜力(DOT)"].sum(),
+        "信立坦有量终端数": int(df["信立坦有量终端数"].sum()),
+        "信立坦所有终端份额(DOT %)": df["信立坦MAT销量(DOT)"].sum() / df["潜力(DOT)"].sum(),
+        "信立坦目标终端份额(DOT %)": df["信立坦MAT销量(DOT)"].sum() / df["信立坦目标终端潜力(DOT)"].sum(),
+        "信立坦有量终端份额(DOT %)": df["信立坦MAT销量(DOT)"].sum() / df["信立坦有量终端潜力(DOT)"].sum(),
+    }
 
-    # 潜力部分
-    pivoted_potential = pd.pivot_table(
-        data=df,
-        values="POTENTIAL_DOT",
-        index=dimension_selected,
-        columns=None,
-        aggfunc=[len, sum],
-        fill_value=0,
+    # 综合透视分析表格
+    table_pivot = df.fillna(0).reindex(
+        columns=[
+            "终端数量",
+            "潜力(DOT)",
+            "潜力贡献(DOT %)",
+            "信立坦目标终端数",
+            "信立坦目标终端覆盖潜力(DOT %)",
+            "信立坦有量终端数",
+            "信立坦有量终端覆盖潜力(DOT %)",
+            "信立坦MAT销量(DOT)",
+            "信立坦销量贡献(DOT %)",
+            "信立坦所有终端份额(DOT %)",
+            "信立坦目标终端份额(DOT %)",
+            "信立坦有量终端份额(DOT %)",
+        ]
     )
+    table_pivot = format_table(df=table_pivot, id="table_pivot")
+    print(table_pivot)
 
-    pivoted_potential = pd.DataFrame(
-        pivoted_potential.to_records()
-    )  # pivot table对象转为默认df
-    pivoted_potential.set_index(dimension_selected, inplace=True)
-    # pivoted_potential.reset_index(axis=1, inplace=True)
-    pivoted_potential.columns = ["终端数量", "潜力(DOT)"]
-    pivoted_potential["潜力贡献"] = (
-        pivoted_potential["潜力(DOT)"] / pivoted_potential["潜力(DOT)"].sum()
+    # 散点图 - 潜力贡献（所有终端） versus 信立坦销量贡献
+    fmt = [".1%"]
+    plot_data = df.loc[:, ["潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
+    plot_data.sort_values(by="潜力(DOT)", ascending=False, inplace=True)
+
+    plot_bubble_contrib = plt.figure(
+        FigureClass=PlotBubble,
+        width=12,
+        height=7,
+        fmt=fmt,
+        data=plot_data,
+        fontsize=10,
+        style={"xlabel": "潜力贡献(DOT %)\n气泡大小: 潜力(DOT)", "ylabel": "信立坦销量贡献(DOT %)"},
+        save_to_str=True,
+    ).plot(label_limit=30, show_reg=True)
+
+    # 散点图 - 潜力贡献（有量终端） versus 信立坦销量贡献
+    fmt = [".1%"]
+    plot_data = df.loc[:, ["信立坦有量终端潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
+    plot_data.sort_values(by="信立坦有量终端潜力贡献(DOT %)", ascending=False, inplace=True)
+    plot_bubble_contrib2 = plt.figure(
+        FigureClass=PlotBubble,
+        width=12,
+        height=7,
+        fmt=fmt,
+        data=plot_data,
+        fontsize=10,
+        style={
+            "xlabel": "信立坦有量终端潜力贡献(DOT %)\n气泡大小: 潜力(DOT)",
+            "ylabel": "信立坦销量贡献(DOT %)",
+        },
+        save_to_str=True,
+    ).plot(label_limit=30, show_reg=True)
+
+    # 散点图 - 信立坦有量终端覆盖潜力 versus 信立坦有量终端份额
+    fmt = [".1%"]
+    plot_data = df.loc[
+        :, ["信立坦有量终端覆盖潜力(DOT %)", "信立坦有量终端份额(DOT %)", "信立坦MAT销量(DOT)"]
+    ].fillna(0)
+    plot_data.sort_values(by="信立坦MAT销量(DOT)", ascending=False, inplace=True)
+
+    plot_bubble_allocation = plt.figure(
+        FigureClass=PlotBubble,
+        width=12,
+        height=7,
+        fmt=fmt,
+        data=plot_data,
+        fontsize=10,
+        style={
+            "xlabel": "信立坦有量终端覆盖潜力(DOT %)\n气泡大小: 信立坦MAT销量(DOT)",
+            "ylabel": "信立坦有量终端份额(DOT %)",
+        },
+        save_to_str=True,
+    ).plot(
+        label_limit=30,
+        x_avg_line=True,
+        x_avg_value=kpi["信立坦有量终端覆盖潜力(DOT %)"],
+        x_avg_label="平均:%s" % "{:.1%}".format(kpi["信立坦有量终端覆盖潜力(DOT %)"]),
+        y_avg_line=True,
+        y_avg_value=kpi["信立坦有量终端份额(DOT %)"],
+        y_avg_label="平均:%s" % "{:.1%}".format(kpi["信立坦有量终端份额(DOT %)"]),
     )
-
-    # # 覆盖部分
-    # pivoted_access = pd.pivot_table(
-    #     data=df,
-    #     values="POTENTIAL_DOT",
-    #     index=dimension_selected,
-    #     columns="SALES_COND",
-    #     aggfunc=[len, sum],
-    #     fill_value=0,
-    # )
-    # pivoted_access = pd.DataFrame(pivoted_access.to_records())  # pivot table对象转为默认df
-    # pivoted_access.set_index(dimension_selected, inplace=True)
-    # # pivoted_access.reset_index(axis=1, inplace=True)
-    # pivoted_access.columns = [
-    #     "无销量目标医院终端数量",
-    #     "有销量目标医院终端数量",
-    #     "非目标医院终端数量",
-    #     "无销量目标医院潜力(DOT)",
-    #     "有销量目标医院潜力(DOT)",
-    #     "非目标医院潜力(DOT)",
-    # ]
-    # pivoted_access["信立坦目标覆盖终端数量"] = (
-    #     pivoted_access["无销量目标医院终端数量"] + pivoted_access["有销量目标医院终端数量"]
-    # )
-    # pivoted_access["信立坦目标覆盖潜力(DOT)"] = (
-    #     pivoted_access["有销量目标医院潜力(DOT)"] + pivoted_access["无销量目标医院潜力(DOT)"]
-    # )
-    # pivoted_access["信立坦目标覆盖潜力(DOT %)"] = pivoted_access[
-    #     "信立坦目标覆盖潜力(DOT)"
-    # ] / pivoted_access.sum(axis=1)
-    # pivoted_access["信立坦销售覆盖终端数量"] = pivoted_access["有销量目标医院终端数量"]
-    # pivoted_access["信立坦销售覆盖潜力(DOT %)"] = pivoted_access[
-    #     "有销量目标医院潜力(DOT)"
-    # ] / pivoted_access.sum(axis=1)
-
-    # # 内部销售部分
-    # pivoted_sales = pd.pivot_table(
-    #     data=df,
-    #     values="SALES_MAT",
-    #     index=dimension_selected,
-    #     columns=None,
-    #     aggfunc=sum,
-    #     fill_value=0,
-    # )
-    # pivoted_sales = pd.DataFrame(
-    #     pivoted_sales.to_records()
-    # )  # pivot table对象转为默认df
-    # pivoted_sales.set_index(dimension_selected, inplace=True)
-    # pivoted_sales.columns = ["信立坦MAT销量(DOT)"]
-    # pivoted_sales["信立坦销售贡献"] = (
-    #     pivoted_sales["信立坦MAT销量(DOT)"] / pivoted_sales["信立坦MAT销量(DOT)"].sum()
-    # )
-
-    # kpi = {
-    #     "潜力汇总(DOT)": int(pivoted_potential["潜力(DOT)"].sum()),
-    #     "有潜力值的终端数量": int(pivoted_potential["终端数量"].sum()),
-    #     "信立坦目标终端覆盖潜力(DOT %)": pivoted_access["信立坦目标覆盖潜力(DOT)"].sum()
-    #     / pivoted_potential["潜力(DOT)"].sum(),
-    #     "信立坦目标终端数量": int(pivoted_access["信立坦目标覆盖终端数量"].sum()),
-    #     "信立坦有量终端覆盖潜力(DOT %)": pivoted_access["有销量目标医院潜力(DOT)"].sum()
-    #     / pivoted_potential["潜力(DOT)"].sum(),
-    #     "信立坦有量终端数量": int(pivoted_access["信立坦销售覆盖终端数量"].sum()),
-    #     "信立坦所有终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_potential["潜力(DOT)"].sum(),
-    #     "信立坦目标终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_access["信立坦目标覆盖潜力(DOT)"].sum(),
-    #     "信立坦有量终端份额": pivoted_sales["信立坦MAT销量(DOT)"].sum()/pivoted_access["有销量目标医院潜力(DOT)"].sum(),
-    # }
 
     # # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     # show_limit_results = form_dict["toggle_limit_show"]
@@ -235,8 +272,14 @@ def query(request):
     # context = dict(context, **ptable_monthly)
     # context = dict(context, **ptable_comm_monthly)
 
-    ptable = format_table(pivoted_potential, "ptable")
-    context = {"ptable": ptable}
+    # ptable = format_table(pivoted_potential, "ptable")
+    context = {
+        "kpi": kpi,
+        "table_pivot": table_pivot,
+        "plot_bubble_contrib": plot_bubble_contrib,
+        "plot_bubble_contrib2": plot_bubble_contrib2,
+        "plot_bubble_allocation": plot_bubble_allocation,
+    }
 
     return HttpResponse(
         json.dumps(context, ensure_ascii=False),
@@ -249,6 +292,17 @@ def table_hp(request):
     form_dict = json.loads(request.POST.get("formdata"))  # filter栏表单数据
     sql = sqlparse(form_dict)  # sql拼接
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+
+    # 检查查询是否有数据，如没有，返回null;如有，继续可视化
+    if df.empty:
+        dataTable = {}
+        dataTable["iTotalRecords"] = 0  # 数据总条数
+        dataTable["sEcho"] = 0
+        dataTable["iTotalDisplayRecords"] = 0  # 显示的条数
+        dataTable["aaData"] = []
+        return HttpResponse(
+            json.dumps(dataTable), content_type="application/json charset=utf-8",
+        )
 
     aodata = json.loads(request.POST.get("aodata"))
     for item in aodata:
@@ -314,6 +368,17 @@ def table_pivot(request):
     sql = sqlparse(form_dict)  # sql拼接
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
+    # 检查查询是否有数据，如没有，返回null;如有，继续可视化
+    if df.empty:
+        dataTable = {}
+        dataTable["iTotalRecords"] = 0  # 数据总条数
+        dataTable["sEcho"] = 0
+        dataTable["iTotalDisplayRecords"] = 0  # 显示的条数
+        dataTable["aaData"] = []
+        return HttpResponse(
+            json.dumps(dataTable), content_type="application/json charset=utf-8",
+        )
+
     dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
 
     # 潜力部分
@@ -330,11 +395,82 @@ def table_pivot(request):
         pivoted_potential.to_records()
     )  # pivot table对象转为默认df
     pivoted_potential.set_index(dimension_selected, inplace=True)
-    pivoted_potential.reset_index(inplace=True)
-    pivoted_potential.columns = [dimension_selected, "HP_NUMBER", "POTENTIAL_DOT"]
-    pivoted_potential["POTENTIAL_CONTRIB"] = (
-        pivoted_potential["POTENTIAL_DOT"] / pivoted_potential["POTENTIAL_DOT"].sum()
+    pivoted_potential.columns = ["终端数量", "潜力(DOT)"]
+    pivoted_potential["潜力贡献(DOT %)"] = (
+        pivoted_potential["潜力(DOT)"] / pivoted_potential["潜力(DOT)"].sum()
     )
+    # pivoted_potential.reset_index(inplace=True)
+
+    # 覆盖部分
+    pivoted_access = pd.pivot_table(
+        data=df,
+        values="POTENTIAL_DOT",
+        index=dimension_selected,
+        columns="STATUS",
+        aggfunc=[len, sum],
+        fill_value=0,
+    )
+    pivoted_access = pd.DataFrame(pivoted_access.to_records())  # pivot table对象转为默认df
+    pivoted_access.set_index(dimension_selected, inplace=True)
+    pivoted_access = pivoted_access.reindex(
+        columns=[
+            "('len', '无销量目标医院')",
+            "('len', '有销量目标医院')",
+            "('len', '非目标医院')",
+            "('sum', '无销量目标医院')",
+            "('sum', '有销量目标医院')",
+            "('sum', '非目标医院')",
+        ]
+    )
+    pivoted_access.columns = [
+        "信立坦无量终端数",
+        "信立坦有量终端数",
+        "信立坦非目标终端数",
+        "信立坦无量终端潜力(DOT)",
+        "信立坦有量终端潜力(DOT)",
+        "信立坦非目标终端潜力(DOT)",
+    ]
+    pivoted_access["信立坦目标终端数"] = pivoted_access["信立坦无量终端数"] + pivoted_access["信立坦有量终端数"]
+    pivoted_access["信立坦目标终端潜力(DOT)"] = (
+        pivoted_access["信立坦无量终端潜力(DOT)"] + pivoted_access["信立坦有量终端潜力(DOT)"]
+    )
+    pivoted_access["信立坦目标终端覆盖率(DOT %)"] = pivoted_access[
+        "信立坦目标终端潜力(DOT)"
+    ] / pivoted_access.sum(axis=1)
+    pivoted_access["信立坦有量终端覆盖率(DOT %)"] = pivoted_access[
+        "信立坦有量终端潜力(DOT)"
+    ] / pivoted_access.sum(axis=1)
+    # pivoted_access.reset_index(inplace=True)
+
+    # 内部销售部分
+    pivoted_sales = pd.pivot_table(
+        data=df,
+        values="MAT_SALES",
+        index=dimension_selected,
+        columns=None,
+        aggfunc=sum,
+        fill_value=0,
+    )
+    pivoted_sales = pd.DataFrame(pivoted_sales.to_records())  # pivot table对象转为默认df
+    pivoted_sales.set_index(dimension_selected, inplace=True)
+    pivoted_sales.columns = ["信立坦MAT销量(DOT)"]
+    pivoted_sales["信立坦销量贡献(DOT %)"] = (
+        pivoted_sales["信立坦MAT销量(DOT)"] / pivoted_sales["信立坦MAT销量(DOT)"].sum()
+    )
+
+    df_combined = pd.concat([pivoted_potential, pivoted_access, pivoted_sales], axis=1)
+    df_combined["信立坦所有终端份额"] = df_combined["信立坦MAT销量(DOT)"] / df_combined["潜力(DOT)"]
+
+    df_combined["信立坦目标终端份额"] = (
+        df_combined["信立坦MAT销量(DOT)"] / df_combined["信立坦目标终端潜力(DOT)"]
+    )
+
+    df_combined["信立坦有量终端份额"] = (
+        df_combined["信立坦MAT销量(DOT)"] / df_combined["信立坦有量终端潜力(DOT)"]
+    )
+
+    df_combined.fillna(0, inplace=True)
+    df_combined.reset_index(inplace=True)
 
     aodata = json.loads(request.POST.get("aodata"))
     for item in aodata:
@@ -347,109 +483,213 @@ def table_pivot(request):
         1: "HP_NUMBER",
         2: "POTENTIAL_DOT",
         3: "POTENTIAL_CONTRIB",
+        4: "HP_NUMBER_TARGET",
+        5: "COVERAGE_TARGET",
+        6: "HP_NUMBER_HAVE_SALES",
+        7: "COVERAGE_HAVE_SALES",
+        8: "SALES_DOT",
+        9: "SALES_CONTRIB",
+        10: "SHARE_TOTAL",
+        11: "SHARE_TARGET",
+        12: "SHARE_HAVE_SALES",
     }
 
-    result = get_dt_page(pivoted_potential, aodata, dict_order)
+    result = get_dt_page(df_combined, aodata, dict_order)
 
     data = []
     for item in result:
-        print(item)
         row = {
-            dimension_selected: item[dimension_selected],
-            "HP_NUMBER": item["HP_NUMBER"],
-            "POTENTIAL_DOT": "{:,.0f}".format(item["POTENTIAL_DOT"])
-            if item["POTENTIAL_DOT"] is not None
-            else "0",
-            "POTENTIAL_CONTRIB": "{:.1%}".format(item["POTENTIAL_CONTRIB"])
-            if item["POTENTIAL_CONTRIB"] is not None
-            else "0.0%",
+            dimension_selected: item[dimension_selected],  # 分析维度
+            "HP_NUMBER": format_numbers(  # 所有终端数量
+                num_str=item["HP_NUMBER"],
+                format_str="{:,.0f}",
+                else_str="0",
+                ignore_nan=True,
+            ),
+            "POTENTIAL_DOT": format_numbers(  # 潜力
+                num_str=item["POTENTIAL_DOT"],
+                format_str="{:,.0f}",
+                else_str="0",
+                ignore_nan=True,
+            ),
+            "POTENTIAL_CONTRIB": format_numbers(  # 潜力贡献
+                num_str=item["POTENTIAL_CONTRIB"],
+                format_str="{:.1%}",
+                else_str="0.0%",
+                ignore_nan=True,
+            ),
+            "HP_NUMBER_TARGET": format_numbers(  # 信立坦目标终端数量
+                num_str=item["HP_NUMBER_TARGET"],
+                format_str="{:,.0f}",
+                else_str="0",
+                ignore_nan=True,
+            ),
+            "COVERAGE_TARGET": format_numbers(  # 信立坦目标终端覆盖潜力(DOT %)
+                num_str=item["COVERAGE_TARGET"],
+                format_str="{:.1%}",
+                else_str="0.0%",
+                ignore_nan=True,
+            ),
+            "HP_NUMBER_HAVE_SALES": format_numbers(  # 信立坦有量终端数量
+                num_str=item["HP_NUMBER_HAVE_SALES"],
+                format_str="{:,.0f}",
+                else_str="0",
+                ignore_nan=True,
+            ),
+            "COVERAGE_HAVE_SALES": format_numbers(  # 信立坦有量终端覆盖潜力(DOT %)
+                num_str=item["COVERAGE_HAVE_SALES"],
+                format_str="{:.1%}",
+                else_str="0.0%",
+                ignore_nan=True,
+            ),
+            "SALES_DOT": format_numbers(  # MAT销量
+                num_str=item["SALES_DOT"],
+                format_str="{:,.0f}",
+                else_str="0",
+                ignore_nan=True,
+            ),
+            "SALES_CONTRIB": format_numbers(  # 信立坦销量贡献
+                num_str=item["SALES_CONTRIB"],
+                format_str="{:.1%}",
+                else_str="0.0%",
+                ignore_nan=True,
+            ),
+            "SHARE_TOTAL": format_numbers(  # 信立坦所有终端份额(DOT %)
+                num_str=item["SHARE_TOTAL"],
+                format_str="{:.1%}",
+                else_str="0.0%",
+                ignore_nan=True,
+            ),
+            "SHARE_TARGET": format_numbers(  # 信立坦目标终端份额(DOT %)
+                num_str=item["SHARE_TARGET"],
+                format_str="{:.1%}",
+                else_str="0.0%",
+                ignore_nan=True,
+            ),
+            "SHARE_HAVE_SALES": format_numbers(  # 信立坦有量终端份额(DOT %)
+                num_str=item["SHARE_HAVE_SALES"],
+                format_str="{:.1%}",
+                else_str="0.0%",
+                ignore_nan=True,
+            ),
         }
         data.append(row)
 
+    print(data)
+
     dataTable = {}
-    dataTable["iTotalRecords"] = pivoted_potential.shape[0]  # 数据总条数
+    dataTable["iTotalRecords"] = df_combined.shape[0]  # 数据总条数
     dataTable["sEcho"] = sEcho + 1
-    dataTable["iTotalDisplayRecords"] = pivoted_potential.shape[0]  # 显示的条数
+    dataTable["iTotalDisplayRecords"] = df_combined.shape[0]  # 显示的条数
     dataTable["aaData"] = data
 
     return HttpResponse(json.dumps(dataTable, ensure_ascii=False))
 
 
-def get_df(form_dict, is_pivoted=True):
+def get_df(form_dict):
     sql = sqlparse(form_dict)  # sql拼接
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
-    # df["HOSPITAL"] = df["HOSPITAL"].str[11:]  # 因医院全名太长，去除医院10位编码
+    # 检查查询是否有数据，如没有，返回null;如有，继续可视化
+    if df.empty:
+        return None
 
-    # if is_pivoted is True:
-    #     return {
-    #         "销售": pivot(df=df[df.TAG != "指标"], form_dict=form_dict),
-    #         "社区销售": pivot(
-    #             df=df[(df.TAG != "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
-    #             form_dict=form_dict,
-    #         ),
-    #         "带指标销售": pivot(
-    #             df=df[(df.TAG != "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
-    #             form_dict=form_dict,
-    #         ),
-    #         "指标": pivot(
-    #             df=df[(df.TAG == "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
-    #             form_dict=form_dict,
-    #         ),
-    #         "社区指标": pivot(
-    #             df=df[(df.TAG == "指标") & (df.LEVEL.isin(["旗舰社区", "普通社区"]))],
-    #             form_dict=form_dict,
-    #         ),
-    #         "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
-    #         "代表数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_rsp"),
-    #     }
+    dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
 
-    # else:
-    return df
+    # 潜力部分
+    pivoted_potential = pd.pivot_table(
+        data=df,
+        values="POTENTIAL_DOT",
+        index=dimension_selected,
+        columns=None,
+        aggfunc=[len, sum],
+        fill_value=0,
+    )
 
+    pivoted_potential = pd.DataFrame(
+        pivoted_potential.to_records()
+    )  # pivot table对象转为默认df
+    pivoted_potential.set_index(dimension_selected, inplace=True)
+    pivoted_potential.columns = ["终端数量", "潜力(DOT)"]
+    pivoted_potential["潜力贡献(DOT %)"] = (
+        pivoted_potential["潜力(DOT)"] / pivoted_potential["潜力(DOT)"].sum()
+    )
+    # pivoted_potential.reset_index(inplace=True)
 
-def pivot(df, form_dict, type="sales"):
-    dimension_selected = form_dict["DIMENSION_select"][0]  # 分析维度
-    unit_selected = form_dict["UNIT_select"][0]  # 单位（盒数、标准盒数、金额）
-    if dimension_selected[0] == "[":
-        column = dimension_selected[1:][:-1]
-    else:
-        column = dimension_selected
+    # 覆盖部分
+    pivoted_access = pd.pivot_table(
+        data=df,
+        values="POTENTIAL_DOT",
+        index=dimension_selected,
+        columns="STATUS",
+        aggfunc=[len, sum],
+        fill_value=0,
+    )
+    pivoted_access = pd.DataFrame(pivoted_access.to_records())  # pivot table对象转为默认df
+    pivoted_access.set_index(dimension_selected, inplace=True)
+    pivoted_access = pivoted_access.reindex(
+        columns=[
+            "('len', '无销量目标医院')",
+            "('len', '有销量目标医院')",
+            "('len', '非目标医院')",
+            "('sum', '无销量目标医院')",
+            "('sum', '有销量目标医院')",
+            "('sum', '非目标医院')",
+        ]
+    )
+    pivoted_access.columns = [
+        "信立坦无量终端数",
+        "信立坦有量终端数",
+        "信立坦非目标终端数",
+        "信立坦无量终端潜力(DOT)",
+        "信立坦有量终端潜力(DOT)",
+        "信立坦非目标终端潜力(DOT)",
+    ]
+    pivoted_access["信立坦目标终端数"] = pivoted_access["信立坦无量终端数"] + pivoted_access["信立坦有量终端数"]
+    pivoted_access["信立坦目标终端潜力(DOT)"] = (
+        pivoted_access["信立坦无量终端潜力(DOT)"] + pivoted_access["信立坦有量终端潜力(DOT)"]
+    )
+    pivoted_access["信立坦目标终端覆盖潜力(DOT %)"] = (
+        pivoted_access["信立坦目标终端潜力(DOT)"] / pivoted_potential["潜力(DOT)"]
+    )
+    pivoted_access["信立坦有量终端覆盖潜力(DOT %)"] = (
+        pivoted_access["信立坦有量终端潜力(DOT)"] / pivoted_potential["潜力(DOT)"]
+    )
+    # pivoted_access.reset_index(inplace=True)
 
-    if type == "sales":
-        pivoted = pd.pivot_table(
-            df,
-            values=unit_selected,  # 数据透视汇总值为AMOUNT字段，一般保持不变
-            index="DATE",  # 数据透视行为DATE字段，一般保持不变
-            columns=column,  # 数据透视列为前端选择的分析维度
-            aggfunc=np.sum,
-        )  # 数据透视汇总方式为求和，一般保持不变
-    elif type == "count_hp":
-        pivoted = pd.pivot_table(
-            df,
-            values="HP_ID",  # 数据透视汇总值为HOSPITAL字段
-            index="DATE",  # 数据透视行为DATE字段，一般保持不变
-            columns=column,  # 数据透视列为前端选择的分析维度
-            aggfunc=pd.Series.nunique,
-        )  # 数据透视汇总方式为计数
-    elif type == "count_rsp":
-        pivoted = pd.pivot_table(
-            df,
-            values="RSP_ID",  # 数据透视汇总值为RSP字段
-            index="DATE",  # 数据透视行为DATE字段，一般保持不变
-            columns=column,  # 数据透视列为前端选择的分析维度
-            aggfunc=pd.Series.nunique,
-        )  # 数据透视汇总方式为计数
+    # 内部销售部分
+    pivoted_sales = pd.pivot_table(
+        data=df,
+        values="MAT_SALES",
+        index=dimension_selected,
+        columns=None,
+        aggfunc=sum,
+        fill_value=0,
+    )
+    pivoted_sales = pd.DataFrame(pivoted_sales.to_records())  # pivot table对象转为默认df
+    pivoted_sales.set_index(dimension_selected, inplace=True)
+    pivoted_sales.columns = ["信立坦MAT销量(DOT)"]
+    pivoted_sales["信立坦销量贡献(DOT %)"] = (
+        pivoted_sales["信立坦MAT销量(DOT)"] / pivoted_sales["信立坦MAT销量(DOT)"].sum()
+    )
 
-    if pivoted.empty is False:
-        pivoted.sort_values(
-            by=pivoted.index[-1], axis=1, ascending=False, inplace=True
-        )  # 结果按照最后一个DATE表现排序
-        pivoted.fillna(0, inplace=True)
-        pivoted = pd.DataFrame(pivoted.to_records())
-        pivoted.set_index("DATE", inplace=True)
+    df_combined = pd.concat([pivoted_potential, pivoted_access, pivoted_sales], axis=1)
+    df_combined["信立坦所有终端份额(DOT %)"] = (
+        df_combined["信立坦MAT销量(DOT)"] / df_combined["潜力(DOT)"]
+    )
 
-    return pivoted
+    df_combined["信立坦目标终端份额(DOT %)"] = (
+        df_combined["信立坦MAT销量(DOT)"] / df_combined["信立坦目标终端潜力(DOT)"]
+    )
+
+    df_combined["信立坦有量终端份额(DOT %)"] = (
+        df_combined["信立坦MAT销量(DOT)"] / df_combined["信立坦有量终端潜力(DOT)"]
+    )
+
+    df_combined["信立坦有量终端潜力贡献(DOT %)"] = (
+        df_combined["信立坦有量终端潜力(DOT)"] / df_combined["信立坦有量终端潜力(DOT)"].sum()
+    )
+    return df_combined
 
 
 def sqlparse(context):
