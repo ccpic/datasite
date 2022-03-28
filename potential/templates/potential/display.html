@@ -14,7 +14,8 @@
 <!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
 <div class="ui pointing secondary menu">
     <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
-    <a class="item" data-tab="cross_table"><i class="th icon"></i>综合分析</a>
+    <a class="item" data-tab="cross_table"><i class="expand icon"></i>综合分析</a>
+    <a class="item" data-tab="potential_table"><i class="th icon"></i>潜力详情</a>
     <a class="item" data-tab="plot_bubble_contrib"><i class="yen sign icon"></i>潜力 vs. 销售</a>
     <a class="item" data-tab="plot_bubble_allocation"><i class="asterisk icon"></i>覆盖 vs. 上量</a>
     <a class="item" data-tab="hps"><i class="hospital icon"></i>终端明细</a>
@@ -128,11 +129,31 @@
     <div class="ui container" id='table_pivot_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
     </div>
 </div>
+<div class="ui tab segment" data-tab="potential_table">
+    <h3 class="ui header">
+        <div class="content">
+            综合分析（潜力、覆盖、上量）
+            <div class="sub header">数据表格
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('table_pivot_potentail') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='table_pivot_potential_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
 <div class="ui tab segment" data-tab="plot_bubble_contrib">
     <h3 class="ui header">
         <div class="content">
             潜力贡献（所有终端） versus 信立坦销售贡献
-            <div class="ui orange basic label"></div>
+            <div class="ui orange basic label" id="label_top1"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
     </h3>
@@ -143,7 +164,7 @@
     <h3 class="ui header">
         <div class="content">
             潜力贡献（信立坦有量终端） versus 信立坦销售贡献
-            <div class="ui orange basic label"></div>
+            <div class="ui orange basic label" id="label_top2"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
     </h3>
@@ -156,7 +177,7 @@
     <h3 class="ui header">
         <div class="content">
             覆盖 versus 上量（按信立坦销量排序）
-            <div class="ui orange basic label"></div>
+            <div class="ui orange basic label" id="label_top3"></div>
             <div class="sub header">气泡图（气泡大小=信立坦MAT销量）</div>
         </div>
     </h3>
@@ -167,7 +188,7 @@
     <h3 class="ui header">
         <div class="content">
             覆盖 versus 上量（按潜力排序）
-            <div class="ui orange basic label"></div>
+            <div class="ui orange basic label" id="label_top4"></div>
             <div class="sub header">气泡图（气泡大小=潜力）</div>
         </div>
     </h3>
@@ -245,14 +266,6 @@
     $('.pointing.secondary.menu .item').tab();
     $('.ui.radio.checkbox')
       .checkbox()
-    ;
-    $('.ui.slider')
-        .slider({
-            min: 0,
-            max: 100,
-            start: 30,
-            step: 5,
-        })
     ;
 </script>
 <script>

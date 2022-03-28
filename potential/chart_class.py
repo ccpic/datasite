@@ -496,7 +496,6 @@ def data_to_list(data):
 
 
 def check_data_with_axes(data: list, axes: axes):
-    print(data, axes)
     if len(data) != len(axes):
         message = "Got %s pieces of data, while %s axes existed." % (
             len(data),

@@ -190,34 +190,69 @@
 
         var columnDefs_table_pivot = [{
                 type: 'percent',
-                targets: [3, 5, 7, 9, 10, 11, 12]
+                width: "8%",
+                targets: [2, 3, 4, 6, 7, 8, 9, -1, -2]
             },
             {
-                targets: [0,1],
-                className: 'dt-center'
-            },
+                "width": "10%",
+                "targets": [1, 5]
+            }, // 保持表格相对列宽度固定
             {
-                targets: [3],
+                targets: [2],
                 render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6',
                     1, 'ridge') // 根据一定的色彩方案初始化条形图
             },
             {
-                targets: [5, 7],
+                targets: [3, 4],
                 render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFD700', '#E6E6E6',
                     1, 'ridge') // 根据一定的色彩方案初始化条形图
             },
             {
-                targets: [9],
+                targets: [6],
                 render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#CAB1F5', '#E6E6E6',
                     1, 'ridge') // 根据一定的色彩方案初始化条形图
             },
             {
-                targets: [10, 11, 12],
+                targets: [7, 8, 9],
                 render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFABD1', '#E6E6E6',
                     1, 'ridge') // 根据一定的色彩方案初始化条形图
             },
+            {
+                "targets": [-1, -2], // 指定倒数第1,2列贡献比
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    var value_idx = parseFloat(cellData.replace('%', ''));
+                    if (value_idx < 100) {
+                        $(td).css('color', 'red')
+                    } else if (value_idx >= 100) {
+                        $(td).css('color', 'green')
+                    }
+                }
+            },
         ];
-
+        var columnDefs_table_pivot_potential = [{
+                type: 'percent',
+                width: "8%",
+                targets: [3, 5, 7, 8, 9]
+            },
+            {
+                "width": "8%",
+                "targets": [1, 4, 6]
+            }, // 保持表格相对列宽度固定
+            {
+                "width": "10%",
+                "targets": [2, -1, -2]
+            }, // 保持表格相对列宽度固定
+            {
+                targets: [3, 9],
+                render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff', '#E6E6E6',
+                    1, 'ridge') // 根据一定的色彩方案初始化条形图
+            },
+            {
+                targets: [5, 7, 8],
+                render: $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFD700', '#E6E6E6',
+                    1, 'ridge') // 根据一定的色彩方案初始化条形图
+            },
+        ];
         $.ajax({
             // 请求的url
             url: '{% url 'potential:query' %}',
@@ -245,7 +280,10 @@
 
                 // 展示datatables表格
                 $("#table_pivot_div").html(ret['table_pivot']);
-                initTable($("#table_pivot"), 2, columnDefs_table_pivot);
+                initTable($("#table_pivot"), 1, columnDefs_table_pivot);
+                $("#table_pivot_potential_div").html(ret['table_pivot_potential']);
+                initTable($("#table_pivot_potential"), 2, columnDefs_table_pivot_potential);
+
                 // 展示Matplotlib气泡图
                 $("#plot_bubble_contrib").attr('src', ret['plot_bubble_contrib']);
                 $("#plot_bubble_contrib2").attr('src', ret['plot_bubble_contrib2']);
@@ -254,10 +292,10 @@
 
                 // 动态修改label
                 if (ret["limit_works"] === true){
-                    $(".ui.orange.basic.label").html("Top" + ret["plot_item_limit"])
+                    $("[id*='label_top']").html("Top" + ret["plot_item_limit"])
                 }
                 else {
-                    $(".ui.orange.basic.label").remove()
+                    $("[id*='label_top']").remove()
                 }
 
             },
