@@ -4,7 +4,22 @@ from typing import List, Union
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import numpy as np
 import math
+import json
 
+
+
+# 解决json dump numpy相关格式报错的问题
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NpEncoder, self).default(obj)
+        
 # 根据前端Datatables返回的aodata对原始df处理并分页
 def get_dt_page(df: pd.DataFrame, aodata: dict, dict_order: dict) -> Paginator.page:
     for item in aodata:
@@ -84,12 +99,12 @@ def sql_extent(
         statement = ""
         if isinstance(selected, list):
             for data in selected:
-                statement = statement + "'" + data + "', "
-            statement = statement[:-2]
+                statement = statement + f"'{data}', "
+            statement = statement[:-2] # 去除最后一个循环产生的", "
         else:
-            statement = "'" + selected + "'"
+            statement = f"'{selected }'"
         if statement != "":
-            sql = sql + operator + field_name + " in (" + statement + ")"
+            sql = f"{sql}{operator}{field_name} in ({statement})"
     return sql
 
 

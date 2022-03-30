@@ -1,23 +1,33 @@
-{% extends "potential/potential.html" %}
-
-{% block display %}
-
+{% extends "potential/potential.html" %} {% block display %}
 
 <!-- 数据处理时的loading遮罩 -->
-<div class="ui active dimmer" id="dimmer">
-</div>
+<div class="ui active dimmer" id="dimmer"></div>
 <div class="ui active dimmer" id="dimmer_dummy" style="height: 100vh">
-    <div class="ui text" style="color: #FFFFFF;">请使用左侧筛选框选择分析维度和定义市场</div>
+    <div class="ui text" style="color: #ffffff">
+        请使用左侧筛选框选择分析维度和定义市场
+    </div>
 </div>
-
 
 <!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
 <div class="ui pointing secondary menu">
-    <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
-    <a class="item" data-tab="cross_table"><i class="expand icon"></i>综合分析</a>
-    <a class="item" data-tab="potential_table"><i class="th icon"></i>潜力详情</a>
-    <a class="item" data-tab="plot_bubble_contrib"><i class="yen sign icon"></i>潜力 vs. 销售</a>
-    <a class="item" data-tab="plot_bubble_allocation"><i class="asterisk icon"></i>覆盖 vs. 上量</a>
+    <a class="item active" data-tab="total"
+        ><i class="circle icon"></i>总体表现</a
+    >
+    <a class="item" data-tab="cross_table"
+        ><i class="expand icon"></i>综合分析</a
+    >
+    <a class="item" data-tab="potential_table"
+        ><i class="th icon"></i>潜力详情</a
+    >
+    <a class="item" data-tab="plot_bubble_contrib"
+        ><i class="yen sign icon"></i>潜力 vs. 销售</a
+    >
+    <a class="item" data-tab="plot_bubble_allocation"
+        ><i class="asterisk icon"></i>覆盖 vs. 上量</a
+    >
+    <a class="item" data-tab="scatter"
+        ><i class="hospital icon"></i>终端潜力 vs. 销量</a
+    >
     <a class="item" data-tab="hps"><i class="hospital icon"></i>终端明细</a>
 </div>
 <div class="ui tab segment active" data-tab="total">
@@ -30,29 +40,20 @@
     <div class="ui divider"></div>
     <!-- Semantic UI的statistic类能呈现“醒目大数字”的效果 -->
 
-    <div class="ui segment">
+    <div class="ui segment" id="chart_width">
         <a class="ui red ribbon label">定义市场潜力</a>
         <div class="ui small three statistics">
             <div class="statistic">
-                <div class="value" id="potential_total">
-                </div>
-                <div class="label">
-                    总潜力(DOT)
-                </div>
+                <div class="value" id="potential_total"></div>
+                <div class="label">总潜力(DOT)</div>
             </div>
             <div class="statistic">
-                <div class="value" id="number_total">
-                </div>
-                <div class="label">
-                   终端数量
-                </div>
+                <div class="value" id="number_total"></div>
+                <div class="label">终端数量</div>
             </div>
             <div class="statistic">
-                <div class="value" id="share_total">
-                </div>
-                <div class="label">
-                    信立坦所有终端份额(DOT %)
-                </div>
+                <div class="value" id="share_total"></div>
+                <div class="label">信立坦所有终端份额(DOT %)</div>
             </div>
         </div>
     </div>
@@ -60,25 +61,16 @@
         <a class="ui blue ribbon label">信立坦目标</a>
         <div class="ui small three statistics">
             <div class="statistic">
-                <div class="value" id="potential_target">
-                </div>
-                <div class="label">
-                    信立坦目标终端覆盖潜力(DOT %)
-                </div>
+                <div class="value" id="potential_target"></div>
+                <div class="label">信立坦目标终端覆盖潜力(DOT %)</div>
             </div>
             <div class="statistic">
-                <div class="value" id="number_target">
-                </div>
-                <div class="label">
-                    信立坦目标终端数量
-                </div>
+                <div class="value" id="number_target"></div>
+                <div class="label">信立坦目标终端数量</div>
             </div>
             <div class="statistic">
-                <div class="value" id="share_target">
-                </div>
-                <div class="label">
-                    信立坦目标终端份额(DOT %)
-                </div>
+                <div class="value" id="share_target"></div>
+                <div class="label">信立坦目标终端份额(DOT %)</div>
             </div>
         </div>
     </div>
@@ -86,25 +78,16 @@
         <a class="ui purple ribbon label">信立坦有量（开户概念）</a>
         <div class="ui small three statistics">
             <div class="statistic">
-                <div class="value" id="potential_sales">
-                </div>
-                <div class="label">
-                    信立坦有量终端覆盖潜力(DOT %)
-                </div>
+                <div class="value" id="potential_sales"></div>
+                <div class="label">信立坦有量终端覆盖潜力(DOT %)</div>
             </div>
             <div class="statistic">
-                <div class="value" id="number_sales">
-                </div>
-                <div class="label">
-                    信立坦有量终端数量
-                </div>
+                <div class="value" id="number_sales"></div>
+                <div class="label">信立坦有量终端数量</div>
             </div>
             <div class="statistic">
-                <div class="value" id="share_sales">
-                </div>
-                <div class="label">
-                    信立坦有量终端份额(DOT %)
-                </div>
+                <div class="value" id="share_sales"></div>
+                <div class="label">信立坦有量终端份额(DOT %)</div>
             </div>
         </div>
     </div>
@@ -113,47 +96,57 @@
     <h3 class="ui header">
         <div class="content">
             综合分析（潜力、覆盖、上量）
-            <div class="sub header">数据表格
-
-            </div>
+            <div class="sub header">数据表格</div>
         </div>
     </h3>
     <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('table_pivot') );"
-         data-content="复制成功" data-position="bottom center">
+    <div
+        class="ui top attached button"
+        tabindex="0"
+        onclick="selectElementContents( document.getElementById('table_pivot') );"
+        data-content="复制成功"
+        data-position="bottom center"
+    >
         <i class="copy icon"></i>
         复制到剪贴板
     </div>
     <div class="ui hidden divider"></div>
-    <div class="ui container" id='table_pivot_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
+    <div
+        class="ui container"
+        id="table_pivot_div"
+        style="width: 100%; overflow-x: scroll; overflow-y: hidden"
+    ></div>
 </div>
 <div class="ui tab segment" data-tab="potential_table">
     <h3 class="ui header">
         <div class="content">
             综合分析（潜力、覆盖、上量）
-            <div class="sub header">数据表格
-
-            </div>
+            <div class="sub header">数据表格</div>
         </div>
     </h3>
     <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('table_pivot_potentail') );"
-         data-content="复制成功" data-position="bottom center">
+    <div
+        class="ui top attached button"
+        tabindex="0"
+        onclick="selectElementContents( document.getElementById('table_pivot_potentail') );"
+        data-content="复制成功"
+        data-position="bottom center"
+    >
         <i class="copy icon"></i>
         复制到剪贴板
     </div>
     <div class="ui hidden divider"></div>
-    <div class="ui container" id='table_pivot_potential_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-    </div>
+    <div
+        class="ui container"
+        id="table_pivot_potential_div"
+        style="width: 100%; overflow-x: scroll; overflow-y: hidden"
+    ></div>
 </div>
 <div class="ui tab segment" data-tab="plot_bubble_contrib">
     <h3 class="ui header">
         <div class="content">
             潜力贡献（所有终端） versus 信立坦销售贡献
-            <div class="ui orange basic label" id="label_top1"></div>
+            <div class="ui orange basic label" id="bubble_label1"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
     </h3>
@@ -164,7 +157,7 @@
     <h3 class="ui header">
         <div class="content">
             潜力贡献（信立坦有量终端） versus 信立坦销售贡献
-            <div class="ui orange basic label" id="label_top2"></div>
+            <div class="ui orange basic label" id="bubble_label2"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
     </h3>
@@ -177,7 +170,7 @@
     <h3 class="ui header">
         <div class="content">
             覆盖 versus 上量（按信立坦销量排序）
-            <div class="ui orange basic label" id="label_top3"></div>
+            <div class="ui orange basic label" id="bubble_label3"></div>
             <div class="sub header">气泡图（气泡大小=信立坦MAT销量）</div>
         </div>
     </h3>
@@ -188,7 +181,7 @@
     <h3 class="ui header">
         <div class="content">
             覆盖 versus 上量（按潜力排序）
-            <div class="ui orange basic label" id="label_top4"></div>
+            <div class="ui orange basic label" id="bubble_label4"></div>
             <div class="sub header">气泡图（气泡大小=潜力）</div>
         </div>
     </h3>
@@ -197,57 +190,121 @@
         <img id="plot_bubble_allocation2" style="width: 100%" alt="" />
     </div>
 </div>
-<div class="ui tab segment" data-tab="hps">
+<!-- prettier-ignore -->
+<div class="ui tab segment" data-tab="scatter">
     <h3 class="ui header">
         <div class="content">
-            终端潜力
-            <div class="sub header">数据表格
-
+            终端潜力 versus 信立坦销量
+            <div class="sub header">可交互散点图            
+                <div class="ui red basic label">
+                    滚动鼠标滚轮或拖动坐标轴滚动条可缩放显示区域
+                </div>
             </div>
         </div>
     </h3>
     <div class="ui divider"></div>
-    <div class="ui top attached button" tabindex="0"
-         onclick="selectElementContents( document.getElementById('table_hp') );"
-         data-content="复制成功" data-position="bottom center">
+    <div class="ui container">
+        <div id="scatter" style="width:1000px; height:600px;"></div>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="hps">
+    <h3 class="ui header">
+        <div class="content">
+            终端潜力
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div
+        class="ui top attached button"
+        tabindex="0"
+        onclick="selectElementContents( document.getElementById('table_hp') );"
+        data-content="复制成功"
+        data-position="bottom center"
+    >
         <i class="copy icon"></i>
         复制到剪贴板
     </div>
     <div class="ui hidden divider"></div>
-    <div class="ui container" id='table_hp_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
-        <table cellpadding="0" cellspacing="0" border="0" id="table_hp" class="ui celled table">
-        </table>
+    <div
+        class="ui container"
+        id="table_hp_div"
+        style="width: 100%; overflow-x: scroll; overflow-y: hidden"
+    >
+        <table
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            id="table_hp"
+            class="ui celled table"
+        ></table>
     </div>
 </div>
 
-
-
 <div class="ui modal" id="modal_options">
-    <div class="header">
-        查询选项
-    </div>
+    <div class="header">查询选项</div>
     <div class="content">
         <div class="ui form">
             <div class="field">
                 <label>限制气泡图最多显示的项目数（0为不限制）</label>
                 <div class="ui right labeled input">
-                    <input type="text" id="txtNum" value="30" disabled="">
+                    <input
+                        type="text"
+                        id="bubble_limit"
+                        value="30"
+                        disabled=""
+                    />
                     <div class="ui mini vertical buttons">
-                        <button class="ui icon button" command="Up"> <i class="up chevron icon"></i>
-                
+                        <button
+                            class="ui icon button"
+                            command="Up"
+                            id="bubble_limit_button_up"
+                        >
+                            <i class="up chevron icon"></i>
                         </button>
-                        <button class="ui icon button" command="Down"> <i class="down chevron icon"></i>
-                
+                        <button
+                            class="ui icon button"
+                            command="Down"
+                            id="bubble_limit_button_down"
+                        >
+                            <i class="down chevron icon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label>限制散点图最多显示的项目数（0为不限制）</label>
+                <div class="ui right labeled input">
+                    <input
+                        type="text"
+                        id="scatter_limit"
+                        value="200"
+                        disabled=""
+                    />
+                    <div class="ui mini vertical buttons">
+                        <button
+                            class="ui icon button"
+                            command="Up"
+                            id="scatter_limit_button_up"
+                        >
+                            <i class="up chevron icon"></i>
+                        </button>
+                        <button
+                            class="ui icon button"
+                            command="Down"
+                            id="scatter_limit_button_down"
+                        >
+                            <i class="down chevron icon"></i>
                         </button>
                     </div>
                 </div>
             </div>
             <div class="ui hidden divider"></div>
             <div class="ui hidden divider"></div>
-              <div class="field">
+            <div class="field">
                 <label>自定义SQL</label>
                 <textarea id="customized_sql"></textarea>
-              </div>
+            </div>
         </div>
     </div>
     <div class="actions">
@@ -256,22 +313,21 @@
 </div>
 
 <style>
-#dimmer_dummy
-{
-    background: rgba(255, 255, 255, 0) !important;
-}
+    #dimmer_dummy {
+        background: rgba(255, 255, 255, 0) !important;
+    }
 </style>
 <!-- 下方js为保证Semantic UI tab类工作 -->
 <script>
-    $('.pointing.secondary.menu .item').tab();
-    $('.ui.radio.checkbox')
-      .checkbox()
-    ;
+    $(".pointing.secondary.menu .item").tab();
+    $(".ui.radio.checkbox").checkbox();
 </script>
 <script>
     // 复制有node结构的文本区域
     function selectElementContents(el) {
-        var body = document.body, range, sel;
+        var body = document.body,
+            range,
+            sel;
         if (document.createRange && window.getSelection) {
             range = document.createRange();
             sel = window.getSelection();
@@ -293,11 +349,9 @@
 </script>
 <script>
     // 按钮点击后有弹出文本，显示data-content内容“复制成功”
-    $('.ui.top.attached.button')
-        .popup({
-            on: 'click'
-        })
-    ;
+    $(".ui.top.attached.button").popup({
+        on: "click",
+    });
 </script>
 <script>
     $("#export_pivot").click(function(){
@@ -317,39 +371,51 @@
 <script>
     // Constants
     var KEY_UP = 38,
-    KEY_DOWN = 40;
+        KEY_DOWN = 40;
 
     // Variables
     var min = 0,
-    max = 200,
-    step = 5;
+        max = 1000,
+        step = 5;
 
-    $('.ui.icon.button').click(function () {
-    var command = $(this).attr('command');
-    HandleUpDown(command);
+    $("[id*='bubble_limit_button']").click(function () {
+        var command = $(this).attr("command");
+        HandleUpDown(command, $("#bubble_limit"));
     });
 
-    $('#txtNum').keypress(function (e) {
-    var code = e.keyCode;
-    if (code != KEY_UP && code != KEY_DOWN) return;
-    var command = code == KEY_UP ? 'Up' : code == KEY_DOWN ? 'Down' : '';
-    HandleUpDown(command);
+    $("#bubble_limit").keypress(function (e) {
+        var code = e.keyCode;
+        if (code != KEY_UP && code != KEY_DOWN) return;
+        var command = code == KEY_UP ? "Up" : code == KEY_DOWN ? "Down" : "";
+        HandleUpDown(command, $("#bubble_limit"));
     });
 
-    function HandleUpDown(command) {
-    var val = $('#txtNum').val().trim();
-    var num = val !== '' ? parseInt(val) : 0;
+    $("[id*='scatter_limit_button']").click(function () {
+        var command = $(this).attr("command");
+        HandleUpDown(command, $("#scatter_limit"));
+    });
 
-    switch (command) {
-        case 'Up':
-            if (num < max) num += step;
-            break;
-        case 'Down':
-            if (num > min) num -= step;
-            break;
-    }
+    $("#scatter_limit").keypress(function (e) {
+        var code = e.keyCode;
+        if (code != KEY_UP && code != KEY_DOWN) return;
+        var command = code == KEY_UP ? "Up" : code == KEY_DOWN ? "Down" : "";
+        HandleUpDown(command, $("#scatter_limit"));
+    });
 
-    $('#txtNum').val(num);
+    function HandleUpDown(command, text_field) {
+        var val = text_field.val().trim();
+        var num = val !== "" ? parseInt(val) : 0;
+
+        switch (command) {
+            case "Up":
+                if (num < max) num += step;
+                break;
+            case "Down":
+                if (num > min) num -= step;
+                break;
+        }
+
+        text_field.val(num);
     }
 </script>
 {% endblock display %}

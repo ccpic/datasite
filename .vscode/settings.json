@@ -1,6 +1,5 @@
 {
   "python.pythonPath": "venv\\Scripts\\python.exe",
-  "prettier.disableLanguages": ["django-html"],
   "files.associations": {
     "**/*.html": "html",
     "**/templates/**/*.html": "django-html",
@@ -10,12 +9,8 @@
   "emmet.includeLanguages": {
     "django-html": "html"
   },
-  "beautify.language": {
-    "html": ["htm", "html", "django-html"]
-  },
   "[django-html]": {
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "HookyQR.beautify"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["gantt"]
 }

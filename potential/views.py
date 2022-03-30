@@ -1,6 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from django.http import request
 from django.contrib.auth.decorators import login_required
+from matplotlib.font_manager import json_dump
 from sqlalchemy import create_engine
 import pandas as pd
 import json
@@ -12,6 +13,7 @@ from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
 from .chart_class import PlotBubble
 from datasite.commons import (
+    NpEncoder,
     format_numbers,
     format_table,
     get_distinct_list,
@@ -87,15 +89,18 @@ def query(request: request) -> HttpResponse:
     HttpResponse
         返回json格式的数据和图表
     """
-
     form_dict = qdict_to_dict(request.GET)
+    sql = sqlparse(form_dict)  # sql拼接
+    data = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+    dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
+
     # 透视过的数据
-    df = get_df(form_dict)
+    df = get_pivot(data, dimension_selected)
 
     # 气泡图展示的数量限制，如为0则不设限
-    plot_item_limit = (
-        int(form_dict["plot_item_limit"])
-        if int(form_dict["plot_item_limit"]) != 0
+    bubble_limit = (
+        int(form_dict["bubble_limit"])
+        if int(form_dict["bubble_limit"]) != 0
         else df.shape[0]
     )
 
@@ -111,11 +116,6 @@ def query(request: request) -> HttpResponse:
         "信立坦目标终端份额(DOT %)": df["信立坦MAT销量(DOT)"].sum() / df["信立坦目标终端潜力(DOT)"].sum(),
         "信立坦有量终端份额(DOT %)": df["信立坦MAT销量(DOT)"].sum() / df["信立坦有量终端潜力(DOT)"].sum(),
     }
-
-    # json不支持inf，替换为None
-    for k, v in kpi.items():
-        if v in [np.inf, -np.inf]:
-            kpi[k] = None
 
     # 综合透视分析表格
     table_pivot = df.fillna(0).reindex(
@@ -154,14 +154,14 @@ def query(request: request) -> HttpResponse:
             "单家终端平均潜力(有量终端)",
         ]
     )
-    table_pivot_potential = format_table(df=table_pivot_potential, id="table_pivot_potential")
+    table_pivot_potential = format_table(
+        df=table_pivot_potential, id="table_pivot_potential"
+    )
 
-    # 散点图 - 潜力贡献（所有终端） versus 信立坦销量贡献
+    # 气泡图 - 潜力贡献（所有终端） versus 信立坦销量贡献
     fmt = [".1%"]
     plot_data = df.loc[:, ["潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
-    plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(
-        plot_item_limit
-    )
+    plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(bubble_limit)
 
     plot_bubble_contrib = plt.figure(
         FigureClass=PlotBubble,
@@ -178,7 +178,7 @@ def query(request: request) -> HttpResponse:
     fmt = [".1%"]
     plot_data = df.loc[:, ["信立坦有量终端潜力贡献(DOT %)", "信立坦销量贡献(DOT %)", "潜力(DOT)"]].fillna(0)
     plot_data = plot_data.sort_values(by="信立坦有量终端潜力贡献(DOT %)", ascending=False).head(
-        plot_item_limit
+        bubble_limit
     )
 
     plot_bubble_contrib2 = plt.figure(
@@ -201,7 +201,7 @@ def query(request: request) -> HttpResponse:
         :, ["信立坦有量终端覆盖潜力(DOT %)", "信立坦有量终端份额(DOT %)", "信立坦MAT销量(DOT)"]
     ].fillna(0)
     plot_data = plot_data.sort_values(by="信立坦MAT销量(DOT)", ascending=False).head(
-        plot_item_limit
+        bubble_limit
     )
 
     plot_bubble_allocation = plt.figure(
@@ -231,9 +231,7 @@ def query(request: request) -> HttpResponse:
     plot_data = df.loc[:, ["信立坦有量终端覆盖潜力(DOT %)", "信立坦有量终端份额(DOT %)", "潜力(DOT)"]].fillna(
         0
     )
-    plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(
-        plot_item_limit
-    )
+    plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(bubble_limit)
 
     plot_bubble_allocation2 = plt.figure(
         FigureClass=PlotBubble,
@@ -256,12 +254,23 @@ def query(request: request) -> HttpResponse:
         y_avg_value=kpi["信立坦有量终端份额(DOT %)"],
         y_avg_label="平均:%s" % "{:.1%}".format(kpi["信立坦有量终端份额(DOT %)"]),
     )
+
+    # # Echarts Grid 散点图，展示不同维度内的单家终端潜力
+    # plot_scatter = echarts_scatter(
+    #     data[["HP_NAME", "POTENTIAL_DOT", "MAT_SALES"]].set_index("HP_NAME").fillna(0)
+    # )
+
     # # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     # show_limit_results = form_dict["toggle_limit_show"]
 
+    # json不支持nan和inf，替换为None
+    for k, v in kpi.items():
+        if v in [np.inf, -np.inf, np.nan] or np.isnan(v):
+            kpi[k] = None
+
     context = {
-        "plot_item_limit": plot_item_limit,
-        "limit_works": plot_item_limit < df.shape[0],
+        "bubble_limit": bubble_limit,
+        "bubble_limit_works": bubble_limit < df.shape[0],
         "kpi": kpi,
         "table_pivot": table_pivot,
         "table_pivot_potential": table_pivot_potential,
@@ -269,6 +278,7 @@ def query(request: request) -> HttpResponse:
         "plot_bubble_contrib2": plot_bubble_contrib2,
         "plot_bubble_allocation": plot_bubble_allocation,
         "plot_bubble_allocation2": plot_bubble_allocation2,
+        # "plot_scatter": json.loads(plot_scatter.dump_options()),
     }
 
     return HttpResponse(
@@ -577,15 +587,25 @@ def table_hp(request):
 #     return HttpResponse(json.dumps(dataTable, ensure_ascii=False))
 
 
-def get_df(form_dict):
-    sql = sqlparse(form_dict)  # sql拼接
-    df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+def get_pivot(df: pd.DataFrame, dimension_selected: str) -> pd.DataFrame:
+    """透视处理数据，以计算各种潜力、覆盖、上量相关的KPIs
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        原始数据（每行为1个终端）
+    dimension_selected : str
+        前端控件返回的分析维度，即透视的行字段
+
+    Returns
+    -------
+    pd.DataFrame
+        行为分析维度，列为各种潜力、覆盖、上量相关的KPIs的df
+    """
 
     # 检查查询是否有数据，如没有，返回null;如有，继续可视化
     if df.empty:
         return None
-
-    dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
 
     # 潜力部分
     pivoted_potential = pd.pivot_table(
@@ -694,7 +714,7 @@ def get_df(form_dict):
     )
 
     df_combined["单家终端平均潜力(所有终端)"] = df_combined["潜力(DOT)"] / df_combined["终端数量"]
-    
+
     df_combined["单家终端平均潜力(有量终端)"] = (
         df_combined["信立坦有量终端潜力(DOT)"] / df_combined["信立坦有量终端数"]
     )
@@ -703,8 +723,26 @@ def get_df(form_dict):
     return df_combined
 
 
-def sqlparse(context):
-    sql = "Select * from %s WHERE 1=1" % DB_TABLE  # 先处理单选部分
+def sqlparse(context: dict, columns: list = None) -> str:
+    """根据前端控件的输入返回从sql数据库取数的sql语句
+
+    Parameters
+    ----------
+    context : dict
+        前端控件输入含有各字段条件参数的字典
+    columns : list, optional
+        指定数据库取数的字段, by default None
+
+    Returns
+    -------
+    str
+        取数的sql语句
+    """
+    if columns is None:
+        sql_columns = "*"
+    else:
+        sql_columns = ", ".join(columns)
+    sql = f"Select {sql_columns} from %s WHERE 1=1" % DB_TABLE  # 先处理单选部分
     if context["customized_sql"] == "":
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
@@ -715,7 +753,8 @@ def sqlparse(context):
                 "UNIT_select",
                 "toggle_limit_show",
                 "customized_sql",
-                "plot_item_limit",
+                "bubble_limit",
+                "scatter_limit",
             ]:
                 if k[-2:] == "[]":
                     field_name = k[:-9]  # 如果键以[]结尾，删除_select[]取原字段名
@@ -726,6 +765,24 @@ def sqlparse(context):
     else:
         sql = context["customized_sql"]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
     return sql
+
+
+def scatter_data(request):
+    form_dict = json.loads(request.POST.get("formdata"))  # filter栏表单数据
+    sql = sqlparse(
+        form_dict, ["HP_NAME", "STATUS", "POTENTIAL_DOT", "MAT_SALES", "AM", "RSP", "HP_TYPE", "DECILE", "DECILE_TOTAL"]
+    )  # sql拼接
+    df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+
+    df = df.fillna(0)
+    df[["POTENTIAL_DOT", "MAT_SALES"]] = df[["POTENTIAL_DOT", "MAT_SALES"]].astype("int")
+
+    context = {"data": df.values.tolist(), "sales_max": df["MAT_SALES"].max()}
+
+    return HttpResponse(
+        json.dumps(context, cls=NpEncoder, ensure_ascii=False),
+        content_type="application/json charset=utf-8",
+    )
 
 
 def export(request, type):

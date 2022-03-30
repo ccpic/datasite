@@ -5,24 +5,22 @@
             {% csrf_token %}
             <h3 class="ui header" id="analysis">分析维度</h3>
             <div class="field">
-                <select name="DIMENSION_select" id="DIMENSION_select" class="ui fluid tiny search dropdown">
+                <select
+                    name="DIMENSION_select"
+                    id="DIMENSION_select"
+                    class="ui fluid tiny search dropdown"
+                >
                     {% for key, value in mselect_dict.items %}
                     <option value="{{ value.select }}">{{ key }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <h3 class="ui header" id="data_filter">
-                数据筛选
-                {#                <div class="content">#}
-                {#                    <div class="ui pointing below red basic label">#}
-                {#                        请选择销售数据筛选的范围#}
-                {#                    </div>#}
-                {#                </div>#}
-            </h3>
+            <h3 class="ui header" id="data_filter">数据筛选</h3>
+            <!-- prettier-ignore -->
             <div class="field">
                 {% for key, value in mselect_dict.items %}
                 <div class="field">
-                    <select name="{{ value.select|add:"_select[]" }}" id="{{ value.select|add:"_select" }}" multiple=""
+                    <select name='{{ value.select|add:"_select[]" }}' id='{{ value.select|add:"_select" }}' multiple=""
                         class="ui fluid tiny search dropdown">
                         <option value="">{{ key }}</option>
                         {% for item in value.options %}
@@ -32,17 +30,26 @@
                 </div>
                 {% endfor %}
             </div>
-            <br>
+            <br />
             <div class="ui fluid buttons">
                 <!--<input class="ui button" type="reset" id="reset"/>-->
                 <!--<div class="or"></div>-->
-                <input class="ui blue button" type='button' id='AJAX_get' value="查询" />
-                <input class="ui blue basic button" type='button' id='show_options' value="选项" />
+                <input
+                    class="ui blue button"
+                    type="button"
+                    id="AJAX_get"
+                    value="查询"
+                />
+                <input
+                    class="ui blue basic button"
+                    type="button"
+                    id="show_options"
+                    value="选项"
+                />
             </div>
         </form>
     </div>
 </div>
-
 
 <script>
     function submitForm() {
@@ -54,51 +61,24 @@
 
 <!-- 因为用到Semantic UI的Search Dropdown控件，必须有下面语句初始化 -->
 <script>
-    $('.ui.fluid.search.dropdown')
-        .dropdown({
-            fullTextSearch: true
-        });
+    $(".ui.fluid.search.dropdown").dropdown({
+        fullTextSearch: true,
+    });
 </script>
 
 <script>
     $("#show_options").click(function () {
-        $("#modal_options").modal({
+        $("#modal_options")
+            .modal({
                 closable: false,
                 onApprove: function () {
-                    $("#modal_options").modal('hide')
-                }
+                    $("#modal_options").modal("hide");
+                },
             })
-            .modal('show')
-    })
+            .modal("show");
+    });
 </script>
-{#<script>#}
-{#    // 在JS中再次使用字段字典#}
-{#    var dict = {{ mselect_dict|safe }};#}
-{#    // 在Django模板中遇到带有{}的字符串必须使用replace这种方式#}
-{#    var url = "{% url 'internal_sales:search' 'COLUMNPLACEHOLDER' 'QUERYPLACEHOLDER' %}".replace(#}
-{#        'QUERYPLACEHOLDER', '{query}'#}
-{#    );#}
-{#    // jQuery语法遍历所有多选框#}
-{#    $('.ui.fluid.search.dropdown.selection.multiple').each(function () {#}
-{#        // Semantic UI语法获得多选框默认文本#}
-{#        var text = $(this).dropdown('get default text');#}
-{#        // 上方语句如遇到bug可不使用Semantic UI API，直接用Jquery语句#}
-{#        var text = $(this).children('select').children('option:first').text();#}
-{#        // 根据字典倒推该多选框是哪个字段#}
-{#        var column = dict[text]['select'];#}
-{#        $(this).dropdown(#}
-{#            {#}
-{#                apiSettings: {#}
-{#                    // 用下方URL从后端返回查询后的json#}
-{#                    url: url.replace('COLUMNPLACEHOLDER', column)#}
-{#                },#}
-{#                // 输入至少2个字符后才query#}
-{#                minCharacters: 2,#}
-{#                cache: false#}
-{#            })#}
-{#        ;#}
-{#    })#}
-{#</script>#}
+
 <script type="text/javascript">
     $("#AJAX_get").click(function (event) {
         event.preventDefault(); // 防止表单默认的提交
@@ -113,7 +93,28 @@
         // 获取交互表单数据
         var form_data = getForm();
 
+        // 根据参数生成终端echarts scatter图
+        // Echarts初始化
+        var scatter = initChart('scatter');
+        // prettier-ignore
+        var url_scatter_data = '{% url 'potential:scatter_data' %}';
+        $.ajax({
+            type: "POST",
+            url: url_scatter_data,
+            dataType: "json",
+            data: {
+                formdata: JSON.stringify(form_data),
+            },
+            success: function (ret) {
+                updateChart(scatter, getScatterOptions(ret["data"], 0, ret["sales_max"] ));
+            },
+            error: function () { //失败
+                console.log('散点图绘制失败');
+            }
+        });
+
         // 根据参数生成服务器端dt表格
+        // prettier-ignore
         var url_table_hp = '{% url 'potential:table_hp' %}';
         var columns_table_hp = [{
                 title: "医院编码",
@@ -253,8 +254,10 @@
                     1, 'ridge') // 根据一定的色彩方案初始化条形图
             },
         ];
+
         $.ajax({
             // 请求的url
+            // prettier-ignore
             url: '{% url 'potential:query' %}',
             // 请求的type
             type: 'GET',
@@ -291,11 +294,11 @@
                 $("#plot_bubble_allocation2").attr('src', ret['plot_bubble_allocation2']);
 
                 // 动态修改label
-                if (ret["limit_works"] === true){
-                    $("[id*='label_top']").html("Top" + ret["plot_item_limit"])
+                if (ret["bubble_limit_works"] === true){
+                    $("[id*='bubble_label']").html("Top" + ret["bubble_limit"])
                 }
                 else {
-                    $("[id*='label_top']").remove()
+                    $("[id*='bubble_label']").remove()
                 }
 
             },
@@ -319,6 +322,27 @@
     }
 </script>
 <script>
+    function initChart(chart_id) {
+        var chart = echarts.init(document.getElementById(chart_id), "white", {
+            renderer: "canvas",
+        });
+        chart.showLoading({
+            text: "正在加载数据",
+        }); //增加加载提示
+        return chart;
+    }
+</script>
+<script>
+    function updateChart(chart, chart_options) {
+        chart.clear();
+        if (chart_options !== "null") {
+            chart.setOption(chart_options);
+            chart.hideLoading();
+        }
+    }
+</script>
+<script>
+    // prettier-ignore
     function getForm() {
         // 获取单选下拉框的值
         var form_data = {
@@ -334,7 +358,7 @@
         }
 
         // 获取输出选项modal的值
-        form_data["plot_item_limit"] = $("#txtNum").val();
+        form_data["bubble_limit"] = $("#bubble_limit").val();
         form_data["customized_sql"] = $("#customized_sql").val();
 
         return form_data
@@ -343,13 +367,13 @@
 
 <script>
     function initChart(chart_id) {
-        var chart = echarts.init(document.getElementById(chart_id), 'white', {
-            renderer: 'canvas'
+        var chart = echarts.init(document.getElementById(chart_id), "white", {
+            renderer: "canvas",
         });
         chart.showLoading({
-            text: '正在加载数据'
+            text: "正在加载数据",
         }); //增加加载提示
-        return chart
+        return chart;
     }
 </script>
 
@@ -367,69 +391,77 @@
     $(document).ready(function () {
         $.ajaxSetup({
             data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            }
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+            },
         });
     });
 </script>
 
-
 <script>
     function initTable(table, orderBy, columnDefs) {
         table.DataTable({
-            order: [
-                [orderBy, "desc"]
-            ], // 初始以第2列（注意第一列索引为0）由高到低排序
+            order: [[orderBy, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
             pageLength: 25, // 前端分页，初始每页显示25条记录
             autoWidth: false, // 不自动调整表格宽度
-            oLanguage: { // UI Label本地化
-                "sLengthMenu": "显示 _MENU_ 项结果",
-                "sProcessing": "处理中...",
-                "sZeroRecords": "没有匹配结果",
-                "sInfo": "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
-                "sInfoEmpty": "没有数据",
-                "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
-                "sInfoPostFix": "",
-                "sSearch": "搜索:",
-                "sUrl": "",
-                "sEmptyTable": "未查询到数据",
-                "sLoadingRecords": "载入中...",
-                "sInfoThousands": ",",
-                "oPaginate": {
-                    "sFirst": "首页",
-                    "sPrevious": "上页",
-                    "sNext": "下页",
-                    "sLast": "末页"
+            oLanguage: {
+                // UI Label本地化
+                sLengthMenu: "显示 _MENU_ 项结果",
+                sProcessing: "处理中...",
+                sZeroRecords: "没有匹配结果",
+                sInfo: "显示第 _START_ 至 _END_ 条结果，共 _TOTAL_ 条",
+                sInfoEmpty: "没有数据",
+                sInfoFiltered: "(获取 _MAX_ 条客户档案)",
+                sInfoPostFix: "",
+                sSearch: "搜索:",
+                sUrl: "",
+                sEmptyTable: "未查询到数据",
+                sLoadingRecords: "载入中...",
+                sInfoThousands: ",",
+                oPaginate: {
+                    sFirst: "首页",
+                    sPrevious: "上页",
+                    sNext: "下页",
+                    sLast: "末页",
                 },
             },
-            "columnDefs": columnDefs,
+            columnDefs: columnDefs,
         });
         jQuery.extend(jQuery.fn.dataTableExt.oSort, {
             "percent-pre": function (a) {
-
-                var x = (a == "+nan%" || a === 'nan%' || a === '-nan%' || a === 'inf%' || a === '+inf%' ||
-                    a === '-inf%') ? 0 : a.replace(/%/, "");
+                var x =
+                    a == "+nan%" ||
+                    a === "nan%" ||
+                    a === "-nan%" ||
+                    a === "inf%" ||
+                    a === "+inf%" ||
+                    a === "-inf%"
+                        ? 0
+                        : a.replace(/%/, "");
                 return parseFloat(x);
             },
 
             "percent-asc": function (a, b) {
-                return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+                return a < b ? -1 : a > b ? 1 : 0;
             },
 
             "percent-desc": function (a, b) {
-                return ((a < b) ? 1 : ((a > b) ? -1 : 0));
-            }
+                return a < b ? 1 : a > b ? -1 : 0;
+            },
         });
     }
 </script>
 
 <script>
     // Ajax table初始化方法
-    function initAjaxDataTable(urlParam, columnsParam, form_data, orderBy, columnDefs) {
+    function initAjaxDataTable(
+        urlParam,
+        columnsParam,
+        form_data,
+        orderBy,
+        columnDefs
+    ) {
         return {
-            order: [
-                [orderBy, "desc"]
-            ], // 初始以第2列（注意第一列索引为0）由高到低排序
+            order: [[orderBy, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
             pageLength: 25, // 前端分页，初始每页显示25条记录
             destroy: true, //每次初始化前会先摧毁已经存在的表格对象
             sPaginationType: "full_numbers", //分页风格，full_number会把所有页码显示出来
@@ -447,46 +479,157 @@
             */
             fnServerData: function (sSource, aoData, fnCallback) {
                 $.ajax({
-                    'type': 'POST',
-                    "url": sSource,
-                    "dataType": "json",
-                    "data": {
-                        "aodata": JSON.stringify(aoData),
-                        "formdata": JSON.stringify(form_data),
+                    type: "POST",
+                    url: sSource,
+                    dataType: "json",
+                    data: {
+                        aodata: JSON.stringify(aoData),
+                        formdata: JSON.stringify(form_data),
                     },
-                    "success": function (resp) {
+                    success: function (resp) {
                         fnCallback(resp);
-                    }
+                    },
                 });
             },
-            "oLanguage": { //语言设置
-                "sLengthMenu": '<select class="form-control" style="width:150px">' +
+            oLanguage: {
+                //语言设置
+                sLengthMenu:
+                    '<select class="form-control" style="width:150px">' +
                     '<option value="10" selected>每页显示10条</option>' +
                     '<option value="25">每页显示25条</option>' +
                     '<option value="50">每页显示50条</option>' +
                     '<option value="100">每页显示100条</option>' +
-                    '</select>',
-                "sProcessing": "处理中...",
-                "sZeroRecords": "没有匹配结果",
-                "sInfo": "显示第 _START_ 至 _END_ 条客户档案，共 _TOTAL_ 条",
-                "sInfoEmpty": "没有数据",
-                "sInfoFiltered": "(获取 _MAX_ 条客户档案)",
-                "sInfoPostFix": "",
-                "sSearch": "搜索:",
-                "sUrl": "",
-                "sEmptyTable": "表中数据为空",
-                "sLoadingRecords": "载入中...",
-                "sInfoThousands": ",",
-                "oPaginate": {
-                    "sFirst": "首页",
-                    "sPrevious": "上页",
-                    "sNext": "下页",
-                    "sLast": "末页"
+                    "</select>",
+                sProcessing: "处理中...",
+                sZeroRecords: "没有匹配结果",
+                sInfo: "显示第 _START_ 至 _END_ 条客户档案，共 _TOTAL_ 条",
+                sInfoEmpty: "没有数据",
+                sInfoFiltered: "(获取 _MAX_ 条客户档案)",
+                sInfoPostFix: "",
+                sSearch: "搜索:",
+                sUrl: "",
+                sEmptyTable: "表中数据为空",
+                sLoadingRecords: "载入中...",
+                sInfoThousands: ",",
+                oPaginate: {
+                    sFirst: "首页",
+                    sPrevious: "上页",
+                    sNext: "下页",
+                    sLast: "末页",
                 },
             },
-            "columnDefs": columnDefs,
-            "bServerSide": true, //开启服务器模式，使用服务器端处理配置datatable。
-            "columns": columnsParam,
-        }
+            columnDefs: columnDefs,
+            bServerSide: true, //开启服务器模式，使用服务器端处理配置datatable。
+            columns: columnsParam,
+        };
+    }
+</script>
+<script>
+    function getScatterOptions(data, dataMin, dataMax) {
+        console.log(data);
+        var option = {
+            grid: {
+                right: "12%",
+            },
+            visualMap: [
+                {
+                    type: "continuous",
+                    min: dataMin,
+                    max: dataMax,
+                    dimension: 3,
+                    orient: "vertical",
+                    top: "center",
+                    right: 0,
+                    text: ["高销量", "低销量"],
+                    show: false,
+                    calculable: true,
+                    inRange: {
+                        color: ["#8C000F", "#84B701", "#054907"],
+                        symbolSize: [5, 20],
+                    },
+                },
+            ],
+            dataZoom: [
+                {
+                    type: "slider",
+                    show: true,
+                    xAxisIndex: [0],
+                    start: 0,
+                    end: 100,
+                    filterMode: "filter",
+                },
+                {
+                    type: "slider",
+                    left: 0,
+                    show: true,
+                    yAxisIndex: [0],
+                    start: 0,
+                    end: 100,
+                    filterMode: "empty",
+                },
+                {
+                    type: "inside",
+                    xAxisIndex: [0],
+                },
+                {
+                    type: "inside",
+                    yAxisIndex: [0],
+                },
+            ],
+            tooltip: {
+                trigger: "item",
+                axisPointer: {
+                    type: "cross",
+                },
+                backgroundColor: "rgba(255,255,255,0.95)", //设置背景图片 rgba格式
+                color: "black",
+                borderWidth: "1", //边框宽度设置1
+                borderColor: "gray", //设置边框颜色
+                textStyle: {
+                    color: "black", //设置文字颜色
+                },
+            },
+            xAxis: [
+                {
+                    name: "终端潜力值(DOT)",
+                    type: "value",
+                },
+            ],
+            yAxis: [
+                {
+                    name: "信立坦MAT销售(DOT)",
+                    type: "value",
+                },
+            ],
+            series: [
+                {
+                    type: "scatter",
+                    dimensions: [
+                        "终端名称",
+                        "状态",
+                        "潜力",
+                        "销量",
+                        "地区经理",
+                        "代表",
+                        "类型",
+                        "DECILE(等级/社区内部)",
+                        "DECILE(合并计算)",
+                    ],
+                    encode: {
+                        x: 2,
+                        y: 3,
+                        tooltip: [1, 6, 7, 8, 4, 5, 2, 3],
+                        itemName: 0,
+                        itemGroup: 1,
+                    },
+                    symbolSize: 6,
+                    data: data,
+                    emphasis: {
+                        focus: "self",
+                    },
+                },
+            ],
+        };
+        return option;
     }
 </script>
