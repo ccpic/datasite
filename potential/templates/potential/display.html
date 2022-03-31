@@ -29,6 +29,7 @@
         ><i class="hospital icon"></i>终端潜力 vs. 销量</a
     >
     <a class="item" data-tab="hps"><i class="hospital icon"></i>终端明细</a>
+    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
 </div>
 <div class="ui tab segment active" data-tab="total">
     <h3 class="ui header">
@@ -240,7 +241,24 @@
         ></table>
     </div>
 </div>
-
+<div class="ui tab segment" data-tab="export">
+    <div class="ui buttons">
+        <input
+            class="ui blue button"
+            type="button"
+            id="export_pivot"
+            value="导出透视&计算后指标"
+        />
+    </div>
+    <div class="ui buttons">
+        <input
+            class="ui blue button"
+            type="button"
+            id="export_raw"
+            value="导出原始数据"
+        />
+    </div>
+</div>
 <div class="ui modal" id="modal_options">
     <div class="header">查询选项</div>
     <div class="content">
@@ -354,21 +372,6 @@
     });
 </script>
 <script>
-    $("#export_pivot").click(function(){
-        var form_data = getForm();
-
-        var downloadUrl = '{% url 'internal_sales:export' 'pivoted' %}'+ '?' + $.param(form_data, true);
-        window.location.href = downloadUrl;
-    });
-
-    $("#export_raw").click(function(){
-        var form_data = getForm();
-
-        var downloadUrl = '{% url 'internal_sales:export' 'raw' %}'+ '?' + $.param(form_data, true);
-        window.location.href = downloadUrl;
-    })
-</script>
-<script>
     // Constants
     var KEY_UP = 38,
         KEY_DOWN = 40;
@@ -417,5 +420,22 @@
 
         text_field.val(num);
     }
+</script>
+<script>
+    $("#export_pivot").click(function(){
+        var form_data = getForm();
+
+        // prettier-ignore
+        var downloadUrl = '{% url 'potential:export' 'pivoted' %}'+ '?' + $.param(form_data, true);
+        window.location.href = downloadUrl;
+    });
+
+    $("#export_raw").click(function(){
+        var form_data = getForm();
+
+        // prettier-ignore
+        var downloadUrl = '{% url 'potential:export' 'raw' %}'+ '?' + $.param(form_data, true);
+        window.location.href = downloadUrl;
+    })
 </script>
 {% endblock display %}

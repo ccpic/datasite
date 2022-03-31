@@ -7,7 +7,6 @@ import math
 import json
 
 
-
 # 解决json dump numpy相关格式报错的问题
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -19,7 +18,8 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NpEncoder, self).default(obj)
-        
+
+
 # 根据前端Datatables返回的aodata对原始df处理并分页
 def get_dt_page(df: pd.DataFrame, aodata: dict, dict_order: dict) -> Paginator.page:
     for item in aodata:
@@ -100,7 +100,7 @@ def sql_extent(
         if isinstance(selected, list):
             for data in selected:
                 statement = statement + f"'{data}', "
-            statement = statement[:-2] # 去除最后一个循环产生的", "
+            statement = statement[:-2]  # 去除最后一个循环产生的", "
         else:
             statement = f"'{selected }'"
         if statement != "":
@@ -125,9 +125,10 @@ def format_numbers(
 
 
 def get_distinct_list(column: str, db_table: str, engine: str) -> list:
-    sql = "Select DISTINCT " + column + " From " + db_table
+    sql = f"Select DISTINCT {column} From {db_table}"
     df = pd.read_sql_query(sql, engine)
     df.dropna(inplace=True)
+    df.sort_values(by=column, inplace=True)
     l = df.values.flatten().tolist()
     return l
 

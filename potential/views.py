@@ -43,7 +43,8 @@ D_MULTI_SELECT = {
     "区县": "COUNTY",
     "潜力分位（等级、社区各自内部）": "DECILE",
     "潜力分位（合并计算）": "DECILE_TOTAL",
-    "医院": "HOSPITAL",
+    # "医院": "HOSPITAL",
+    # "信立坦销售状态": "STATUS",
 }
 
 
@@ -287,8 +288,68 @@ def query(request: request) -> HttpResponse:
     )  # 返回结果必须是json格式
 
 
+@login_required
+def export(request: request, type: str) -> HttpResponse:
+    """根据前端控件的输入使用导出选择范围内的数据，数据有2种格式——原始数 or 透视&计算过的表格数据
+
+    Parameters
+    ----------
+    request : request
+        前端控件的输入选择
+    type : str
+        以何种格式导出——原始数 or 透视&计算过的表格数据
+
+    Returns
+    -------
+    HttpResponse
+        Excel格式的下载内容
+    """
+
+    form_dict = qdict_to_dict(request.GET)
+    sql = sqlparse(form_dict)  # sql拼接
+    data = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
+    dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
+
+    excel_file = IO()
+    xlwriter = pd.ExcelWriter(excel_file, engine="xlsxwriter")
+
+    if type == "pivoted":
+        df = get_pivot(data, dimension_selected)  # 透视后的数据
+        df.to_excel(xlwriter, sheet_name="data", index=True)
+    elif type == "raw":
+        data.to_excel(xlwriter, sheet_name="data", index=False)
+
+    xlwriter.save()
+    xlwriter.close()
+
+    excel_file.seek(0)
+
+    # 设置浏览器mime类型
+    response = HttpResponse(
+        excel_file.read(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    # 设置文件名
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # 当前精确时间不会重复，适合用来命名默认导出文件
+    response["Content-Disposition"] = "attachment; filename=" + now + ".xlsx"
+    return response
+
+
 @login_required()
-def table_hp(request):
+def table_hp(request: request) -> HttpResponse:
+    """根据前端控件的输入使用Ajax异步通信返回为终端明细DataTables表格准备的数据
+
+    Parameters
+    ----------
+    request : request
+        前端控件的输入选择（包括DataTables的配置项如排序和翻页等）
+
+    Returns
+    -------
+    HttpResponse
+        json格式的单家终端表现和DataTables配置项数据
+    """
     form_dict = json.loads(request.POST.get("formdata"))  # filter栏表单数据
     sql = sqlparse(form_dict)  # sql拼接
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
@@ -767,15 +828,42 @@ def sqlparse(context: dict, columns: list = None) -> str:
     return sql
 
 
-def scatter_data(request):
+@login_required()
+def scatter_data(request: request) -> HttpResponse:
+    """根据前端控件的输入使用Ajax异步通信返回为终端表现散点图准备的数据
+
+    Parameters
+    ----------
+    request : request
+        前端控件的输入选择
+
+    Returns
+    -------
+    HttpResponse
+        json格式的单家终端数据
+    """
+
     form_dict = json.loads(request.POST.get("formdata"))  # filter栏表单数据
     sql = sqlparse(
-        form_dict, ["HP_NAME", "STATUS", "POTENTIAL_DOT", "MAT_SALES", "AM", "RSP", "HP_TYPE", "DECILE", "DECILE_TOTAL"]
+        form_dict,
+        [
+            "HP_NAME",
+            "STATUS",
+            "POTENTIAL_DOT",
+            "MAT_SALES",
+            "AM",
+            "RSP",
+            "HP_TYPE",
+            "DECILE",
+            "DECILE_TOTAL",
+        ],
     )  # sql拼接
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
     df = df.fillna(0)
-    df[["POTENTIAL_DOT", "MAT_SALES"]] = df[["POTENTIAL_DOT", "MAT_SALES"]].astype("int")
+    df[["POTENTIAL_DOT", "MAT_SALES"]] = df[["POTENTIAL_DOT", "MAT_SALES"]].astype(
+        "int"
+    )
 
     context = {"data": df.values.tolist(), "sales_max": df["MAT_SALES"].max()}
 
@@ -783,7 +871,3 @@ def scatter_data(request):
         json.dumps(context, cls=NpEncoder, ensure_ascii=False),
         content_type="application/json charset=utf-8",
     )
-
-
-def export(request, type):
-    pass
