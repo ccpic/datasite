@@ -54,7 +54,7 @@
             </div>
             <div class="statistic">
                 <div class="value" id="share_total"></div>
-                <div class="label">信立坦所有终端份额(DOT %)</div>
+                <div class="label">信立坦所有终端销售份额(DOT %)</div>
             </div>
         </div>
     </div>
@@ -71,7 +71,7 @@
             </div>
             <div class="statistic">
                 <div class="value" id="share_target"></div>
-                <div class="label">信立坦目标终端份额(DOT %)</div>
+                <div class="label">信立坦目标终端销售份额(DOT %)</div>
             </div>
         </div>
     </div>
@@ -88,7 +88,7 @@
             </div>
             <div class="statistic">
                 <div class="value" id="share_sales"></div>
-                <div class="label">信立坦有量终端份额(DOT %)</div>
+                <div class="label">信立坦有量终端销售份额(DOT %)</div>
             </div>
         </div>
     </div>
@@ -290,33 +290,6 @@
                     </div>
                 </div>
             </div>
-            <div class="field">
-                <label>限制散点图最多显示的项目数（0为不限制）</label>
-                <div class="ui right labeled input">
-                    <input
-                        type="text"
-                        id="scatter_limit"
-                        value="200"
-                        disabled=""
-                    />
-                    <div class="ui mini vertical buttons">
-                        <button
-                            class="ui icon button"
-                            command="Up"
-                            id="scatter_limit_button_up"
-                        >
-                            <i class="up chevron icon"></i>
-                        </button>
-                        <button
-                            class="ui icon button"
-                            command="Down"
-                            id="scatter_limit_button_down"
-                        >
-                            <i class="down chevron icon"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
             <div class="ui hidden divider"></div>
             <div class="ui hidden divider"></div>
             <div class="field">
@@ -333,6 +306,10 @@
 <style>
     #dimmer_dummy {
         background: rgba(255, 255, 255, 0) !important;
+    }
+
+    .ui.grid {
+        min-height: 80vh;
     }
 </style>
 <!-- 下方js为保证Semantic UI tab类工作 -->
