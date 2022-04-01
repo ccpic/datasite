@@ -13,12 +13,6 @@ import datetime
 from .models import *
 from datasite.commons import sql_extent, qdict_to_dict
 
-
-try:
-    import six  # for modern Django
-except ImportError:
-    from django.utils import six  # for legacy Django
-
 try:
     from io import BytesIO as IO  # for modern python
 except ImportError:
