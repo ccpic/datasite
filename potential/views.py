@@ -41,8 +41,7 @@ D_MULTI_SELECT = {
     "省份": "PROVINCE",
     "城市": "CITY",
     "区县": "COUNTY",
-    "潜力分位（等级、社区各自内部）": "DECILE",
-    "潜力分位（合并计算）": "DECILE_TOTAL",
+    "潜力分位": "DECILE",
     # "医院": "HOSPITAL",
     # "信立坦销售状态": "STATUS",
 }
@@ -380,8 +379,8 @@ def table_hp(request: request) -> HttpResponse:
         5: "AM",
         6: "RSP",
         7: "HP_TYPE",
-        8: "DECILE",
-        9: "DECILE_TOTAL",
+        8: "STATUS",
+        9: "DECILE",
         10: "POTENTIAL_DOT",
         11: "MAT_SALES",
         12: "SHARE",
@@ -400,8 +399,10 @@ def table_hp(request: request) -> HttpResponse:
             "am": item["AM"],
             "rsp": item["RSP"],
             "hp_type": html_label(item["HP_TYPE"]),
+            "status": html_label(
+                "目标" if item["STATUS"] in ["有销量目标医院", "无销量目标医院"] else "非目标"
+            ),
             "decile": html_label(item["DECILE"]),
-            "decile_total": html_label(item["DECILE_TOTAL"]),
             "potential_dot": "{:,.0f}".format(item["POTENTIAL_DOT"])
             if item["POTENTIAL_DOT"] is not None
             else "0",
@@ -855,7 +856,6 @@ def scatter_data(request: request) -> HttpResponse:
             "RSP",
             "HP_TYPE",
             "DECILE",
-            "DECILE_TOTAL",
         ],
     )  # sql拼接
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe

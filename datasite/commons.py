@@ -75,7 +75,9 @@ def html_label(text: Union[str, int, float]) -> str:
         "2": "purple",
         "1": "brown",
         "等级医院": "blue",
-        "社区医院": "green",
+        "社区医院": "olive",
+        "目标": "green",
+        "非目标": "red",
     }
     color = COLOR_DICT.get(str(text), "black")
     html_str = '<div class="ui %s basic label">%s</div>' % (color, text)
@@ -150,13 +152,6 @@ def build_formatters_by_col(df: pd.DataFrame, table_id: str = None) -> dict:
             elif any(
                 x in str(column) for x in ["份额", "贡献", "达成", "占比", "覆盖率", "DOT %"]
             ):
-                # elif (
-                #     "份额" in str(column)
-                #     or "贡献" in str(column)
-                #     or "达成" in str(column)
-                #     or "占比" in str(column)
-                #     or "覆盖率" in str(column)
-                # ):
                 d[column] = format_share
             elif any(x in str(column) for x in ["价格", "单价"]):
                 d[column] = format_currency

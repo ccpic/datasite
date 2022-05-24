@@ -149,12 +149,12 @@
                 data: "hp_type"
             },
             {
-                title: "等级/社区医院内部潜力分级",
-                data: "decile"
+                title: "是否目标",
+                data: "status"
             },
             {
-                title: "所有终端合并计算潜力分级",
-                data: "decile_total"
+                title: "潜力分位",
+                data: "decile"
             },
             {
                 title: "潜力值(DOT)",
@@ -175,7 +175,7 @@
             }, // 保持表格相对列宽度固定
             {
                 "width": "10%",
-                "targets": [0, 5, 7, 10, 11]
+                "targets": [0, 5, 7, 10,11]
             }, // 保持表格相对列宽度固定
             {
                 "targets": [12],
@@ -612,8 +612,7 @@
                         "地区经理",
                         "代表",
                         "类型",
-                        "DECILE(等级/社区内部)",
-                        "DECILE(合并计算)",
+                        "DECILE",
                     ],
                     encode: {
                         x: 2,

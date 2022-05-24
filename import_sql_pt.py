@@ -137,20 +137,41 @@ def prepare_potential(hp_index: float) -> pd.DataFrame:
         open("外部潜力数据.xlsx", "rb"), sheet_name="等级医院潜力"
     )  # 从Excel读取大医院潜力数据
     df_hp["信立泰医院名称"].fillna(df_hp["IQVIA 医院名称"], inplace=True)  # 没有信立泰名称的copy IQVIA医院名称
-    df_hp = df_hp.loc[:, ["信立泰医院代码", "信立泰医院名称", "省份", "城市", "区县", "终端潜力值", "等级医院潜力分级"]]
-    df_hp.columns = ["医院编码", "医院名称", "省份", "城市", "区县", "终端潜力值", "等级医院内部潜力分位"]
+    df_hp = df_hp.loc[
+        :,
+        [
+            "信立泰医院代码",
+            "信立泰医院名称",
+            "省份",
+            "城市",
+            "区县",
+            "终端潜力值",
+            "信立泰调整后的潜力片数",
+            "信立泰调整后的Decile",
+        ],
+    ]
+    df_hp.columns = ["医院编码", "医院名称", "省份", "城市", "区县", "终端潜力值", "信立泰终端潜力值", "信立泰潜力分位"]
     df_hp["数据源"] = "IQVIA大医院潜力201909MAT"
     df_hp["医院类型"] = "等级医院"
-    df_hp["终端潜力值"] = df_hp["终端潜力值"] * hp_index  # 放大
+    df_hp["终端潜力值"] = df_hp.apply(
+        lambda x: x["终端潜力值"] * hp_index if pd.isnull(x["信立泰终端潜力值"]) else x["信立泰终端潜力值"],
+        axis=1,
+    )  # 如果有信立泰内部潜力则应用，没有则使用外部潜力*hp_index
 
     # 导入社区医院终端潜力数据
     df_cm = pd.read_excel(
         open("外部潜力数据.xlsx", "rb"), sheet_name="社区医院潜力"
     )  # 从Excel读取社区医院潜力数据
-    df_cm = df_cm.loc[:, ["信立泰ID", "终端名称", "省份", "城市", "区县", "潜力值（DOT）", "社区医院潜力分级"]]
-    df_cm.columns = ["医院编码", "医院名称", "省份", "城市", "区县", "终端潜力值", "社区医院内部潜力分位"]
+    df_cm = df_cm.loc[
+        :,
+        ["信立泰ID", "终端名称", "省份", "城市", "区县", "潜力值（DOT）", "信立泰调整后的潜力片数", "信立泰调整后的Decile"],
+    ]
+    df_cm.columns = ["医院编码", "医院名称", "省份", "城市", "区县", "终端潜力值", "信立泰终端潜力值", "信立泰潜力分位"]
     df_cm["数据源"] = "Pharbers社区医院潜力202103MAT"
     df_cm["医院类型"] = "社区医院"
+    df_hp["终端潜力值"] = df_hp.apply(
+        lambda x: x["终端潜力值"] if pd.isnull(x["信立泰终端潜力值"]) else x["信立泰终端潜力值"], axis=1
+    )  # 如果有信立泰内部潜力则应用，没有则使用外部潜力
 
     # 删除重复值
     df_combined = pd.concat([df_hp, df_cm])
@@ -159,7 +180,31 @@ def prepare_potential(hp_index: float) -> pd.DataFrame:
     )  # 找出IQVIA和Pharbers数据重复的终端，keep参数=first保留IQVIA的，last保留Pharbers的
     # dup_rows.to_csv("dup.csv", encoding="utf-8-sig")
     df_hp = df_hp.drop(dup_rows.index)  # drop重复数据
-    df_combined = pd.concat([df_hp, df_cm])
+
+    # 导入其他医院终端潜力数据
+    df_others = pd.read_excel(
+        open("外部潜力数据.xlsx", "rb"), sheet_name="匹配不上的信立泰目标医院"
+    )  # 从Excel读取社区医院潜力数据
+    df_others = df_others.loc[
+        :, ["信立泰ID", "终端名称", "省份", "城市", "区县", "终端潜力值(片数)", "医院级别", "医院地域属性"]
+    ]
+    df_others.columns = [
+        "医院编码",
+        "医院名称",
+        "省份",
+        "城市",
+        "区县",
+        "信立泰终端潜力值",
+        "信立泰潜力分位",
+        "医院类型",
+    ]
+    df_others["数据源"] = "未匹配上外部潜力数据的信立坦目标医院"
+    df_others["医院类型"] = df_others["医院类型"].apply(
+        lambda x: "等级医院" if x in ["城市医院", "县域医院"] else "社区医院"
+    )
+    df_others["终端潜力值"] = df_others["信立泰终端潜力值"]
+
+    df_combined = pd.concat([df_hp, df_cm, df_others])
 
     print(df_combined)
     return df_combined
@@ -203,6 +248,8 @@ def merge_data(df_internal: pd.DataFrame, df_potential: pd.DataFrame) -> pd.Data
     df_combined["信立坦销售份额"] = df_combined["信立坦MAT销量"] / df_combined["终端潜力值"]
     df_combined["信立坦销售表现"] = df_combined["信立坦销售份额"].apply(lambda x: share_cond(x))
 
+    print(df_combined.columns)
+
     df_combined.columns = [
         "HP_ID",
         "HP_NAME",
@@ -210,10 +257,10 @@ def merge_data(df_internal: pd.DataFrame, df_potential: pd.DataFrame) -> pd.Data
         "CITY",
         "COUNTY",
         "POTENTIAL_DOT",
-        "DECILE_HP",
+        "POTENTIAL_DOT_SALUBRIS",
+        "DECILE_SALUBRIS",
         "DATA_SOURCE",
         "HP_TYPE",
-        "DECILE_CM",
         "MAT_SALES",
         "RSP",
         "ANNUAL_TARGET",
@@ -234,14 +281,14 @@ def merge_data(df_internal: pd.DataFrame, df_potential: pd.DataFrame) -> pd.Data
         axis=1,
     )
 
-    # 合并Decile到同一字段，但该Decile并不是合并计算的潜力分位，仍是等级医院和社区医院内的分位，仅为方便使用
-    df_combined["DECILE"] = df_combined.apply(
-        lambda x: x["DECILE_HP"] if x["HP_TYPE"] == "等级医院" else x["DECILE_CM"], axis=1
-    )
+    # # 合并Decile到同一字段，但该Decile并不是合并计算的潜力分位，仍是等级医院和社区医院内的分位，仅为方便使用
+    # df_combined["DECILE"] = df_combined.apply(
+    #     lambda x: x["DECILE_HP"] if x["HP_TYPE"] == "等级医院" else x["DECILE_CM"], axis=1
+    # )
 
     # 计算潜力等级医院和社区医院合并的潜力分位
     df_combined.sort_values(by=["POTENTIAL_DOT"], inplace=True)
-    df_combined["DECILE_TOTAL"] = (
+    df_combined["DECILE"] = (
         np.floor(
             df_combined["POTENTIAL_DOT"].cumsum()
             / df_combined["POTENTIAL_DOT"].sum()
@@ -250,6 +297,17 @@ def merge_data(df_internal: pd.DataFrame, df_potential: pd.DataFrame) -> pd.Data
         + 1
     ).astype("int")
     df_combined.sort_values(by=["POTENTIAL_DOT"], ascending=False, inplace=True)
+
+    df_combined["DECILE"] = df_combined.apply(
+        lambda x: x["DECILE"]
+        if pd.isnull(x["DECILE_SALUBRIS"])
+        else x["DECILE_SALUBRIS"],
+        axis=1,
+    )  # 如果有内部潜力评级的终端和我们计算出来的有偏差，以内部为准
+
+    df_combined.drop(
+        ["POTENTIAL_DOT_SALUBRIS", "DECILE_SALUBRIS"], axis=1, inplace=True
+    )
 
     # for col in [
     #     "MAT_SALES",
@@ -277,7 +335,7 @@ def import_data(
         lambda x: ",".join(x.tolist()) if type(x) != str and type(x) != float else x
     )  # RSP字段转为字符串存储
     df.loc[:, ["POTENTIAL_DOT", "MAT_SALES", "SHARE"]].fillna(0)  # 数值字段的空值都替换为0
-    
+
     df.to_sql(
         table,
         con=engine,
@@ -293,10 +351,7 @@ def import_data(
             "POTENTIAL_DOT": t.FLOAT(),
             "DATA_SOURCE": t.NVARCHAR(length=30),
             "HP_TYPE": t.NVARCHAR(length=4),
-            "DECILE_HP": t.INTEGER(),
-            "DECILE_CM": t.INTEGER(),
             "DECILE": t.INTEGER(),
-            "DECILE_TOTAL": t.INTEGER(),
             "MAT_SALES": t.FLOAT(),
             "ANNUAL_TARGET": t.FLOAT(),
             "RSP": t.NVARCHAR(length=100),
@@ -315,9 +370,9 @@ if __name__ == "__main__":
     engine = create_engine("mssql+pymssql://(local)/Internal_sales")
     table = "potential"
 
-    filename_3on1 = "三合一表2月初版"
-    start_month = 202103
-    end_month = 202202
+    filename_3on1 = "三合一表3月初版"
+    start_month = 202104
+    end_month = 202203
     HP_INDEX = 1.1  # 大医院潜力项目早1年半做，放大1.1倍，RAAS市场年增长率6%
 
     df_internal = prepare_internal(filename_3on1, start_month, end_month)
