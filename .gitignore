@@ -141,3 +141,5 @@ dmypy.json
 
 # Migration
 migrations
+
+import_sql*.py
