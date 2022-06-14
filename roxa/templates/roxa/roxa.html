@@ -14,7 +14,9 @@
 {% block body %}
     {% csrf_token %}
     <div class="ui hidden divider"></div>
-
+    <div class="ui active dimmer">
+        <div class="ui text loader">数据加载中……</div>
+    </div>
     <div class="ui container">
         <div id="pusher" class="pusher" style="padding-top:50px">
             <div class="ui huge breadcrumb">
@@ -52,7 +54,8 @@
                             </select><div class="ui left pointing label">
                                 切换地图着色依据的指标
                                 </div>
-                            <div id="map" style="height:600px"></div>
+                            <div id="map" style="height:600px">
+                            </div>
                         </div>
                         <div class="ui tab segment" data-tab="table_kpi">
                             <div
@@ -343,6 +346,8 @@
                     };
 
                     map.hideLoading();
+                    // 去除加载遮罩（去掉active）
+                    $(".ui.dimmer").attr('class', 'ui dimmer');
                     map.setOption(option, {
                         notMerge: true,
                         lazyUpdate: false

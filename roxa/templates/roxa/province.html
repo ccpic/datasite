@@ -14,7 +14,9 @@
 {% block body %}
 
     <div class="ui hidden divider"></div>
-
+    <div class="ui active dimmer">
+        <div class="ui text loader">数据加载中……</div>
+    </div>
     <div class="ui container">
         <div id="pusher" class="pusher" style="padding-top:50px">
             <div class="ui huge breadcrumb">
@@ -320,6 +322,8 @@
                     };
 
                     map.hideLoading();
+                    // 去除加载遮罩（去掉active）
+                    $(".ui.dimmer").attr('class', 'ui dimmer');
                     map.setOption(option, {
                         notMerge: true,
                         lazyUpdate: false
