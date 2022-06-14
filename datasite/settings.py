@@ -106,7 +106,7 @@ WSGI_APPLICATION = "datasite.wsgi.application"
 DATABASES = {
     "default": {
         "NAME": "CHPA_city",
-        "ENGINE": "sql_server.pyodbc",
+        "ENGINE": "mssql",
         "HOST": "(local)",
         "USER": "",
         "PASSWORD": "",
