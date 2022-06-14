@@ -1,0 +1,257 @@
+<!-- 写入 base.html 中定义的 body content -->
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+{% load static %}
+
+{% block title %}罗沙司他销售数据{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+            <div class="ui huge breadcrumb">
+                <a href="{% url "roxa:index" %}" class="section">全国</a>
+                <i class="right angle icon divider"></i>
+                <a href="{% url 'roxa:province' %}?province={{province}}" class="section">{{province}}</a>
+                <i class="right angle icon divider"></i>
+                <div href="" class="section"
+                        class="active section">{{ city }}</div>
+            </div>
+            <div class="ui celled grid">
+                <div class="row">
+                    <div class="sixteen wide column">
+                        <!-- 创建Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
+                        <div class="ui pointing secondary menu">
+                            <a class="item active" data-tab="table_hp"
+                                ><i class="building icon"></i>医院明细</a
+                            >
+                        </div>
+                        <div class="ui tab active segment" data-tab="table_hp">
+                            <div
+                                class="ui top attached button"
+                                tabindex="0"
+                                onclick="selectElementContents( document.getElementById('table_hp') );"
+                                data-content="复制成功"
+                                data-position="bottom center"
+                            >
+                                <i class="copy icon"></i>
+                                复制到剪贴板
+                            </div>
+                            <div class="ui hidden divider"></div>
+                            <div
+                                class="ui container"
+                                id="table_hp_div"
+                                style="width: 100%; overflow-x: scroll; overflow-y: hidden"
+                            >
+                                <table
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                    id="table_hp"
+                                    class="ui celled table"
+                                ></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ui hidden divider"></div>
+   
+    <script>
+        $(".pointing.secondary.menu .item").tab();
+    </script>
+    <script>
+        // Ajax table初始化方法
+        function initAjaxDataTable(
+            urlParam,
+            columnsParam,
+            form_data,
+            orderBy,
+            columnDefs
+        ) {
+            return {
+                order: [[orderBy, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
+                pageLength: 25, // 前端分页，初始每页显示25条记录
+                destroy: true, //每次初始化前会先摧毁已经存在的表格对象
+                sPaginationType: "full_numbers", //分页风格，full_number会把所有页码显示出来
+                searching: true, //搜索
+                ordering: true, //是否启用排序
+                autoWidth: false, // 关闭自动调整表格宽度
+                bProcessing: true, //是否显示加载
+                sAjaxSource: urlParam, //请求资源路径
+                serverSide: true, //开启服务器处理模式
+                /*
+                     使用ajax，在服务端处理数据
+                     sSource:即是"sAjaxSource"
+                     aoData:要传递到服务端的参数
+                     fnCallback:处理返回数据的回调函数
+                */
+                fnServerData: function (sSource, aoData, fnCallback) {
+                    console.log(JSON.stringify(form_data))
+                    $.ajax({
+                        type: "POST",
+                        url: sSource,
+                        dataType: "json",
+                        data: {
+                            csrfmiddlewaretoken: "{{ csrf_token }}",
+                            aodata: JSON.stringify(aoData),
+                            formdata: JSON.stringify(form_data),
+                        },
+                        success: function (resp) {
+                            fnCallback(resp);
+                        },
+                    });
+                },
+                oLanguage: {
+                    //语言设置
+                    sLengthMenu:
+                        '<select class="form-control" style="width:150px">' +
+                        '<option value="10" selected>每页显示10条</option>' +
+                        '<option value="25">每页显示25条</option>' +
+                        '<option value="50">每页显示50条</option>' +
+                        '<option value="100">每页显示100条</option>' +
+                        "</select>",
+                    sProcessing: "处理中...",
+                    sZeroRecords: "没有匹配结果",
+                    sInfo: "显示第 _START_ 至 _END_ 条客户档案，共 _TOTAL_ 条",
+                    sInfoEmpty: "没有数据",
+                    sInfoFiltered: "(获取 _MAX_ 条客户档案)",
+                    sInfoPostFix: "",
+                    sSearch: "搜索:",
+                    sUrl: "",
+                    sEmptyTable: "表中数据为空",
+                    sLoadingRecords: "载入中...",
+                    sInfoThousands: ",",
+                    oPaginate: {
+                        sFirst: "首页",
+                        sPrevious: "上页",
+                        sNext: "下页",
+                        sLast: "末页",
+                    },
+                },
+                columnDefs: columnDefs,
+                bServerSide: true, //开启服务器模式，使用服务器端处理配置datatable。
+                columns: columnsParam,
+            };
+        }
+    </script>
+    <script>
+        // 根据参数生成服务器端dt表格
+        // prettier-ignore
+        var city = {{ json_city|safe }}
+        var url_table_kpi = '{% url 'roxa:table_kpi' %}';
+        var columnDefs_table_kpi = [
+            {% comment %} {
+                "width": "5%",
+                "targets": [8, 9, 12]
+            }, // 保持表格相对列宽度固定
+            {
+                "width": "10%",
+                "targets": [0, 5, 7, 10,11]
+            }, // 保持表格相对列宽度固定 
+            {% endcomment %}
+            {
+                "targets": [2],
+                "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff',
+                    '#E6E6E6', 1, 'ridge')
+            }, // 根据一定的色彩方案初始化条形图
+            {
+                "targets": [5],
+                "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFD700',
+                    '#E6E6E6', 1, 'ridge')
+            }, // 根据一定的色彩方案初始化条形图
+            {
+                "targets": [3], // 指定第4列达成率
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    var value_idx = parseFloat(cellData.replace('%', ''));
+                    if (value_idx < 100) {
+                        $(td).css('color', 'red')
+                    } else if (value_idx >= 100) {
+                        $(td).css('color', 'green')
+                    }
+                }
+            },
+            {
+                "targets": [6, 7, 8, 9], // 指定第4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
+                        $(td).css('color', 'red')
+                    }
+                }
+            },
+        ]; 
+
+    </script>
+    <script>
+        // 根据参数生成服务器端dt表格
+        // prettier-ignore
+        var columns_table_hp = [
+            {
+                title: "医院名称",
+                data: "HP_NAME"
+            },
+            {
+                title: "指标金额（万元）",
+                data: "target_value"
+            },
+            {
+                title: "指标占比（%）",
+                data: "target_value_contrib"
+            },
+            {
+                title: "达成率（%）",
+                data: "ach"
+            },
+            {
+                title: "销售金额（万元）",
+                data: "value_abs"
+            },
+            {
+                title: "金额贡献（%）",
+                data: "value_contrib"
+            },
+            {
+                title: "销售额同比净增长（万元）",
+                data: "value_diff1"
+            },
+            {
+                title: "销售额同比增长率（%）",
+                data: "value_gr1"
+            },
+            {
+                title: "销售额环比净增长（万元）",
+                data: "value_diff2"
+            },
+            {
+                title: "销售额环比增长率（%）",
+                data: "value_gr2"
+            },
+        ];
+
+        // 终端明细表格太大，采用Ajax服务器端更新数据的方法，因此单独与后端通信
+        $("#table_hp").DataTable(
+            initAjaxDataTable(url_table_kpi, columns_table_hp, {"city": city, "level": "HP_NAME"}, 1, columnDefs_table_kpi)
+        )
+    </script>
+{% endblock body %}
+
+
+
+
+
+
+
+
+
+
+

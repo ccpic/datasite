@@ -1,0 +1,575 @@
+<!-- 写入 base.html 中定义的 body content -->
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load humanize %}
+{% load tags %}
+{% load static %}
+
+{% block title %}罗沙司他销售数据{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div id="pusher" class="pusher" style="padding-top:50px">
+            <div class="ui huge breadcrumb">
+                <a href="{% url "roxa:index" %}" class="section">全国</a>
+                <i class="right angle icon divider"></i>
+                <div href="" class="section"
+                        class="active section">{{ province }}</div>
+            </div>
+            <div class="ui celled grid">
+                <div class="row">
+                    <div class="sixteen wide column">
+                        <!-- 创建Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
+                        <div class="ui pointing secondary menu">
+                            <a class="item active" data-tab="map"
+                                ><i class="circle icon"></i>总体表现</a
+                            >
+                            <a class="item" data-tab="table_kpi"
+                                ><i class="braille icon"></i>城市KPI</a
+                            >
+                            <a class="item" data-tab="table_hp"
+                                ><i class="building icon"></i>医院明细</a
+                            >
+                        </div>
+                        <div class="ui tab segment active" data-tab="map">
+                            <a class="ui red ribbon label">2021H1</a>
+                            <select class="ui dropdown">
+                                <option value="target_value">指标金额（万元）</option>
+                                <option value="target_value_contrib">指标占比（%）</option>
+                                <option value="ach">达成率（%）</option>
+                                <option value="value_abs">销售额（万元）</option>
+                                <option value="value_diff1">销售额同比净增长（万元）</option>
+                                <option value="value_gr1">销售额同比增长率（%）</option>
+                                <option value="value_diff2">销售额环比净增长（万元）</option>
+                                <option value="value_gr2">销售额环比增长率（%）</option>
+                                <option value="value_contrib">销售额贡献（%）</option>
+                                <option value="hp_count">有量医院家数</option>
+                                <option value="hp_avg_value">有量医院单产（万元）</option>
+                            </select><div class="ui left pointing label">
+                                切换地图着色依据的指标
+                            </div>
+                            <div id="map" style="height:600px"></div>
+                        </div>
+                        <div class="ui tab segment" data-tab="table_kpi">
+                            <div
+                                class="ui top attached button"
+                                tabindex="0"
+                                onclick="selectElementContents( document.getElementById('table_kpi') );"
+                                data-content="复制成功"
+                                data-position="bottom center"
+                            >
+                                <i class="copy icon"></i>
+                                复制到剪贴板
+                            </div>
+                            <div class="ui hidden divider"></div>
+                            <div
+                                class="ui container"
+                                id="table_kpi_div"
+                                style="width: 100%; overflow-x: scroll; overflow-y: hidden"
+                            >
+                                <table
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                    id="table_kpi"
+                                    class="ui celled table"
+                                ></table>
+                            </div>
+                        </div>
+                        <div class="ui tab segment" data-tab="table_hp">
+                            <div
+                                class="ui top attached button"
+                                tabindex="0"
+                                onclick="selectElementContents( document.getElementById('table_hp') );"
+                                data-content="复制成功"
+                                data-position="bottom center"
+                            >
+                                <i class="copy icon"></i>
+                                复制到剪贴板
+                            </div>
+                            <div class="ui hidden divider"></div>
+                            <div
+                                class="ui container"
+                                id="table_hp_div"
+                                style="width: 100%; overflow-x: scroll; overflow-y: hidden"
+                            >
+                                <table
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                    id="table_hp"
+                                    class="ui celled table"
+                                ></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ui hidden divider"></div>
+    <style>
+        .ui.selection.dropdown { min-width: 250px; } 
+    </style>
+    <script>
+        $( document ).ready(function() {
+            ajax_map("target_value");
+        });
+    </script>
+    
+    <script>
+        $('.ui.dropdown').dropdown({
+            onChange: function(value, text, $selectedItem) {
+                ajax_map(value);
+            }
+        });
+        $(".pointing.secondary.menu .item").tab();
+    </script>
+    <script>
+        function toPercent(str, decimal=1){
+            if (isNaN(str) === false){
+                var strP=Number(str*100).toFixed(decimal);
+                strP+="%";
+            } else {
+                strP = str;
+            }
+            return strP;
+        }
+    </script>
+
+    <script>
+        function getMax(arr) {
+            var max;
+            for (var key in arr) {
+                if (max == null || parseFloat(arr[key]) > parseFloat(max))
+                    max = arr[key];
+            }
+            return max;
+        }
+    </script>
+    <script>
+        function getMin(arr) {
+            var min;
+            for (var key in arr) {
+                if (min == null || parseFloat(arr[key]) < parseFloat(min))
+                    min = arr[key];
+            }
+            return min;
+        }
+    </script>
+    <script type="text/javascript">
+        function ajax_map(metric){
+            var province = {{ json_province|safe }}
+            // 省份地级市地图
+            var mapData = [];
+            var url_province = "{% url 'roxa:query' %}?province=" + province
+            $.get(url_province,res=>{
+                var jsonProvince = "{% static 'echarts/china.json' %}"
+                var jsonProvince = jsonProvince.replace("china.json", "province/"+province+".json")
+                $.get(jsonProvince, function (provJson) {
+                    echarts.registerMap(province, provJson);
+                    console.log(res)
+                    for (var region in res.data[metric]) {
+                        var region_data = {
+                            name: region,
+                            value: res.data[metric][region],
+                            target_value: res.data["target_value"][region],
+                            target_value_contrib: res.data["target_value_contrib"][region],
+                            ach: res.data["ach"][region],
+                            value_abs: res.data["value_abs"][region],
+                            value_diff1: res.data["value_diff1"][region],
+                            value_gr1: res.data["value_gr1"][region],
+                            value_diff2: res.data["value_diff2"][region],
+                            value_gr2: res.data["value_gr2"][region],
+                            value_contrib: res.data["value_contrib"][region],
+                            hp_count: res.data["hp_count"][region],
+                            hp_avg_value: res.data["hp_avg_value"][region],
+                        };
+                        mapData.push(region_data)
+                    };
+                    var data_max = getMax(res.data[metric]);
+                    var data_min = getMin(res.data[metric]);
+                    var map = echarts.init(document.getElementById('map'));
+                    map.showLoading();
+                    option = {
+                        tooltip: {
+                            trigger: 'item',
+                            // formatter: '{b}{c}',
+                            formatter: function (params) {
+                                return params.data.name 
+                                + "<br>"
+                                + "指标金额（万元）: "
+                                + params.data.target_value.toFixed(0)
+                                + "<br>" 
+                                + "达成率（%）: "
+                                + toPercent(params.data.ach, 0)
+                                + "<br>" 
+                                + "指标占比（%）: "
+                                + toPercent(params.data.target_value_contrib, 1)
+                                + "<br>" 
+                                + "销售额（万元）: "
+                                + params.data.value_abs.toFixed(0)
+                                + "<br>" 
+                                + "销售额同比净增长（万元）: "
+                                + params.data.value_diff1.toFixed(0)
+                                + "<br>" 
+                                + "销售额同比增长率（%）: "
+                                + toPercent(params.data.value_gr1, 0) 
+                                + "<br>" 
+                                + "销售额环比净增长（万元）: "
+                                + params.data.value_diff2.toFixed(0)
+                                + "<br>" 
+                                + "销售额环比增长率（%）: "
+                                + toPercent(params.data.value_gr2, 0) 
+                                + "<br>" 
+                                + "销售额贡献（%）: "
+                                + toPercent(params.data.value_contrib) 
+                                + "<br>" 
+                                + "有量医院家数（n）: "
+                                + params.data.hp_count
+                                + "<br>" 
+                                + "有量医院单产（万元）: "
+                                + params.data.hp_avg_value.toFixed(1);
+                            },
+                            backgroundColor: "rgba(255,255,255,0.8)", //设置背景图片 rgba格式
+                            color: "black",
+                            borderWidth: "1", //边框宽度设置1
+                            borderColor: "gray", //设置边框颜色
+                            textStyle: {
+                                color: "black", //设置文字颜色
+                            },
+                        },
+                        visualMap: {
+                            min: data_min,
+                            max: data_max,
+                            text: ['High', 'Low'],
+                            realtime: false,
+                            calculable: true,
+                            inRange: {
+                              color: ['lightskyblue', 'yellow', 'orangered']
+                            }
+                          },
+                        toolbox: {
+                            show: true,
+                            //orient: 'vertical',
+                            left: 'right',
+                            top: 'top',
+                            feature: {
+                              dataView: { readOnly: false },
+                              restore: {},
+                              saveAsImage: {}
+                            }
+                          },
+                        series: [{
+                            name: province,
+                            type: 'map',
+                            mapType: province,
+                            selectedMode: false,//single 表示单选;multiple表示多选 默认flase不选
+                            label: {
+                                show: true,
+                                formatter:function(params){
+                                    if (params.data === undefined){
+                                        return null
+                                    }
+                                    else {
+                                        if(params.data.value===null){
+                                            var label_text = "NaN"
+                                        }
+                                        else {
+                                            if (["value_gr1","value_gr2","ach"].includes(metric)){
+                                                var label_text = toPercent(params.data.value, 0) 
+                                            }
+                                            else if (["value_contrib", "target_value_contrib"].includes(metric)){
+                                                var label_text = toPercent(params.data.value) 
+                                            }
+                                            else if (["hp_avg_value"].includes(metric)){
+                                                var label_text = params.data.value.toFixed(1);
+                                            }
+                                            else if (["target_value", "value_abs", "value_diff1", "value_diff2"].includes(metric)){
+                                                var label_text =  params.data.value.toFixed(0);
+                                            }
+                                            else {
+                                                var label_text = params.data.value
+                                            }
+                                        }                   
+                                        return params.name + "(" + label_text + ")"
+                                    }
+                                },   
+
+                            },
+                            geoIndex: 0,
+                            itemStyle: {
+                                normal: {
+                                    borderWidth: 0.5,
+                                    borderColor: 'black',
+                                },
+                                emphasis: {
+                                    areaColor: 'red',
+                                },
+                            },
+                            //此为加载的数据
+                            data: mapData
+                        }]
+                    };
+
+                    map.hideLoading();
+                    map.setOption(option, {
+                        notMerge: true,
+                        lazyUpdate: false
+                    });
+
+                    map.on('click', function (params) {
+                        var city = params.name;
+                        var url_city = "{% url 'roxa:city' %}?province=" + province + "&city=" + city
+                        window.location.href = url_city 
+                    });
+                });
+            });
+        }
+    </script>
+    <script>
+        // Ajax table初始化方法
+        function initAjaxDataTable(
+            urlParam,
+            columnsParam,
+            form_data,
+            orderBy,
+            columnDefs
+        ) {
+            return {
+                order: [[orderBy, "desc"]], // 初始以第2列（注意第一列索引为0）由高到低排序
+                pageLength: 25, // 前端分页，初始每页显示25条记录
+                destroy: true, //每次初始化前会先摧毁已经存在的表格对象
+                sPaginationType: "full_numbers", //分页风格，full_number会把所有页码显示出来
+                searching: true, //搜索
+                ordering: true, //是否启用排序
+                autoWidth: false, // 关闭自动调整表格宽度
+                bProcessing: true, //是否显示加载
+                sAjaxSource: urlParam, //请求资源路径
+                serverSide: true, //开启服务器处理模式
+                /*
+                     使用ajax，在服务端处理数据
+                     sSource:即是"sAjaxSource"
+                     aoData:要传递到服务端的参数
+                     fnCallback:处理返回数据的回调函数
+                */
+                fnServerData: function (sSource, aoData, fnCallback) {
+                    console.log(JSON.stringify(form_data))
+                    $.ajax({
+                        type: "POST",
+                        url: sSource,
+                        dataType: "json",
+                        data: {
+                            csrfmiddlewaretoken: "{{ csrf_token }}",
+                            aodata: JSON.stringify(aoData),
+                            formdata: JSON.stringify(form_data),
+                        },
+                        success: function (resp) {
+                            fnCallback(resp);
+                        },
+                    });
+                },
+                oLanguage: {
+                    //语言设置
+                    sLengthMenu:
+                        '<select class="form-control" style="width:150px">' +
+                        '<option value="10" selected>每页显示10条</option>' +
+                        '<option value="25">每页显示25条</option>' +
+                        '<option value="50">每页显示50条</option>' +
+                        '<option value="100">每页显示100条</option>' +
+                        "</select>",
+                    sProcessing: "处理中...",
+                    sZeroRecords: "没有匹配结果",
+                    sInfo: "显示第 _START_ 至 _END_ 条客户档案，共 _TOTAL_ 条",
+                    sInfoEmpty: "没有数据",
+                    sInfoFiltered: "(获取 _MAX_ 条客户档案)",
+                    sInfoPostFix: "",
+                    sSearch: "搜索:",
+                    sUrl: "",
+                    sEmptyTable: "表中数据为空",
+                    sLoadingRecords: "载入中...",
+                    sInfoThousands: ",",
+                    oPaginate: {
+                        sFirst: "首页",
+                        sPrevious: "上页",
+                        sNext: "下页",
+                        sLast: "末页",
+                    },
+                },
+                columnDefs: columnDefs,
+                bServerSide: true, //开启服务器模式，使用服务器端处理配置datatable。
+                columns: columnsParam,
+            };
+        }
+    </script>
+    <script>
+        // 根据参数生成服务器端dt表格
+        // prettier-ignore
+        var province = {{ json_province|safe }}
+        var url_table_kpi = '{% url 'roxa:table_kpi' %}';
+        var columns_table_kpi = [
+            {
+                title: "城市",
+                data: "CITY"
+            },
+            {
+                title: "指标金额（万元）",
+                data: "target_value"
+            },
+            {
+                title: "指标占比（%）",
+                data: "target_value_contrib"
+            },
+            {
+                title: "达成率（%）",
+                data: "ach"
+            },
+            {
+                title: "销售金额（万元）",
+                data: "value_abs"
+            },
+            {
+                title: "金额贡献（%）",
+                data: "value_contrib"
+            },
+            {
+                title: "销售额同比净增长（万元）",
+                data: "value_diff1"
+            },
+            {
+                title: "销售额同比增长率（%）",
+                data: "value_gr1"
+            },
+            {
+                title: "销售额环比净增长（万元）",
+                data: "value_diff2"
+            },
+            {
+                title: "销售额环比增长率（%）",
+                data: "value_gr2"
+            },
+            {
+                title: "有量医院家数（n）",
+                data: "hp_count"
+            },
+            {
+                title: "有量医院单产（万元）",
+                data: "hp_avg_value"
+            }
+        ];
+        var columnDefs_table_kpi = [
+            {% comment %} {
+                "width": "5%",
+                "targets": [8, 9, 12]
+            }, // 保持表格相对列宽度固定
+            {
+                "width": "10%",
+                "targets": [0, 5, 7, 10,11]
+            }, // 保持表格相对列宽度固定 
+            {% endcomment %}
+            {
+                "targets": [2],
+                "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff',
+                    '#E6E6E6', 1, 'ridge')
+            }, // 根据一定的色彩方案初始化条形图
+            {
+                "targets": [5],
+                "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#FFD700',
+                    '#E6E6E6', 1, 'ridge')
+            }, // 根据一定的色彩方案初始化条形图
+            {
+                "targets": [3], // 指定第4列达成率
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    var value_idx = parseFloat(cellData.replace('%', ''));
+                    if (value_idx < 100) {
+                        $(td).css('color', 'red')
+                    } else if (value_idx >= 100) {
+                        $(td).css('color', 'green')
+                    }
+                }
+            },
+            {
+                "targets": [6, 7, 8, 9], // 指定第4,5,6列绝对值变化，份额获取，增长率，这些有可能出现负数
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    if (cellData.startsWith('-')) { // 因为涉及到百分数的问题，这里用检查字符串的方法而不是<0的方法判断负数
+                        $(td).css('color', 'red')
+                    }
+                }
+            },
+        ]; 
+
+        // 终端明细表格太大，采用Ajax服务器端更新数据的方法，因此单独与后端通信
+        $("#table_kpi").DataTable(
+            initAjaxDataTable(url_table_kpi, columns_table_kpi, {"province": province, "level": "CITY"}, 1, columnDefs_table_kpi)
+        )
+    </script>
+    <script>
+        // 根据参数生成服务器端dt表格
+        // prettier-ignore
+        var columns_table_hp = [
+            {
+                title: "医院名称",
+                data: "HP_NAME"
+            },
+            {
+                title: "指标金额（万元）",
+                data: "target_value"
+            },
+            {
+                title: "指标占比（%）",
+                data: "target_value_contrib"
+            },
+            {
+                title: "达成率（%）",
+                data: "ach"
+            },
+            {
+                title: "销售金额（万元）",
+                data: "value_abs"
+            },
+            {
+                title: "金额贡献（%）",
+                data: "value_contrib"
+            },
+            {
+                title: "销售额同比净增长（万元）",
+                data: "value_diff1"
+            },
+            {
+                title: "销售额同比增长率（%）",
+                data: "value_gr1"
+            },
+            {
+                title: "销售额环比净增长（万元）",
+                data: "value_diff2"
+            },
+            {
+                title: "销售额环比增长率（%）",
+                data: "value_gr2"
+            },
+        ];
+
+        // 终端明细表格太大，采用Ajax服务器端更新数据的方法，因此单独与后端通信
+        $("#table_hp").DataTable(
+            initAjaxDataTable(url_table_kpi, columns_table_hp, {"province": province, "level": "HP_NAME"}, 1, columnDefs_table_kpi)
+        )
+    </script>
+{% endblock body %}
+
+
+
+
+
+
+
+
+
+
+

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "rdpac",
     "medical_info",
     "potential",
+    "roxa",
     "policy_feed",
 ]
 
