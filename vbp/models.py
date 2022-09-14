@@ -45,7 +45,7 @@ REGION_CHOICES = [
     ("甘肃", "甘肃"),
     ("青海", "青海"),
     ("宁夏", "宁夏"),
-    ("新疆（含兵团）", "新疆（含兵团）"),
+    ("新疆(含兵团)", "新疆(含兵团)"),
 ]
 
 
@@ -208,6 +208,70 @@ D_MAIN_SPEC = {
     "注射用盐酸苯达莫司汀": {"25mg": 1, "100mg": 4},
     "紫杉醇注射剂": {"5ml:30mg": 1, "16.7ml:100mg": 10 / 3},
     "左氧氟沙星注射剂型": {"(以左氧氟沙星计)含左氧氟沙星0.25g": 0.5, "(以左氧氟沙星计)含左氧氟沙星0.5g": 1,},
+    "阿法替尼口服常释剂型": {"20mg": 2 / 4, "30mg": 3 / 4, "40mg": 1, "50mg": 5 / 4},
+    "阿立哌唑口腔崩解片": {"5mg": 1, "10mg": 2, "15mg": 3},
+    "昂丹司琼注射剂": {"2ml:4mg": 0.5, "4ml:8mg": 1},
+    "奥美拉唑注射剂": {"20mg": 0.5, "40mg": 1, "60mg": 1.5},
+    "奥曲肽注射剂": {"1ml:0.05mg": 0.5, "1ml:0.1mg": 1, "1ml:0.2mg": 2, "1ml:0.3mg": 3},
+    "奥司他韦口服常释剂型": {"30mg": 30 / 75, "45mg": 45 / 75, "75mg": 1},
+    "吡格列酮口服常释剂型": {"15mg": 0.5, "30mg": 1},
+    "单硝酸异山梨酯口服常释剂型": {"10mg": 0.5, "20mg": 1},
+    "碘帕醇注射剂": {
+        "30ml:11.1g(I)": 0.3,
+        "50ml:18.5g(I)": 0.5,
+        "100ml:37g(I)": 1,
+        "200ml:74g(I)": 2,
+    },
+    "厄洛替尼口服常释剂型": {"25mg": 25 / 150, "100mg": 100 / 150, "150mg": 1},
+    "甲磺酸仑伐替尼胶囊": {"4mg": 1, "10mg": 10 / 4},
+    "咖啡因注射剂": {"1ml:20mg": 1, "3ml:60mg": 3},
+    "拉考沙胺口服常释剂型": {"50mg": 0.5, "100mg": 1, "150mg": 1.5, "200mg": 2},
+    "来氟米特口服常释剂型": {"10mg": 1, "20mg": 2},
+    "利多卡因注射剂": {"5ml:0.1g": 1, "10ml:0.2g": 2, "20ml:0.4g": 4},
+    "罗库溴铵注射剂": {"2.5ml:25mg": 0.5, "5ml:50mg": 1},
+    "吗替麦考酚酯口服常释剂型": {"0.25g": 1, "0.5g": 2},
+    "美托洛尔缓释剂型": {"23.75mg": 0.5, "47.5mg": 1, "95mg": 2, "190mg": 4},
+    "米力农注射剂": {"5ml:5mg": 1, "10ml:10mg": 2, "20ml:20mg": 4, "50ml:50mg": 10},
+    "帕立骨化醇注射剂": {"1ml:2μg": 2 / 5, "1ml:5μg": 1, "2ml:10μg": 2},
+    "舒尼替尼口服常释剂型": {"12.5mg": 1, "25mg": 2, "37.5mg": 3, "50mg": 4},
+    "特布他林吸入剂": {"1ml:2.5mg": 0.5, "2ml:5mg": 1},
+    "替罗非班注射剂型": {
+        "50ml:12.5mg": 0.5,
+        "100ml:盐酸替罗非班5mg与氯化钠0.9g": 1,
+        "250ml:盐酸替罗非班12.5mg与氯化钠2.25g": 2.5,
+    },
+    "硝苯地平缓释剂型": {"10mg": 0.5, "20mg": 1},
+    "硝苯地平控释剂型": {"30mg": 1, "60mg": 2},
+    "盐酸鲁拉西酮片": {"20mg": 0.5, "40mg": 1, "80mg": 2},
+    "盐酸美金刚缓释胶囊": {"7mg": 1, "14mg": 2, "21mg": 3, "28mg": 4},
+    "伊班膦酸注射剂": {"1ml:1mg": 1, "2ml:2mg": 2, "3ml:3mg": 3, "6ml:6mg": 6},
+    "伊立替康注射剂": {"2ml:40mg": 1, "5ml:100mg": 2.5, "15ml:300mg": 7.5},
+    "依达拉奉注射剂型": {"20ml:30mg": 1, "100ml:30mg": 1, "100ml:依达拉奉30mg与氯化钠855mg": 1},
+    "唑来膦酸注射剂 4mg": {"5ml:4mg": 1, "100ml:4mg": 1},
+    "甲泼尼龙口服常释剂型": {"4mg": 1, "16mg": 4},
+    "甲泼尼龙注射剂 20/40mg": {"20mg": 1, "40mg": 2},
+    "甲泼尼龙注射剂 125mg及以上": {"125mg": 0.25, "250mg": 0.5, "500mg": 1, "1g": 2, "2g": 4},
+    "奥硝唑口服常释剂型": {"0.25g": 1, "0.5g": 2},
+    "克林霉素磷酸酯注射剂": {"2ml:0.3g": 0.5, "4ml:0.6g": 1, "6ml:0.9g": 1.5},
+    "罗红霉素口服常释剂型": {"150mg": 1, "300mg": 2},
+    "头孢克洛口服液体剂": {"0.125g": 1, "0.25g": 2},
+    "头孢克肟口服常释剂型": {"50mg": 0.5, "100mg": 1, "200mg": 2},
+    "头孢美唑注射剂型": {
+        "0.25g": 0.25,
+        "0.5g": 0.5,
+        "1g": 1,
+        "2g": 2,
+        "粉体室：按头孢美唑（C15H17N7O5S3）计 1.0g；液体室：氯化钠注射液100ml:0.9g": 2,
+    },
+    "头孢米诺注射剂": {"0.25g": 0.25, "0.5g": 0.5, "1g": 1, "1.5g": 1.5, "2g": 2,},
+    "美罗培南注射剂": {"0.25g": 0.5, "0.5g": 1, "1g": 2},
+    "头孢吡肟注射剂型": {
+        "0.5g": 0.5,
+        "1g": 1,
+        "2g": 2,
+        "粉体室：盐酸头孢吡肟（按 C19H24N6O5S2计）1.0g；液体室：氯化钠注射液100ml:0.9g": 1,
+        "粉体室：盐酸头孢吡肟（按 C19H24N6O5S2计）2.0g；液体室：氯化钠注射液100ml:0.9g": 2,
+    },
 }
 
 
@@ -264,6 +328,17 @@ class Tender(models.Model):
             "头孢唑林注射剂型",
             "左氧氟沙星注射剂型",
             "布地奈德吸入剂",
+            "甲泼尼龙口服常释剂型",
+            "甲泼尼龙注射剂",
+            "奥硝唑口服常释剂型",
+            "复方磺胺甲噁唑口服常释剂型",
+            "克林霉素磷酸酯注射剂",
+            "罗红霉素口服常释剂型",
+            "头孢克洛口服液体剂",
+            "头孢克肟颗粒剂",
+            "头孢克肟口服常释剂型",
+            "头孢美唑注射剂型",
+            "头孢米诺注射剂",
         ]:
             if self.winner_num == 1:
                 pct = 0.4
@@ -273,6 +348,13 @@ class Tender(models.Model):
                 pct = 0.6
             else:
                 pct = 0.7
+        elif self.target in ["美罗培南注射剂", "米卡芬净注射剂", "替加环素注射剂", "头孢吡肟注射剂型"]:
+            if self.winner_num == 1:
+                pct = 0.3
+            elif self.winner_num == 2:
+                pct = 0.4
+            else:
+                pct = 0.5
         else:
             if self.winner_num == 1:
                 pct = 0.5
@@ -318,6 +400,7 @@ class Tender(models.Model):
             for spec in self.get_specs():
                 qs = self.region_volume.all().filter(spec=spec)
                 if qs.exists():
+                    print(self.target)
                     volume += (
                         qs.aggregate(Sum("amount_reported"))["amount_reported__sum"]
                         * D_MAIN_SPEC[self.target][spec]
@@ -393,7 +476,7 @@ class Tender(models.Model):
                     return 2
                 elif self.winner_num >= 4:
                     return 3
-        elif "第五轮" in self.vol:  # 第五轮集采规则
+        elif "第五轮" in self.vol or "第七轮" in self.vol:  # 第五轮集采规则
             if self.winner_num <= 2:  # 1-2家中标，标期1年
                 return 1
             elif self.winner_num == 3:
@@ -469,7 +552,7 @@ class Bid(models.Model):
         Company, on_delete=models.CASCADE, verbose_name="竞标厂商", related_name="bids"
     )
     origin = models.BooleanField(verbose_name="是否该标的原研")
-    bid_spec = models.CharField(max_length=30, verbose_name="报价规格")
+    bid_spec = models.CharField(max_length=100, verbose_name="报价规格")
     bid_price = models.FloatField(verbose_name="报价")
     original_price = models.FloatField(verbose_name="集采前最低价", blank=True, null=True)
     ceiling_price = models.FloatField(verbose_name="最高有效申报价")
@@ -632,7 +715,7 @@ class Volume(models.Model):
         related_name="region_volume",
     )
     region = models.CharField(max_length=10, choices=REGION_CHOICES, verbose_name="区域")
-    spec = models.CharField(max_length=30, verbose_name="规格")
+    spec = models.CharField(max_length=100, verbose_name="规格")
     amount_reported = models.FloatField(verbose_name="合同量")
     winner = models.ForeignKey(
         Bid,

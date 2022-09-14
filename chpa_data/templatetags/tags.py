@@ -87,7 +87,12 @@ def volume_win_percentage(bid, region=None):
 def winner(tender, region):
     qs = Volume.objects.filter(tender=tender, region=region)
     if qs.exists():
-        return qs.first().winner
+        winner = None
+        for q in qs:
+            if q.winner is not None:
+                winner = q.winner
+                break
+        return winner
     else:
         return None
 
@@ -96,7 +101,11 @@ def winner(tender, region):
 def region_std_volume(tender, region):
     qs = Volume.objects.filter(tender=tender, region=region)
     if qs.exists():
-        winner = qs.first().winner
+        winner = None
+        for q in qs:
+            if q.winner is not None:
+                winner = q.winner
+                break
         if winner is not None:
             volume = winner.std_volume_win(region=region)
         else:

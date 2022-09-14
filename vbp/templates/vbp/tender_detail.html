@@ -211,7 +211,7 @@
         }
     </script>
     <script type="text/javascript">
-        COLORLIST = ['navy', 'crimson', 'darkgreen', 'darkorange', 'saddlebrown', 'deepskyblue', 'pink', 'olivedrab',];
+        COLORLIST = ['navy', 'crimson', 'darkgreen', 'darkorange', 'saddlebrown', 'deepskyblue', 'pink', 'olivedrab', "gold", "violet"];
 
         // 省份轮选地图
         var d = {};
@@ -242,6 +242,7 @@
                 value: d['{% winner tender region %}'],
                 volume: '{% region_std_volume tender region %}'
             };
+
             mapData.push(region_data);
         {% endfor %}
 

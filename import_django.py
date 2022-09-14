@@ -39,15 +39,18 @@ def importModel(dict):
 """以下部分为vbp导入模块"""
 
 
-def import_tender():
+def import_tender(vol: str):
     D_DATE = {
         "第二轮33品种": "01-04-2020",
         "第三轮56品种": "01-11-2020",
         "第四轮45品种": "01-05-2021",
         "第五轮62品种": "01-10-2021",
+        "第七轮61品种": "01-11-2022",
         "第一轮25品种扩围联盟地区": "01-12-2019",
     }
-    df = pd.read_excel("vbp_summary_7.6.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_0721.xlsx", sheet_name="汇总", header=0)
+    mask = df["批次"] == vol
+    df = df.loc[mask, :]
     df = df.drop_duplicates("药品通用名")
     # pivoted = pd.pivot_table(df, index='药品通用名', values='最高限价', aggfunc=np.mean)
     # d = pivoted.to_dict()['最高限价']
@@ -69,8 +72,10 @@ def import_tender():
     Tender.objects.bulk_create(l)
 
 
-def import_volume():
-    df = pd.read_excel("vbp_amount_7.6.xlsx", sheet_name="汇总")
+def import_volume(vol: str):
+    df = pd.read_excel("vbp_amount_0721.xlsx", sheet_name="汇总")
+    mask = df["批次"] == vol
+    df = df.loc[mask, :]
     # df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
     print(df)
 
@@ -89,7 +94,7 @@ def import_volume():
     Volume.objects.bulk_create(l)
 
 
-def import_bid():
+def import_bid(vol:str):
 
     D_DELTA = {
         "埃索美拉唑(艾司奥美拉唑)注射剂": {
@@ -133,9 +138,42 @@ def import_bid():
             "广东嘉博": ["250ml(20%)"],
             "德国贝朗": ["250ml(20%)"],
         },
+        "碘帕醇注射剂": {
+            "北京北陆": ["100ml:37g(I)"],
+            "博莱科信谊": ["100ml:37g(I)"],
+            "上海司太立": ["100ml:37g(I)"],
+            "正大天晴": ["100ml:37g(I)"],
+        },
+        "替罗非班注射剂型": {
+            "科伦药业": ["100ml:盐酸替罗非班5mg与氯化钠0.9g"],
+            "西安万隆": ["100ml:盐酸替罗非班5mg与氯化钠0.9g"],
+            "赤峰源生": ["250ml:盐酸替罗非班12.5mg与氯化钠2.25g"],
+            "四川美大康": ["100ml:盐酸替罗非班5mg与氯化钠0.9g"],
+            "鲁南制药": ["100ml:盐酸替罗非班5mg与氯化钠0.9g"],
+            "石药集团": ["100ml:盐酸替罗非班5mg与氯化钠0.9g"],
+        },
+        "盐酸美金刚缓释胶囊": {
+            "宜昌人福": ["7mg"],
+            "成都苑东生物": ["7mg"],
+            "浙江京新": ["7mg"],
+            "天津天士力": ["7mg"],
+            "青岛百洋": ["7mg"],
+            "江苏长泰": ["28mg"],
+        },
+        "甲泼尼龙口服常释剂型": {"浙江仙琚": ["16mg"], "天津天药": ["4mg"], "山东新华鲁抗": ["4mg"],},
+        "头孢米诺注射剂": {
+            "齐鲁安替": ["1g"],
+            "四川合信": ["0.25g"],
+            "山东润泽": ["0.5g"],
+            "上海欣峰": ["1g"],
+            "海南海灵": ["1g"],
+            "北大医药": ["1g"],
+        },
     }
 
-    df = pd.read_excel("vbp_summary_7.6.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_0721.xlsx", sheet_name="汇总", header=0)
+    mask = df["批次"] == vol
+    df = df.loc[mask, :]
     df.fillna("-", inplace=True)
     print(df)
 
@@ -346,11 +384,13 @@ def import_tc():
 
 
 if __name__ == "__main__":
-    importModel(D_MODEL)
-    # import_tender()
-    # import_volume()
-    # import_bid()
+    # importModel(D_MODEL)
+    import_tender("第七轮61品种")
+    import_volume("第七批集采")
+    import_bid("第七轮61品种")
+    
     # update_tender()
+    
     # import_company()
     # import_drug()
     # import_sales()
