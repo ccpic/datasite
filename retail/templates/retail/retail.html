@@ -1,0 +1,31 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load static %}
+
+{% block title %}零售电商发货达成数据分析{% endblock title%}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+<!-- 因为semantic ui的特性需要在body部分写个pusher避免内容被顶部导航栏遮挡 -->
+<div id="pusher" class="pusher" style="padding-top:50px">
+    <div class="ui celled grid">
+        <!-- 左边3/16为filter页面 -->
+        <div class="three wide column">
+            {% include 'retail/filter.html' %}
+        </div>
+
+        <!-- 右边13/16为display页面 -->
+        <div class="thirteen wide column">
+            {% block display %}{% endblock display %}
+        </div>
+    </div>
+</div>
+{% endblock body %}
+
+
+
+
+

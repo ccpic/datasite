@@ -27,6 +27,7 @@ urlpatterns = [
     path("forecast/", include("forecast.urls")),
     path("internal_sales/", include("internal_sales.urls")),
     path("potential/", include("potential.urls")),
+    path("retail/", include("retail.urls")),
     path("roxa/", include("roxa.urls")),
     path("medical_info/", include("medical_info.urls")),
     path("policy_feed/", include("policy_feed.urls")),

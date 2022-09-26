@@ -15,8 +15,8 @@
                                     <option value="{{ value.select }}">{{ key }}</option>
                                 {% endif %}
                             {% endfor %}
-                            <option value="PRODUCT_CORP">产品（公司）|PRODUCT(CORP)</option>
-                            <option value="MOLECULE_TC">通用名（TC III）|MOLECULE(TC III)</option>
+                            <option value="PRODUCT_CORP">商品名（生产企业）</option>
+                            <option value="MOLECULE_TC">通用名（TC III）</option>
                         </select>
                     </div>
                 </div>
@@ -241,7 +241,7 @@
         }
 
         // 获取输出选项modal的值
-        form_data['lang'] = $('#radio_lang').find('[name="lang"]:checked').val();
+        // form_data['lang'] = $('#radio_lang').find('[name="lang"]:checked').val();
         form_data['toggle_bubble_perf'] = $('#toggle_bubble_performance').checkbox('is checked');
         form_data['toggle_treemap_share'] = $('#toggle_treemap_share').checkbox('is checked');
         form_data['customized_sql'] = $('#customized_sql').val();

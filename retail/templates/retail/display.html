@@ -1,0 +1,386 @@
+{% extends "retail/retail.html" %}
+
+{% block display %}
+
+
+<!-- 数据处理时的loading遮罩 -->
+<div class="ui active dimmer" id="dimmer">
+</div>
+<div class="ui active dimmer" id="dimmer_dummy" style="height: 100vh">
+    <div class="ui text" style="color: #FFFFFF;">请使用左侧筛选框选择分析维度和定义市场</div>
+</div>
+
+
+<!-- 创建2个Semantic UI tab，根据鼠标点击切换，以保证页面干净清爽 -->
+<div class="ui pointing secondary menu">
+    <a class="item active" data-tab="total"><i class="circle icon"></i>总体表现</a>
+    <a class="item" data-tab="metrics"><i class="trophy icon"></i>指标汇总</a>
+    <a class="item" data-tab="trend"><i class="signal icon"></i>月度明细</a>
+    <a class="item" data-tab="productivity"><i class="bolt icon"></i>生产力分析</a>
+    <a class="item" data-tab="community"><i class="viadeo icon"></i>社区指标汇总</a>
+    <a class="item" data-tab="comm_trend"><i class="signal icon"></i>社区月度明细</a>
+{#    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>#}
+    <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
+{#    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>#}
+</div>
+<div class="ui tab segment active" data-tab="total">
+    <h3 class="ui header">
+        <div class="content">
+            当前周期表现
+            <div class="sub header">KPIs</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <!-- Semantic UI的statistic类能呈现“醒目大数字”的效果 -->
+    {% for k, v in period_dict.items %}
+        <div class="ui segment">
+            <a class="ui {% if v == 'ytd' %}red{% elif v == 'mqt' %}blue{% else %}purple{% endif %}  ribbon label">最新{{ k }}</a>
+            <div class="ui small three statistics">
+                <div class="statistic">
+                    <div class="value" id="sales_{{ v }}">
+                    </div>
+                    <div class="label" id="label_sales_{{ v }}">
+                        销售
+                    </div>
+                </div>
+                <div class="statistic" id="div_sales_gr_{{ v }}">
+                    <div class="value" id="sales_gr_{{ v }}">
+                    </div>
+                    <div class="label">
+                        销售同比增长
+                    </div>
+                </div>
+{#                <div class="statistic">#}
+{#                    <div class="value" id="target_{{ v }}">#}
+{#                    </div>#}
+{#                    <div class="label">#}
+{#                        指标#}
+{#                    </div>#}
+{#                </div>#}
+                <div class="statistic" id="div_ach_{{ v }}">
+                    <div class="value" id="ach_{{ v }}">
+                    </div>
+                    <div class="label">
+                        达成
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <h3 class="ui header">
+        <div class="content">
+            总体销售趋势
+            <div class="sub header">柱状折线复合图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="bar_total_monthly_trend" style="width:1000px; height:600px;"></div>
+    </div>
+{#    <h3 class="ui header">#}
+{#        <div class="content">#}
+{#            产品销售贡献#}
+{#            <div class="sub header">饼图</div>#}
+{#        </div>#}
+{#    </h3>#}
+{#    <div class="ui divider"></div>#}
+{#    <div class="ui container">#}
+{#        <div id="pie_product" style="width:1000px; height:600px;"></div>#}
+{#    </div>#}
+</div>
+<div class="ui tab segment" data-tab="metrics">
+    <h3 class="ui header">
+        <div class="content">
+            指标汇总
+            <div class="ui red basic label" id="label_metrics">
+                YTD本年迄今
+            </div>
+            <div class="sub header">数据表格
+
+            </div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='ptable_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+
+    <h3 class="ui header">
+        <div class="content">
+            销量 versus 同比净增长
+            <div class="ui red basic label">
+                YTD本年迄今
+            </div>
+            <div class="sub header">散点图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="scatter_sales_abs_diff" style="width:1000px; height:600px;"></div>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="trend">
+    {% for k, v in monthly_metric_dict.items %}
+        <h3 class="ui header">
+            <div class="content">
+                {{ k }}明细
+                <div class="ui purple basic label">
+                    MON月度
+                </div>
+                <div class="sub header">数据表格</div>
+            </div>
+        </h3>
+        <div class="ui divider"></div>
+        <div class="ui top attached button" tabindex="0"
+             onclick="selectElementContents( document.getElementById('ptable_{{ v }}') );"
+             data-content="复制成功" data-position="bottom center">
+            <i class="copy icon"></i>
+            复制到剪贴板
+        </div>
+        <div class="ui hidden divider"></div>
+        <div class="ui container" id="ptable_{{ v }}_div" style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+        </div>
+    {% endfor %}
+</div>
+<div class="ui tab segment" data-tab="productivity">
+    <h3 class="ui header">
+        <div class="content">
+            开户医院单产趋势
+            <div class="ui purple basic label">
+                MON月度
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable_hppdt_monthly') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='ptable_hppdt_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+
+    <h3 class="ui header">
+        <div class="content">
+            代表单产趋势
+            <div class="ui purple basic label">
+                MON月度
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable_rsppdt_monthly') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='ptable_rsppdt_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
+<div class="ui tab segment" data-tab="community">
+    <h3 class="ui header">
+        <div class="content">
+            社区指标汇总
+            <div class="ui red basic label">
+                YTD本年迄今
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable_comm') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id='ptable_comm_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+
+    <h3 class="ui header">
+        <div class="content">
+            社区销量 versus 同比净增长
+            <div class="ui red basic label">
+                YTD本年迄今
+            </div>
+            <div class="sub header">散点图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container">
+        <div id="scatter_sales_comm_abs_diff" style="width:1000px; height:600px;"></div>
+    </div>
+</div>
+
+<div class="ui tab segment" data-tab="comm_trend">
+    {% for k, v in monthly_metric_dict.items %}
+        <h3 class="ui header">
+            <div class="content">
+                社区{{ k }}明细
+                <div class="ui purple basic label">
+                    MON月度
+                </div>
+                <div class="sub header">数据表格</div>
+            </div>
+        </h3>
+        <div class="ui divider"></div>
+        <div class="ui top attached button" tabindex="0"
+             onclick="selectElementContents( document.getElementById('ptable_comm_{{ v }}') );"
+             data-content="复制成功" data-position="bottom center">
+            <i class="copy icon"></i>
+            复制到剪贴板
+        </div>
+        <div class="ui hidden divider"></div>
+        <div class="ui container" id="ptable_comm_{{ v }}_div" style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+        </div>
+    {% endfor %}
+    <h3 class="ui header">
+        <div class="content">
+            社区销售自身占比趋势
+            <div class="ui purple basic label">
+                MON月度
+            </div>
+            <div class="sub header">数据表格</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui top attached button" tabindex="0"
+         onclick="selectElementContents( document.getElementById('ptable_comm_ratio_monthly') );"
+         data-content="复制成功" data-position="bottom center">
+        <i class="copy icon"></i>
+        复制到剪贴板
+    </div>
+    <div class="ui hidden divider"></div>
+    <div class="ui container" id="ptable_comm_ratio_monthly_div" style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
+    </div>
+</div>
+
+<div class="ui tab segment" data-tab="export">
+    <div class="ui buttons">
+        <input class="ui blue button" type='button' id='export_pivot' value="导出整理后时间序列数据"/>
+    </div>
+    <div class="ui buttons">
+        <input class="ui blue button" type='button' id='export_raw' value="导出原始数据"/>
+    </div>
+</div>
+<div class="ui tab segment" data-tab="mpl">
+    <h3 class="ui header">
+        <div class="content">
+            份额分布
+            <div class="sub header">矩形Treemap</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container" id="treemap_share_div">
+        <img id="treemap_share" style="width: 100%" alt="" />
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+            规模 versus 增长
+            <div class="sub header">带线性拟合的气泡图</div>
+        </div>
+    </h3>
+    <div class="ui divider"></div>
+    <div class="ui container" id="bubble_performance_div">
+        <img id="bubble_performance" style="width: 100%" alt="" />
+    </div>
+</div>
+<div class="ui modal" id="modal_options">
+    <div class="header">
+        查询选项
+    </div>
+    <div class="content">
+        <div class="ui form">
+            <div class="field">
+                <div class="ui toggle checkbox" id="toggle_limit_show">
+                    <input type="checkbox" name="output" checked>
+                    <label>只显示前200的结果</label>
+                </div>
+            </div>
+            <div class="ui hidden divider"></div>
+            <div class="ui hidden divider"></div>
+              <div class="field">
+                <label>自定义SQL</label>
+                <textarea id="customized_sql"></textarea>
+              </div>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui positive button">OK</div>
+    </div>
+</div>
+
+<style>
+#dimmer_dummy
+{
+    background: rgba(255, 255, 255, 0) !important;
+}
+</style>
+<!-- 下方js为保证Semantic UI tab类工作 -->
+<script>
+    $('.pointing.secondary.menu .item').tab();
+    $('.ui.radio.checkbox')
+      .checkbox()
+    ;
+</script>
+<script>
+    // 复制有node结构的文本区域
+    function selectElementContents(el) {
+        var body = document.body, range, sel;
+        if (document.createRange && window.getSelection) {
+            range = document.createRange();
+            sel = window.getSelection();
+            sel.removeAllRanges();
+            try {
+                range.selectNodeContents(el);
+                sel.addRange(range);
+            } catch (e) {
+                range.selectNode(el);
+                sel.addRange(range);
+            }
+        } else if (body.createTextRange) {
+            range = body.createTextRange();
+            range.moveToElementText(el);
+            range.select();
+        }
+        document.execCommand("Copy");
+    }
+</script>
+<script>
+    // 按钮点击后有弹出文本，显示data-content内容“复制成功”
+    $('.ui.top.attached.button')
+        .popup({
+            on: 'click'
+        })
+    ;
+</script>
+<script>
+    $("#export_pivot").click(function(){
+        var form_data = getForm();
+
+        var downloadUrl = '{% url 'internal_sales:export' 'pivoted' %}'+ '?' + $.param(form_data, true);
+        window.location.href = downloadUrl;
+    });
+
+    $("#export_raw").click(function(){
+        var form_data = getForm();
+
+        var downloadUrl = '{% url 'internal_sales:export' 'raw' %}'+ '?' + $.param(form_data, true);
+        window.location.href = downloadUrl;
+    })
+</script>
+{% endblock display %}

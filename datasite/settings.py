@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "vbp",
     "forecast",
     "internal_sales",
+    "retail",
     "rdpac",
     "medical_info",
     "potential",

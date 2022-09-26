@@ -8,7 +8,7 @@ from .models import *
 import datetime
 from dateutil.relativedelta import relativedelta
 from chpa_data.charts import *
-from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict
+from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict, date_mask
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -17,10 +17,8 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-date = datetime.datetime(year=2022, month=7, day=1)  # 目标分析月份
-date_ya = date.replace(year=date.year - 1)  # 同比月份
-date_year_begin = date.replace(month=1)  # 本年度开头
-date_ya_begin = date_ya.replace(month=1)  # 去年开头
+DATE = datetime.datetime(year=2022, month=8, day=1)  # 目标分析月份
+
 PRODUCTS_HAVE_TARGET = ["信立坦", "欣复泰", "欣复泰Pro注射笔", "欣复泰Pro注射液"]  # 有指标的产品
 
 # 该字典为数据库字段名和Django Model的关联
@@ -81,7 +79,7 @@ def index(request):
         mselect_dict[key]["options"] = get_distinct_list(value, DB_TABLE, ENGINE)
 
     context = {
-        "date": date,
+        "date": DATE,
         "mselect_dict": mselect_dict,
         "period_dict": D_PERIOD,
         "monthly_metric_dict": D_METRIC_MONTHLY,
@@ -93,6 +91,7 @@ def index(request):
 @login_required
 def query(request):
     form_dict = qdict_to_dict(request.GET)
+    print(form_dict)
     df = get_df(form_dict)
 
     # KPI字典
@@ -101,6 +100,9 @@ def query(request):
     # 是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     show_limit_results = form_dict["toggle_limit_show"]
 
+    # 返回所选的分析维度
+    dimension_select = form_dict["DIMENSION_select"]
+    
     # 综合表现指标汇总
     ptable = format_table(
         get_ptable(
@@ -178,6 +180,7 @@ def query(request):
 
     context = {
         "show_limit_results": show_limit_results,
+        "dimension_select": dimension_select,
         "ptable": ptable,
         "ptable_comm": ptable_comm,
         "ptable_comm_ratio_monthly": ptable_comm_ratio_monthly,
@@ -248,8 +251,8 @@ def get_ratio_monthly(
 ):  # 用以计算医院单产，代表单产，社区占比等ratio指标
     if df1.empty is False:
         if df2.empty is False:
-            mask1 = date_mask(df1, "mat")[0]
-            mask2 = date_mask(df2, "mat")[0]
+            mask1 = date_mask(df1, DATE, "mat")[0]
+            mask2 = date_mask(df2, DATE, "mat")[0]
             df = df1.loc[mask1, :] / df2.loc[mask2, :]
             df.dropna(how="all", axis=1, inplace=True)
             df.fillna(0, inplace=True)
@@ -271,7 +274,7 @@ def get_ratio_monthly(
 
 def get_ptable_monthly(df_sales, show_limit_results):  # 月度明细
     if df_sales.empty is False:
-        mask = date_mask(df_sales, "mat")[0]
+        mask = date_mask(df_sales, DATE, "mat")[0]
         df_sales_abs = df_sales.loc[mask, :].T
         if show_limit_results == "true":
             df_sales_abs = df_sales_abs.iloc[:200, :]
@@ -303,20 +306,20 @@ def get_ptable_comm(
     df_sales, df_sales_comm, df_target_comm, show_limit_results
 ):  # 社区表现
     if df_sales.empty is False:
-        mask_ytd = date_mask(df_sales, "ytd")[0]  # ytd时间段销售
+        mask_ytd = date_mask(df_sales, DATE,"ytd")[0]  # ytd时间段销售
         df_sales_ytd = df_sales.loc[mask_ytd, :].sum(axis=0)
-        mask_ytdya = date_mask(df_sales, "ytd")[1]  # ytd同比时间段销售
+        mask_ytdya = date_mask(df_sales, DATE,"ytd")[1]  # ytd同比时间段销售
         df_sales_ytdya = df_sales.loc[mask_ytdya, :].sum(axis=0)
 
         if df_sales_comm.empty is False:
             df_combined = calculate_sales_metric(df_sales_comm, df_target_comm)
             df_combined.columns = "社区" + df_combined.columns
 
-            mask_ytd = date_mask(df_sales_comm, "ytd")[0]  # ytd时间段销售
+            mask_ytd = date_mask(df_sales_comm,DATE, "ytd")[0]  # ytd时间段销售
             df_sales_comm_ytd = df_sales_comm.loc[mask_ytd, :].sum(axis=0)
             df_sales_comm_contrib_ytd = df_sales_comm_ytd / df_sales_ytd  # ytd时间段自身社区占比
 
-            mask_ytdya = date_mask(df_sales_comm, "ytd")[1]  # ytd同比时间段销售
+            mask_ytdya = date_mask(df_sales_comm, DATE,"ytd")[1]  # ytd同比时间段销售
             df_sales_comm_ytdya = df_sales_comm.loc[mask_ytdya, :].sum(axis=0)
             df_sales_comm_contrib_ytdya = (
                 df_sales_comm_ytdya / df_sales_ytdya
@@ -359,11 +362,11 @@ def get_ptable_comm(
 
 
 def calculate_sales_metric(df_sales, df_target):
-    mask_ytd = date_mask(df_sales, "ytd")[0]  # ytd时间段销售
+    mask_ytd = date_mask(df_sales,DATE, "ytd")[0]  # ytd时间段销售
     df_sales_ytd = df_sales.loc[mask_ytd, :].sum(axis=0)
     df_sales_share_ytd = df_sales_ytd.div(df_sales_ytd.sum())
 
-    mask_ytdya = date_mask(df_sales, "ytd")[1]  # ytd同比时间段销售
+    mask_ytdya = date_mask(df_sales, DATE,"ytd")[1]  # ytd同比时间段销售
     df_sales_ytdya = df_sales.loc[mask_ytdya, :].sum(axis=0)
     df_sales_share_ytdya = df_sales_ytdya.div(df_sales_ytdya.sum())
 
@@ -378,9 +381,9 @@ def calculate_sales_metric(df_sales, df_target):
     # df_sales_qtrqa = df_sales.loc[mask_qtrqa, :].mean(axis=0)  # 上季平均
     # df_sales_gr_qa = df_sales_qtr / df_sales_qtrqa - 1  # 季平均环比
 
-    mask_mqt = date_mask(df_sales, "mqt")[0]
-    mask_mqtqa = (df_sales.index >= date + relativedelta(months=-5)) & (
-        df_sales.index <= date + relativedelta(months=-3)
+    mask_mqt = date_mask(df_sales, DATE,"mqt")[0]
+    mask_mqtqa = (df_sales.index >= DATE + relativedelta(months=-5)) & (
+        df_sales.index <= DATE + relativedelta(months=-3)
     )
 
     df_sales_mqt = df_sales.loc[mask_mqt, :].sum(axis=0)  # 滚动季销售
@@ -389,7 +392,7 @@ def calculate_sales_metric(df_sales, df_target):
     df_sales_gr_qa = df_sales_mqt / df_sales_mqtqa - 1  # 滚动季环比增长率
 
     if df_target.empty is False:
-        mask_ytd = date_mask(df_target, "ytd")[0]
+        mask_ytd = date_mask(df_target,DATE, "ytd")[0]
         df_target_ytd = df_target.loc[mask_ytd, :].sum(axis=0)  # YTD指标
         df_ach_ytd = df_sales_ytd / df_target_ytd  # YTD达成
     else:
@@ -440,9 +443,9 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
             sales_ya = 0
         else:
             # YTD销售
-            sales = sales_total.loc[date_mask(df_sales, v)[0]].sum()
+            sales = sales_total.loc[date_mask(df_sales, DATE, v)[0]].sum()
             # YTDYA销售
-            sales_ya = sales_total.loc[date_mask(df_sales, v)[1]].sum()
+            sales_ya = sales_total.loc[date_mask(df_sales, DATE, v)[1]].sum()
         try:
             # YTD同比增长
             sales_gr = sales / sales_ya - 1
@@ -453,14 +456,14 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
         if sales_total_tpo.empty is True:
             sales_tpo = 0
         else:
-            sales_tpo = sales_total_tpo.loc[date_mask(df_sales_tpo, v)[0]].sum()
+            sales_tpo = sales_total_tpo.loc[date_mask(df_sales_tpo, DATE, v)[0]].sum()
         # 按列求和为查询总指标的Series
         target_total = df_target.sum(axis=1)
         if target_total.empty is True:
             target = 0
         else:
             # YTD指标
-            target = target_total.loc[date_mask(df_target, v)[0]].sum()
+            target = target_total.loc[date_mask(df_target,DATE,  v)[0]].sum()
         try:
             # YTD达标率
             ach = sales_tpo / target
@@ -484,36 +487,6 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
 
     return kpi
 
-
-def date_mask(df, period):
-    if period == "ytd":
-        mask = (df.index >= date_year_begin) & (df.index <= date)
-        mask_ya = (df.index >= date_ya_begin) & (df.index <= date_ya)
-    elif period == "mat":
-        mask = (df.index >= date + relativedelta(months=-11)) & (df.index <= date)
-        mask_ya = (df.index >= date_ya + relativedelta(months=-11)) & (
-            df.index <= date_ya
-        )
-    elif period == "mqt":
-        mask = (df.index >= date + relativedelta(months=-2)) & (df.index <= date)
-        mask_ya = (df.index >= date_ya + relativedelta(months=-2)) & (
-            df.index <= date_ya
-        )
-    elif period == "mon":
-        mask = df.index == date
-        mask_ya = df.index == date_ya
-    elif period == "qtr":  # 返回当季和环比季度的mask，当季可能不是一个完整季，环比季度是一个完整季
-        month = date.month
-        first_month_in_qtr = (month - 1) // 3 * 3 + 1  # 找到本季度的第一个月
-        date_first_month_in_qtr = date.replace(month=first_month_in_qtr)
-        date_first_month_in_qtrqa = date_first_month_in_qtr + relativedelta(months=-3)
-        date_last_month_in_qtrqa = date_first_month_in_qtr + relativedelta(months=-1)
-        mask = (df.index >= date_first_month_in_qtr) & (df.index <= date)
-        mask_ya = (df.index >= date_first_month_in_qtrqa) & (
-            df.index <= date_last_month_in_qtrqa
-        )
-
-    return mask, mask_ya
 
 
 def get_df(form_dict, is_pivoted=True):
@@ -693,7 +666,7 @@ def prepare_chart(
             ]  # 前端控件交互字典将分析维度替换成PRODUCT
             df_by_product = get_df(form_dict_by_product)["销售"]
 
-            mask = date_mask(df_by_product, "ytd")[0]
+            mask = date_mask(df_by_product, DATE, "ytd")[0]
             df_by_product_ytd = df_by_product.loc[mask, :]
             df_by_product_ytd = df_by_product_ytd.sum(axis=0)
             # df_count = df['客户姓名'].groupby(df['所在科室']).count()

@@ -36,8 +36,8 @@ D_MODEL = {
     "PACKAGE": Package,
     "CORPORATION": Corporation,
     "MANUF_TYPE": Manuf_type,
-    "FORMULATION": Formulation,
-    "STRENGTH": Strength,
+    # "FORMULATION": Formulation,
+    # "STRENGTH": Strength,
     "MOLECULE_TC": Molecule_TC,
     "PRODUCT_CORP": Product_Corp,
 }
@@ -48,13 +48,13 @@ D_MULTI_SELECT = {
     "TC II": "[TC II]",
     "TC III": "[TC III]",
     "TC IV": "[TC IV]",
-    "通用名|MOLECULE": "MOLECULE",
-    "商品名|PRODUCT": "PRODUCT",
-    "包装|PACKAGE": "PACKAGE",
-    "生产企业|CORPORATION": "CORPORATION",
+    "通用名": "MOLECULE",
+    "商品名 (只支持英文)": "PRODUCT",
+    "包装 (只支持英文)": "PACKAGE",
+    "生产企业 (只支持英文)": "CORPORATION",
     "企业类型": "MANUF_TYPE",
-    "剂型": "FORMULATION",
-    "剂量": "STRENGTH",
+    # "剂型": "FORMULATION",
+    # "剂量": "STRENGTH",
 }
 
 D_SINGLE_SELECT = {
@@ -123,10 +123,9 @@ def query(request):
     # 检查查询是否有数据，如没有，返回null;如有，继续可视化
     if pivoted.empty:
         return HttpResponse(
-        json.dumps(None),
-        content_type="application/json charset=utf-8",
-    )  # 返回结果必须是json格式
-    
+            json.dumps(None), content_type="application/json charset=utf-8",
+        )  # 返回结果必须是json格式
+
     # KPI
     kpi = get_kpi(pivoted)
 
@@ -277,14 +276,14 @@ def sqlparse(context):
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
             if k not in [
-                "csrfmiddlewaretoken", # CSRF
-                "DIMENSION_select", # 分析维度单选
-                "PERIOD_select", # 分析周期单选
-                "UNIT_select", # 分析单位单选
-                "lang", # 语言单选
-                "toggle_bubble_perf", # 是否启用高级绘图1
-                "toggle_treemap_share", # 是否启用高级绘图2
-                "customized_sql", # 自定义SQL语句
+                "csrfmiddlewaretoken",  # CSRF
+                "DIMENSION_select",  # 分析维度单选
+                "PERIOD_select",  # 分析周期单选
+                "UNIT_select",  # 分析单位单选
+                "lang",  # 语言单选
+                "toggle_bubble_perf",  # 是否启用高级绘图1
+                "toggle_treemap_share",  # 是否启用高级绘图2
+                "customized_sql",  # 自定义SQL语句
             ]:
                 if k[-2:] == "[]":
                     field_name = k[:-9]  # 如果键以[]结尾，删除_select[]取原字段名
@@ -297,52 +296,61 @@ def sqlparse(context):
     return sql
 
 
-
 def get_df(form_dict, is_pivoted=True):
     sql = sqlparse(form_dict)  # sql拼接
     print(sql)
     df = pd.read_sql_query(sql, ENGINE)  # 将sql语句结果读取至Pandas Dataframe
 
-    #  根据中英文选项调整内容
-    if form_dict["lang"] == "CN":
-        df["TC I"] = df["TC I"].str[:2] + df["TC I"].str.split("|").str[1]
-        df["TC II"] = df["TC II"].str[:4] + df["TC II"].str.split("|").str[1]
-        df["TC III"] = df["TC III"].str[:5] + df["TC III"].str.split("|").str[1]
-        df["TC IV"] = df["TC IV"].str[:6] + df["TC IV"].str.split("|").str[1]
-        df["MOLECULE"] = df["MOLECULE"].str.split("|").str[0]
-        df["PRODUCT"] = (
-            df["PRODUCT"].str.split("|").str[0]
-            + "("
-            + df["PRODUCT"].str.split("|").str[1].str[-3:]
-            + ")"
-        )
-        df["CORPORATION"] = df["CORPORATION"].str.split("|").str[0]
-        df["PRODUCT_CORP"] = (
-            df["PRODUCT_CORP"].str.split(" （").str[0].str.split("|").str[0]
-            + " （"
-            + df["PRODUCT_CORP"].str.split(" （").str[1].str.split("|").str[0]
-            + "）"
-        )
-        df["MOLECULE_TC"] = (
-            df["MOLECULE_TC"].str.split("|").str[0]
-            + " （"
-            + df["MOLECULE_TC"].str.split(" （").str[1]
-        )
-    elif form_dict["lang"] == "EN":
-        df["TC I"] = df["TC I"].str.split("|").str[0]
-        df["TC II"] = df["TC II"].str.split("|").str[0]
-        df["TC III"] = df["TC III"].str.split("|").str[0]
-        df["TC IV"] = df["TC IV"].str.split("|").str[0]
-        df["MOLECULE"] = df["MOLECULE"].str.split("|").str[1]
-        df["PRODUCT"] = df["PRODUCT"].str.split("|").str[1]
-        df["CORPORATION"] = df["CORPORATION"].str.split("|").str[1]
-        df["PRODUCT_CORP"] = (
-            df["PRODUCT_CORP"].str.split(" （").str[0].str.split("|").str[1]
-            + " （"
-            + df["PRODUCT_CORP"].str.split(" （").str[1].str.split("|").str[1]
-            + "）"
-        )
-        df["MOLECULE_TC"] = df["MOLECULE_TC"].str.split("|").str[1]
+    # datatables会trim额外的空格，因此用以下代码修改显示形式以突出最后三位Code
+    df["PRODUCT"] = df["PRODUCT"].apply(lambda x: x[:-3].strip() + " (" + x[-3:] + ")")
+
+    # 中英文同时存在太长，以显示中文为主
+    df["TC I"] = df["TC I"].str[:2] + df["TC I"].str.split("|").str[1]
+    df["TC II"] = df["TC II"].str[:4] + df["TC II"].str.split("|").str[1]
+    df["TC III"] = df["TC III"].str[:5] + df["TC III"].str.split("|").str[1]
+    df["TC IV"] = df["TC IV"].str[:6] + df["TC IV"].str.split("|").str[1]
+    df["MOLECULE"] = df["MOLECULE"].str.split("|").str[0]
+
+    # #  根据中英文选项调整内容
+    # if form_dict["lang"] == "CN":
+    #     df["TC I"] = df["TC I"].str[:2] + df["TC I"].str.split("|").str[1]
+    #     df["TC II"] = df["TC II"].str[:4] + df["TC II"].str.split("|").str[1]
+    #     df["TC III"] = df["TC III"].str[:5] + df["TC III"].str.split("|").str[1]
+    #     df["TC IV"] = df["TC IV"].str[:6] + df["TC IV"].str.split("|").str[1]
+    #     df["MOLECULE"] = df["MOLECULE"].str.split("|").str[0]
+    #     df["PRODUCT"] = (
+    #         df["PRODUCT"].str.split("|").str[0]
+    #         + "("
+    #         + df["PRODUCT"].str.split("|").str[1].str[-3:]
+    #         + ")"
+    #     )
+    #     df["CORPORATION"] = df["CORPORATION"].str.split("|").str[0]
+    #     df["PRODUCT_CORP"] = (
+    #         df["PRODUCT_CORP"].str.split(" （").str[0].str.split("|").str[0]
+    #         + " （"
+    #         + df["PRODUCT_CORP"].str.split(" （").str[1].str.split("|").str[0]
+    #         + "）"
+    #     )
+    #     df["MOLECULE_TC"] = (
+    #         df["MOLECULE_TC"].str.split("|").str[0]
+    #         + " （"
+    #         + df["MOLECULE_TC"].str.split(" （").str[1]
+    #     )
+    # elif form_dict["lang"] == "EN":
+    #     df["TC I"] = df["TC I"].str.split("|").str[0]
+    #     df["TC II"] = df["TC II"].str.split("|").str[0]
+    #     df["TC III"] = df["TC III"].str.split("|").str[0]
+    #     df["TC IV"] = df["TC IV"].str.split("|").str[0]
+    #     df["MOLECULE"] = df["MOLECULE"].str.split("|").str[1]
+    #     df["PRODUCT"] = df["PRODUCT"].str.split("|").str[1]
+    #     df["CORPORATION"] = df["CORPORATION"].str.split("|").str[1]
+    #     df["PRODUCT_CORP"] = (
+    #         df["PRODUCT_CORP"].str.split(" （").str[0].str.split("|").str[1]
+    #         + " （"
+    #         + df["PRODUCT_CORP"].str.split(" （").str[1].str.split("|").str[1]
+    #         + "）"
+    #     )
+    #     df["MOLECULE_TC"] = df["MOLECULE_TC"].str.split("|").str[1]
 
     if is_pivoted is True:
         dimension_selected = form_dict["DIMENSION_select"]

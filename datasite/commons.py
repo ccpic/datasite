@@ -5,6 +5,42 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import numpy as np
 import math
 import json
+from dateutil.relativedelta import relativedelta
+import datetime
+
+# 根据指定相对时间段提取dataframe的索引tuple
+def date_mask(df: pd.DataFrame, date: datetime.datetime, period: str):
+    date_ya = date.replace(year=date.year - 1)  # 同比月份
+    date_year_begin = date.replace(month=1)  # 本年度开头
+    date_ya_begin = date_ya.replace(month=1)  # 去年开头
+    if period == "ytd":
+        mask = (df.index >= date_year_begin) & (df.index <= date)
+        mask_ya = (df.index >= date_ya_begin) & (df.index <= date_ya)
+    elif period == "mat":
+        mask = (df.index >= date + relativedelta(months=-11)) & (df.index <= date)
+        mask_ya = (df.index >= date_ya + relativedelta(months=-11)) & (
+            df.index <= date_ya
+        )
+    elif period == "mqt":
+        mask = (df.index >= date + relativedelta(months=-2)) & (df.index <= date)
+        mask_ya = (df.index >= date_ya + relativedelta(months=-2)) & (
+            df.index <= date_ya
+        )
+    elif period == "mon":
+        mask = df.index == date
+        mask_ya = df.index == date_ya
+    elif period == "qtr":  # 返回当季和环比季度的mask，当季可能不是一个完整季，环比季度是一个完整季
+        month = date.month
+        first_month_in_qtr = (month - 1) // 3 * 3 + 1  # 找到本季度的第一个月
+        date_first_month_in_qtr = date.replace(month=first_month_in_qtr)
+        date_first_month_in_qtrqa = date_first_month_in_qtr + relativedelta(months=-3)
+        date_last_month_in_qtrqa = date_first_month_in_qtr + relativedelta(months=-1)
+        mask = (df.index >= date_first_month_in_qtr) & (df.index <= date)
+        mask_ya = (df.index >= date_first_month_in_qtrqa) & (
+            df.index <= date_last_month_in_qtrqa
+        )
+
+    return mask, mask_ya
 
 
 # 解决json dump numpy相关格式报错的问题
