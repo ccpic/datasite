@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "potential",
     "roxa",
     "policy_feed",
+    "kol",
 ]
 
 MIDDLEWARE = [

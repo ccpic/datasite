@@ -1,0 +1,48 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load taggit_templatetags2_tags %}
+{% load tags %}
+
+{% block title %}IQVIA CHPA数据分析平台{% endblock title%}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block body %}
+<!-- 因为semantic ui的特性需要在body部分写个pusher避免内容被顶部导航栏遮挡 -->
+<div id="pusher" class="pusher" style="padding-top:50px">
+    <div class="ui container">
+        <div class="ui celled grid">
+            <!-- 左边12/16为display页面 -->
+            <div class="twelve wide column">
+                {% block display %}{% endblock display %}
+            </div>
+            <!-- 右边4/16为filter页面 -->
+            <div class="four wide column">
+
+                {% get_taglist as tags %}
+
+                <form class="ui form">
+                    <div class="field">
+                        <label>标签</label>
+                        <div class="field">
+                            <select name="tag_select" id="tag_select" multiple="" class="ui fluid tiny search dropdown">
+                                {% for tag in tags %}
+                                <option value="{{ tag }}" selected>{{ tag }} ({{ tag.num_times }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </form>
+
+                <script>
+                    $('.ui.fluid.search.dropdown')
+                        .dropdown({ fullTextSearch: true });
+                </script>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

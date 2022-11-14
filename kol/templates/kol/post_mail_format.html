@@ -1,0 +1,65 @@
+<!-- 载入静态文件 -->
+{% load static %}
+
+<head>
+    <!-- 网站采用的字符编码 -->
+    <meta charset="utf-8">
+    <title>导出邮件格式</title>
+    <!-- DataTables Semantic UI主题的CSS -->
+    <link rel="stylesheet" href="{% static 'Semantic-UI-CSS-master/semantic.min.css' %}">
+    <script src="{% static 'jquery/jquery-3.4.1.js' %}"></script>
+    <link REL="SHORTCUT ICON" HREF="{% static "favicon.ico" %}"/>
+</head>
+
+<div class="item">
+    <div class="content">
+        {% if post.title_cn %}
+            <h2 class="ui header">
+                {% comment %} <i class="bookmark outline icon"></i> {% endcomment %}
+                <div class="content">
+                    {{ post.title_cn }}
+                    {% if post.title_en %}
+                        <div class="sub header">{{ post.title_en }}</div>
+                    {% endif %}
+                </div>
+            </h2>
+        {% else %}
+            {% if post.title_en %}
+                <h2 class="ui header">
+                    {% comment %} <i class="leanpub icon"></i> {% endcomment %}
+                    <div class="content">
+                        {{ post.title_en }}
+                    </div>
+                </h2>
+            {% endif %}
+        {% endif %}
+
+        <div class="meta">
+            <span class="pub_agent" data-tooltip="{{ post.pub_agent.full_name }}"><i>{{ post.pub_agent.abbr_name }}.</i></span>
+            <span class="pub_date"><i>{{ post.pub_date }}</i></span>
+            <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
+        </div>
+        <div class="description">
+            {% if post.images.all %}
+                <div class="ui medium right floated bordered image">
+                    <img  src="{{ post.images.first.image.url }}">
+                </div>
+            {% endif %}
+            <p>{{ post.abstract }}</p>
+        </div>
+        <div class="extra">
+            标签：
+            {% for tag in post.tags.all %}
+                <span>|{{ tag }}</span>
+            {% endfor %}
+        </div>
+        <div class="extra">
+            内网链接：
+            <a href="{% url 'medical_info:post_detail' post.pk %}">http://{{ request.META.HTTP_HOST }}{% url 'medical_info:post_detail' post.pk %}</a>
+        </div>
+        <div class="extra">
+            原文链接：
+            <a href="{{ post.link }}">{{ post.link }}</a>
+        </div>
+    </div>
+</div>

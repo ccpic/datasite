@@ -1,0 +1,215 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "medical_info/index.html" %}
+{% load humanize %}
+{% load tags %}
+{% load taggit_templatetags2_tags %}
+
+{% block title %}医学信息平台{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block display %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    {% if posts %}
+    <div class="ui dividing header">
+        <a href="{% url 'medical_info:posts' %}">所有医学信息</a>
+        {% if kw %}
+            <a class="ui basic blue label" href="{% url 'medical_info:posts' %}?{% add_query_params request kw=kw %}">
+                搜索关键字: {{ kw }}
+                <i class="delete icon"></i>
+            </a>
+        {% endif %}
+        {% if tag_selected  %}
+            {% for tag in tag_selected %}
+                <a class="ui basic red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
+                    标签: {{ tag.name }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
+        {% if nation_selected  %}
+            {% for nation in nation_selected %}
+                <a class="ui basic purple label" href="{% url 'medical_info:posts' %}?{% add_query_params request nation=nation.id %}">
+                    国家: {{ nation.name }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
+        {% if program %}
+            <a class="ui basic violet label" href="{% url 'medical_info:posts' %}?{% add_query_params request program=program.id %}">
+                栏目: {{ program.name}}
+                    {% if program.vol %}
+                     {{ program.vol }}
+                    {% endif %}
+                <i class="delete icon"></i>
+            </a>
+        {% endif %}
+        <span> - 当前显示第
+            {{ posts.start_index }}-{{ posts.end_index }} of {{ record_n }}条记录
+        </span>
+    </div>
+
+    <div class="ui divided items">
+        {% for post in posts %}
+        <div class="item" id="medical_posts">
+            <div class="content">
+                {% if post.title_cn %}
+                <h2 class="ui header">
+                    {% comment %} <i class="bookmark outline icon"></i> {% endcomment %}
+                    <div class="content">
+                        {% if highlights %}
+                        {{ post.title_cn|highlight:highlights }}
+                        {% else %}
+                        {{ post.title_cn}}
+                        {% endif %}
+                        {% if post.title_en %}
+                        <div class="sub header">
+                            {% if highlights %}
+                            {{ post.title_en|highlight:highlights }}
+                            {% else %}
+                            {{ post.title_en}}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </h2>
+                {% else %}
+                {% if post.title_en %}
+                <h2 class="ui header">
+                    {% comment %} <i class="leanpub icon"></i> {% endcomment %}
+                    <div class="content">
+                        {% if highlights %}
+                        {{ post.title_en|highlight:highlights }}
+                        {% else %}
+                        {{ post.title_en}}
+                        {% endif %}
+                    </div>
+                </h2>
+                {% endif %}
+                {% endif %}
+                
+                <div class="meta">
+                    <span class="pub_agent"
+                        data-tooltip="{{ post.pub_agent.full_name }}"><i>{{ post.pub_agent.abbr_name }}.</i></span>
+                    <span class="pub_date"><i>{{ post.pub_date }}</i></span>
+                    <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
+                    {% for nation in post.nation.all %}
+                    <i class="{{ nation.code }} flag" title="{{ nation.name }}"></i>
+                    {% endfor %}
+                </div>
+                <div class="description">
+                    {% if post.images.all %}
+                    <div class="ui medium right floated bordered image">
+                        <img src="{{ post.images.first.image.url }}">
+                    </div>
+                    {% endif %}
+                    <p>
+                        {% if highlights %}
+                        {{ post.abstract|highlight:highlights }}
+                        {% else %}
+                        {{post.abstract}}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="extra">
+                    标签：
+                    {% for tag in post.tags.all %}
+                        {% if tag.name == "含医学部解读" %}
+                            <a class="ui red label" href="{% url 'medical_info:posts' %}?tag={{ tag.pk }}">
+                                <i class="info icon"></i>
+                                {{ tag }}
+                            </a>
+                        {% else %}
+                            <a class="ui label" href="{% url 'medical_info:posts' %}?tag={{ tag.pk }}">
+                                {{ tag }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="extra">
+                    <a class="ui right floated primary basic button" data-tooltip="{{ post.link }}"
+                        href="{{ post.link }}" target="_blank">
+                        文献来源链接
+                        <i class="right chevron icon"></i>
+                    </a>
+                    <a class="ui right floated primary button" href="{% url 'medical_info:post_detail' post.pk %}">
+                        阅读PDF原文
+                        <i class="right chevron icon"></i>
+                    </a>
+                    
+                    <div class="ui pointing basic label">
+                        <i class="green check icon"></i>
+                        {{ post.pub_user.username }}
+                        {% if post.program %}
+                        发布于
+                        <a class="detail" href="{% url 'medical_info:posts' %}?program={{ post.program.pk }}">{{ post.program.name }}{{ post.program.vol }}</a>
+                        {% else %}
+                        发布
+                        {% endif %}
+                    </div>
+                    
+                    <div class="ui basic label">
+                        <i class="eye icon"></i> {{ post.views }}
+                    </div>
+                    {% if perms.medical_info.change_post %}
+                        {% comment %} <a class="ui red basic label" href="{% url 'medical_info:post_mail_format' post.pk %}">
+                            邮件格式
+                        </a> {% endcomment %}
+                        <a class="ui red basic label" href="{% url 'admin:medical_info_post_change' post.pk %}">
+                            编辑
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="ui pagination menu">
+        <a class="item" href="{% url 'medical_info:posts' %}?{% add_query_params request page=1 %}">&lt;&lt;</a>
+
+        {% if posts.number|add:'-4' > 1 %}
+        <a class="item"
+            href="{% url 'medical_info:posts' %}?{% add_query_params request page=posts.number|add:'-5' %}">&hellip;</a>
+        {% endif %}
+
+
+        {% for n in num_pages|times %}
+        {% if n == posts.number %}
+        <span class="active item"
+            href="{% url 'medical_info:posts' %}?{% add_query_params request page=n %}">{{ n }}</span>
+        {% elif n > posts.number|add:'-5' and n < posts.number|add:'5' %}
+        <a class="item" href="{% url 'medical_info:posts' %}?{% add_query_params request page=n %}">{{ n }}</a>
+        {% endif %}
+        {% endfor %}
+
+
+        {% if num_pages > posts.number|add:'4' %}
+        <a class="item"
+            href="{% url 'medical_info:posts' %}?{% add_query_params request page=posts.number|add:'5' %}">&hellip;</a>
+        {% endif %}
+
+        <a class="item"
+            href="{% url 'medical_info:posts' %}?{% add_query_params request page=num_pages %}">&gt;&gt;</a>
+    </div>
+    {% else %}
+    <div class="ui error message">
+        没有搜索到符合条件的记录，返回<a href="{% url 'medical_info:posts' %}">所有医学信息</a>
+    </div>
+    {% endif %}
+</div>
+<div class="ui hidden divider"></div>
+
+<style>
+    .highlight_kw {
+        background-color: #FFEFC5;
+    }
+    .highlight_tag {
+        background-color: #BEF3D8;
+    }
+</style>
+{% endblock display %}
