@@ -11,7 +11,7 @@ from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 import datetime
 from .models import *
-from datasite.commons import sql_extent, qdict_to_dict
+from datasite.commons import sql_extent, qdict_to_dict, NpEncoder
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -193,7 +193,7 @@ def query(request):
         context["bubble_performance"] = bubble_performance
 
     return HttpResponse(
-        json.dumps(context, ensure_ascii=False),
+        json.dumps(context, ensure_ascii=False, cls=NpEncoder),
         content_type="application/json charset=utf-8",
     )  # 返回结果必须是json格式
 
