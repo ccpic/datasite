@@ -8,5 +8,6 @@ from . import views
 
 app_name = 'kol'
 urlpatterns = [
-    path('', views.kols, name='kols'),
+    path('', views.records, name='records'),
+    path('kols', views.kols, name='kols'),
 ]

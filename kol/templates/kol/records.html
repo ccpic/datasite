@@ -1,0 +1,142 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "kol/index.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}KOL管理{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block display %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    {% if records %}
+    <div class="ui dividing header">
+        <a href="{% url 'kol:records' %}">所有拜访记录</a>
+        {% if kw %}
+            <a class="ui basic blue label" href="{% url 'kol:records' %}?{% add_query_params request kw=kw %}">
+                搜索关键字: {{ kw }}
+                <i class="delete icon"></i>
+            </a>
+        {% endif %}
+        <span> - 当前显示第
+            {{ records.start_index }}-{{ records.end_index }} of {{ record_n }}条记录
+        </span>
+    </div>
+
+    <div class="ui divided items">
+        {% for record in records %}
+        <div class="item" id="kol_records">
+            <div class="content">
+
+                <h2 class="ui header">
+                    <div class="content">
+                        {{ record.visit_date|date:"Y-m-d" }} 
+                        {% if highlights %}
+                        {{ record.kol.name|highlight:highlights }}
+                        {% else %}
+                        {{ record.kol.name}}
+                        {% endif %}
+                    </div>
+                </h2>
+                
+                <div class="meta">
+                    <span class="pub_agent"
+                        data-tooltip="{{ record.kol.hospital }}"><i>{{ record.kol.hospital.name }}</i></span>
+                    <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
+                </div>
+                <div class="description">
+                    {% if post.images.all %}
+                    <div class="ui medium right floated bordered image">
+                        <img src="{{ post.images.first.image.url }}">
+                    </div>
+                    {% endif %}
+                    <p>
+                        {% if highlights %}
+                        {{ record.feedback_main|highlight:highlights }}
+                        {% else %}
+                        {{ record.feedback_main }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="extra">
+                    <a class="ui right floated primary basic button" 
+                        href="{{ record.link }}" target="_blank">
+                        详情
+                        <i class="right chevron icon"></i>
+                    </a>
+
+                    
+                    <div class="ui pointing basic label">
+                        <i class="green check icon"></i>
+                        {{ record.pub_user.username }} 记录于 {{ record.upload_date }}
+                    </div>
+                    
+                    {% if perms.medical_info.change_post %}
+                        <a class="ui red basic label" href="{% url 'admin:kol_record_change' record.pk %}">
+                            编辑
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui pagination menu">
+        <a class="item" href="{% url 'kol:records' %}?{% add_query_params request page=1 %}">&lt;&lt;</a>
+
+        {% if records.number|add:'-4' > 1 %}
+        <a class="item"
+            href="{% url 'kol:records' %}?{% add_query_params request page=records.number|add:'-5' %}">&hellip;</a>
+        {% endif %}
+
+
+        {% for n in num_pages|times %}
+        {% if n == records.number %}
+        <span class="active item"
+            href="{% url 'kol:records' %}?{% add_query_params request page=n %}">{{ n }}</span>
+        {% elif n > records.number|add:'-5' and n < records.number|add:'5' %}
+        <a class="item" href="{% url 'kol:records' %}?{% add_query_params request page=n %}">{{ n }}</a>
+        {% endif %}
+        {% endfor %}
+
+
+        {% if num_pages > records.number|add:'4' %}
+        <a class="item"
+            href="{% url 'kol:records' %}?{% add_query_params request page=records.number|add:'5' %}">&hellip;</a>
+        {% endif %}
+
+        <a class="item"
+            href="{% url 'kol:records' %}?{% add_query_params request page=num_pages %}">&gt;&gt;</a>
+    </div>
+    {% else %}
+    <div class="ui error message">
+        没有搜索到符合条件的记录，返回<a href="{% url 'kol:records' %}">所有拜访记录</a>
+    </div>
+    {% endif %}
+</div>
+<div class="ui hidden divider"></div>
+
+<style>
+    .highlight_kw {
+        background-color: #FFEFC5;
+    }
+    .highlight_tag {
+        background-color: #BEF3D8;
+    }
+</style>
+
+<script>
+    $(document).ready(function(){
+        $(".rating").rating('disable');
+    });
+
+</script>
+{% endblock display %}

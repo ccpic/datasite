@@ -3,7 +3,7 @@ from django.shortcuts import render, HttpResponse
 from django.http import request
 from django.contrib.auth.decorators import login_required
 import json
-from .models import Hospital, Kol
+from .models import Hospital, Kol, Record
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from datasite.commons import get_dt_page
 from django.db.models import Q, F, Count
@@ -46,6 +46,54 @@ def get_param(params):
 
     return context
 
+
+@login_required
+def records(request: request) -> HttpResponse:
+    print(request.GET)
+    param_dict = get_param(request.GET)
+
+    records = Record.objects.all()
+
+    # # 根据搜索筛选文章
+    # kw = param_dict["kw"]
+    # if kw is not None:
+    #     kw_list = kw.split(" ")
+
+    #     search_condition = Q(name__icontains=kw_list[0]) | Q(  # 搜索KOL姓名
+    #         hospital__name__icontains=kw_list[0]
+    #     )  # 搜索供职医院名称
+    #     for k in kw_list[1:]:
+    #         search_condition.add(
+    #             Q(name__icontains=k)  # 搜索KOL姓名
+    #             | Q(hospital__name__icontains=k),  # 搜索供职医院名称
+    #             Q.AND,
+    #         )
+
+    #     search_result = kols.filter(search_condition).distinct()
+
+    #     #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+    #     sr_ids = [kol.id for kol in search_result]
+    #     kols = Kol.objects.filter(id__in=sr_ids)
+
+    paginator = Paginator(records, DISPLAY_LENGTH)
+    page = request.GET.get("page")
+
+    try:
+        rows = paginator.page(page)
+    except PageNotAnInteger:
+        rows = paginator.page(1)
+    except EmptyPage:
+        rows = paginator.page(paginator.num_pages)
+
+    context = {
+        "records": rows,
+        "num_pages": paginator.num_pages,
+        "record_n": paginator.count,
+        "display_length": DISPLAY_LENGTH,
+        "kw": param_dict["kw"],
+    }
+
+    return render(request, "kol/records.html", context)
 
 @login_required
 def kols(request: request) -> HttpResponse:

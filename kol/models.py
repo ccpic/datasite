@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.utils import timezone
+from django.contrib.auth.models import User
 
 DEPT_CHOICES = [
     ("肾内科", "肾内科"),
@@ -84,6 +85,39 @@ class Kol(models.Model):
     dept = models.CharField(max_length=10, choices=DEPT_CHOICES, verbose_name="所在科室")
     rating_infl = models.IntegerField(choices=RATING_CHOICES, verbose_name="影响力")
     rating_prof = models.IntegerField(choices=RATING_CHOICES, verbose_name="专业度")
+    upload_date = models.DateTimeField(
+        verbose_name="创建日期", default=timezone.now
+    )
+    pub_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="kol_pub_user"
+    )
 
     def __str__(self):
         return f"{self.hospital} - {self.name}"
+
+
+class Record(models.Model):
+    kol = models.ForeignKey(
+        Kol, on_delete=models.CASCADE, verbose_name="KOL", related_name="record_kol",
+    )
+    visit_date = models.DateField(verbose_name="拜访日期")
+    purpose = models.TextField(verbose_name="拜访目标")
+    feedback_main = models.TextField(verbose_name="主要反馈")
+    feedback_oth = models.TextField(verbose_name="其他重要信息")
+    upload_date = models.DateTimeField(
+        verbose_name="记录日期", default=timezone.now
+    )
+    pub_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="记录人",
+        related_name="record_pub_user",
+    )
+
+    class Meta:
+        verbose_name = "拜访记录"
+        verbose_name_plural = "拜访记录"
+        ordering = ["-upload_date"]
+
+    def __str__(self):
+        return f"{self.visit_date} - {self.kol.name} - {self.kol.hospital}"

@@ -15,95 +15,95 @@
 
 <div class="ui container">
     {% if kols %}
-    <div class="ui dividing header">
-        <a href="{% url 'kol:kols' %}">所有KOL信息</a>
-        {% if kw %}
-            <a class="ui basic blue label" href="{% url 'kol:kols' %}?{% add_query_params request kw=kw %}">
-                搜索关键字: {{ kw }}
-                <i class="delete icon"></i>
-            </a>
-        {% endif %}
-        <span> - 当前显示第
-            {{ kols.start_index }}-{{ kols.end_index }} of {{ record_n }}条记录
-        </span>
-    </div>
+        <div class="ui dividing header">
+            <a href="{% url 'kol:kols' %}">所有KOL信息</a>
+            {% if kw %}
+                <a class="ui basic blue label" href="{% url 'kol:kols' %}?{% add_query_params request kw=kw %}">
+                    搜索关键字: {{ kw }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endif %}
+            <span> - 当前显示第
+                {{ kols.start_index }}-{{ kols.end_index }} of {{ record_n }}条记录
+            </span>
+        </div>
 
-    <div class="ui{% if request.user_agent.is_mobile %} two {% else %} four{% endif %} cards">
-        {% for kol in kols %}
-        <div class="card">
-            <div class="content">
-                <div class="meta" style="float: right">{{ client.bu }}</div>
-                <div class="header">{{ kol.name }}</div>
-            </div>
-            <div class="content">
-                <div class="meta">
+        <div class="ui{% if request.user_agent.is_mobile %} two {% else %} four{% endif %} cards">
+            {% for kol in kols %}
+            <div class="card">
+                <div class="content">
+                    <div class="meta" style="float: right">{{ client.bu }}</div>
+                    <div class="header">{{ kol.name }}</div>
+                </div>
+                <div class="content">
+                    <div class="meta">
+                        <div class="ui list">
+                            <div class="item">
+                                <span>{{ kol.hospital.name }}</span>
+                            </div>
+                            <div class="item">
+                                <span>{{ kol.hospital.decile }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="content">
                     <div class="ui list">
                         <div class="item">
-                            <span>{{ kol.hospital.name }}</span>
+                            <div class="ui red ribbon label">影响力</div>
+                            <div class="ui star rating" data-rating="{{ kol.rating_infl }}" data-max-rating="3"></div>
                         </div>
                         <div class="item">
-                            <span>{{ kol.hospital.decile }}</span>
+                            <div class="ui blue ribbon label">专业度</div>
+                            <div class="ui star rating" data-rating="{{ kol.rating_prof }}" data-max-rating="3"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="content">
-                <div class="ui list">
-                    <div class="item">
-                        <div class="ui red ribbon label">影响力</div>
-                        <div class="ui star rating" data-rating="{{ kol.rating_infl }}" data-max-rating="3"></div>
+                <div class="extra">
+                    <div class="left floated meta">
+                        <i class="marker icon"></i><span>{{ kol.hospital.province }}</span>
                     </div>
-                    <div class="item">
-                        <div class="ui blue ribbon label">专业度</div>
-                        <div class="ui star rating" data-rating="{{ kol.rating_prof }}" data-max-rating="3"></div>
+                    <div class="right floated meta">
+                        <span>{{ client.dsm }}</span>
+                        <span>{{ client.rsp }}</span>
                     </div>
                 </div>
             </div>
-            <div class="extra">
-                <div class="left floated meta">
-                    <i class="marker icon"></i><span>{{ kol.hospital.province }}</span>
-                </div>
-                <div class="right floated meta">
-                    <span>{{ client.dsm }}</span>
-                    <span>{{ client.rsp }}</span>
-                </div>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    <div class="ui hidden divider"></div>
+        <div class="ui hidden divider"></div>
 
-    <div class="ui pagination menu">
-        <a class="item" href="{% url 'kol:kols' %}?{% add_query_params request page=1 %}">&lt;&lt;</a>
+        <div class="ui pagination menu">
+            <a class="item" href="{% url 'kol:kols' %}?{% add_query_params request page=1 %}">&lt;&lt;</a>
 
-        {% if kols.number|add:'-4' > 1 %}
-        <a class="item"
-            href="{% url 'kol:kols' %}?{% add_query_params request page=kols.number|add:'-5' %}">&hellip;</a>
-        {% endif %}
+            {% if kols.number|add:'-4' > 1 %}
+            <a class="item"
+                href="{% url 'kol:kols' %}?{% add_query_params request page=kols.number|add:'-5' %}">&hellip;</a>
+            {% endif %}
 
 
-        {% for n in num_pages|times %}
-        {% if n == kols.number %}
-        <span class="active item"
-            href="{% url 'kol:kols' %}?{% add_query_params request page=n %}">{{ n }}</span>
-        {% elif n > kols.number|add:'-5' and n < kols.number|add:'5' %}
-        <a class="item" href="{% url 'kol:kols' %}?{% add_query_params request page=n %}">{{ n }}</a>
-        {% endif %}
-        {% endfor %}
+            {% for n in num_pages|times %}
+            {% if n == kols.number %}
+            <span class="active item"
+                href="{% url 'kol:kols' %}?{% add_query_params request page=n %}">{{ n }}</span>
+            {% elif n > kols.number|add:'-5' and n < kols.number|add:'5' %}
+            <a class="item" href="{% url 'kol:kols' %}?{% add_query_params request page=n %}">{{ n }}</a>
+            {% endif %}
+            {% endfor %}
 
 
-        {% if num_pages > kols.number|add:'4' %}
-        <a class="item"
-            href="{% url 'kol:kols' %}?{% add_query_params request page=kols.number|add:'5' %}">&hellip;</a>
-        {% endif %}
+            {% if num_pages > kols.number|add:'4' %}
+            <a class="item"
+                href="{% url 'kol:kols' %}?{% add_query_params request page=kols.number|add:'5' %}">&hellip;</a>
+            {% endif %}
 
-        <a class="item"
-            href="{% url 'kol:kols' %}?{% add_query_params request page=num_pages %}">&gt;&gt;</a>
-    </div>
+            <a class="item"
+                href="{% url 'kol:kols' %}?{% add_query_params request page=num_pages %}">&gt;&gt;</a>
+        </div>
     {% else %}
-    <div class="ui error message">
-        没有搜索到符合条件的记录，返回<a href="{% url 'kol:kols' %}">所有KOL信息</a>
-    </div>
+        <div class="ui error message">
+            没有搜索到符合条件的记录，返回<a href="{% url 'kol:kols' %}">所有KOL信息</a>
+        </div>
     {% endif %}
 </div>
 <div class="ui hidden divider"></div>
