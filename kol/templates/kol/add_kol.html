@@ -1,0 +1,80 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "kol/index.html" %}
+{% load humanize %}
+{% load tags %} 
+{% block title %}添加KOL{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block display %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    <div class="ui big breadcrumb">
+        <a href="{% url 'kol:kols' %}">所有KOL信息</a>
+        <i class="right arrow icon divider"></i>
+        <div class="active section">添加KOL</div>
+    </div>
+    <div class="ui divider"></div>
+    <form class="ui form" method="post">
+        {% csrf_token %}
+        <div class="field">
+            <label>KOL姓名</label>
+            <input type="text" name="name" placeholder="KOL姓名" />
+        </div>
+        <div class="inline fields">
+            <label for="rating_infl">影响力</label>
+            <div class="field">
+              <div class="ui radio checkbox">
+                <input type="radio" name="rating_infl" value="3" tabindex="0" class="hidden">
+                <label>高</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui radio checkbox">
+                <input type="radio" name="rating_infl" value="2" tabindex="0" class="hidden">
+                <label>中</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui radio checkbox">
+                <input type="radio" name="rating_infl" value="1" tabindex="0" class="hidden">
+                <label>低</label>
+              </div>
+            </div>
+          </div>
+          <div class="inline fields">
+            <label for="rating_prof">专业度</label>
+            <div class="field">
+              <div class="ui radio checkbox">
+                <input type="radio" name="rating_prof" value="3" tabindex="0" class="hidden">
+                <label>高</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui radio checkbox">
+                <input type="radio" name="rating_prof" value="2" tabindex="0" class="hidden">
+                <label>中</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui radio checkbox">
+                <input type="radio" name="rating_prof" value="1" tabindex="0" class="hidden">
+                <label>低</label>
+              </div>
+            </div>
+          </div>
+        <button class="ui primary button" type="submit">提交</button>
+    </form>
+</div>
+<div class="ui hidden divider"></div>
+
+<script>
+$('.ui.radio.checkbox')
+  .checkbox()
+;
+</script>
+{% endblock display %}

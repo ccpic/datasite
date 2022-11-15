@@ -2,14 +2,17 @@
 {% load tags %}
 
 <div class="ui container">
+    <a class="ui fluid primary button" id="add_kol" href="{% url 'kol:add_kol' %}">新增KOL</a>
+    
+    <div class="ui hidden divider"></div>
     <div class="ui blue vertical segment">
         <h3 class="ui header">
             搜索
         </h3>
-        {% if "/records/" not in request.path %}
+        {% if "kol/kols" in request.path %}
             <form method="get" action="{% url 'kol:kols' %}" class="ui fluid form">
         {% else %}
-            <form method="get" action="{% url 'medical_info:posts' %}" class="ui fluid form">
+            <form method="get" action="{% url 'kol:records' %}" class="ui fluid form">
         {% endif %}
             {% csrf_token %}
             <div class="field">

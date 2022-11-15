@@ -10,4 +10,5 @@ app_name = 'kol'
 urlpatterns = [
     path('', views.records, name='records'),
     path('kols', views.kols, name='kols'),
+    path('add_kol', views.add_kol, name='add_kol'),
 ]

@@ -1,5 +1,5 @@
 import pandas as pd
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, HttpResponse, redirect
 from django.http import request
 from django.contrib.auth.decorators import login_required
 import json
@@ -100,7 +100,7 @@ def kols(request: request) -> HttpResponse:
     print(request.GET)
     param_dict = get_param(request.GET)
 
-    kols = Kol.objects.all()
+    kols = Kol.objects.all().order_by("name")
 
     # 根据搜索筛选文章
     kw = param_dict["kw"]
@@ -121,7 +121,7 @@ def kols(request: request) -> HttpResponse:
 
         #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
         sr_ids = [kol.id for kol in search_result]
-        kols = Kol.objects.filter(id__in=sr_ids)
+        kols = Kol.objects.filter(id__in=sr_ids).order_by("name")
 
     paginator = Paginator(kols, DISPLAY_LENGTH)
     page = request.GET.get("page")
@@ -142,3 +142,18 @@ def kols(request: request) -> HttpResponse:
     }
 
     return render(request, "kol/kols.html", context)
+
+
+@login_required
+def add_kol(request):
+    print(request.POST)
+    if request.method == "POST":
+        name = request.POST.get("name")
+        rating_infl = int(request.POST.get("rating_infl"))
+        rating_prof = int(request.POST.get("rating_prof"))
+        print(name,rating_infl, rating_prof)
+        
+        return redirect("/kol/kols")
+    else:
+        context = {}
+        return render(request, "kol/add_kol.html", context)
