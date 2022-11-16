@@ -95,6 +95,7 @@ def records(request: request) -> HttpResponse:
 
     return render(request, "kol/records.html", context)
 
+
 @login_required
 def kols(request: request) -> HttpResponse:
     print(request.GET)
@@ -148,12 +149,19 @@ def kols(request: request) -> HttpResponse:
 def add_kol(request):
     print(request.POST)
     if request.method == "POST":
-        name = request.POST.get("name")
-        rating_infl = int(request.POST.get("rating_infl"))
-        rating_prof = int(request.POST.get("rating_prof"))
-        print(name,rating_infl, rating_prof)
-        
+        obj = Kol(
+            name=request.POST.get("name"),
+            hospital=Hospital.objects.get(pk=int(request.POST.get("select_hp"))),
+            dept=request.POST.get("dept"),
+            rating_infl=int(request.POST.get("rating_infl")),
+            rating_prof=int(request.POST.get("rating_prof")),
+            titles=request.POST.get("text_title"),
+            pub_user=request.user,
+        )
+        obj.save()
+
         return redirect("/kol/kols")
     else:
-        context = {}
+        hospitals = Hospital.objects.all()
+        context = {"hospitals": hospitals}
         return render(request, "kol/add_kol.html", context)

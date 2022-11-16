@@ -57,9 +57,9 @@
                     {% endif %}
                     <p>
                         {% if highlights %}
-                        {{ record.feedback_main|highlight:highlights }}
+                        {{ record.feedback_main|highlight:highlights|truncatechars:255 }}
                         {% else %}
-                        {{ record.feedback_main }}
+                        {{ record.feedback_main|truncatechars:255 }}
                         {% endif %}
                     </p>
                 </div>

@@ -7,66 +7,16 @@ DEPT_CHOICES = [
     ("其他科室", "其他科室"),
 ]
 
-
-DECILE_CHOICES = [
-    ("D10", "D10"),
-    ("D9", "D9"),
-    ("D8", "D8"),
-    ("D7", "D7"),
-    ("D6", "D6"),
-    ("D5", "D5"),
-    ("D4", "D4"),
-    ("D3", "D3"),
-    ("D2", "D2"),
-    ("D1", "D1"),
-]
-
-PROVINCE_CHOICES = [
-    ("北京", "北京"),
-    ("天津", "天津"),
-    ("河北", "河北"),
-    ("山西", "山西"),
-    ("内蒙古", "内蒙古"),
-    ("辽宁", "辽宁"),
-    ("吉林", "吉林"),
-    ("黑龙江", "黑龙江"),
-    ("上海", "上海"),
-    ("江苏", "江苏"),
-    ("浙江", "浙江"),
-    ("安徽", "安徽"),
-    ("福建", "福建"),
-    ("江西", "江西"),
-    ("山东", "山东"),
-    ("河南", "河南"),
-    ("湖北", "湖北"),
-    ("湖南", "湖南"),
-    ("广东", "广东"),
-    ("广西", "广西"),
-    ("海南", "海南"),
-    ("重庆", "重庆"),
-    ("四川", "四川"),
-    ("贵州", "贵州"),
-    ("云南", "云南"),
-    ("西藏", "西藏"),
-    ("陕西", "陕西"),
-    ("甘肃", "甘肃"),
-    ("青海", "青海"),
-    ("宁夏", "宁夏"),
-    ("新疆", "新疆"),
-]
-
 RATING_CHOICES = [(3, "高"), (2, "中"), (1, "低")]
 
 
 class Hospital(models.Model):
     xltid = models.CharField(verbose_name="信立泰医院id", max_length=10, unique=True)
     name = models.CharField(verbose_name="医院名称", max_length=200, unique=True)
-    province = models.CharField(
-        max_length=10, choices=PROVINCE_CHOICES, verbose_name="省/自治区/直辖市"
-    )
-    decile = models.CharField(
-        max_length=3, choices=DECILE_CHOICES, verbose_name="医院潜力分级"
-    )
+    province = models.CharField(max_length=10, verbose_name="省/自治区/直辖市")
+    city = models.CharField(max_length=20, verbose_name="城市")
+    decile = models.IntegerField(verbose_name="医院潜力分级")
+    dsm = models.CharField(max_length=10, verbose_name="当前地区经理", null=True)
 
     class Meta:
         verbose_name = "医院"
@@ -74,7 +24,7 @@ class Hospital(models.Model):
         ordering = ["name"]
 
     def __str__(self):
-        return f"{self.province} {self.decile} {self.name}"
+        return f"{self.province} {self.city} D{self.decile} {self.name}"
 
 
 class Kol(models.Model):
@@ -85,12 +35,15 @@ class Kol(models.Model):
     dept = models.CharField(max_length=10, choices=DEPT_CHOICES, verbose_name="所在科室")
     rating_infl = models.IntegerField(choices=RATING_CHOICES, verbose_name="影响力")
     rating_prof = models.IntegerField(choices=RATING_CHOICES, verbose_name="专业度")
-    upload_date = models.DateTimeField(
-        verbose_name="创建日期", default=timezone.now
-    )
+    titles = models.TextField(verbose_name="头衔&荣誉", blank=True, null=True)
+    upload_date = models.DateTimeField(verbose_name="创建日期", default=timezone.now)
     pub_user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="kol_pub_user"
     )
+
+    class meta:
+        ordering = ["name"]
+        unique_together = ("name", "hospital", "dept")
 
     def __str__(self):
         return f"{self.hospital} - {self.name}"
@@ -104,9 +57,7 @@ class Record(models.Model):
     purpose = models.TextField(verbose_name="拜访目标")
     feedback_main = models.TextField(verbose_name="主要反馈")
     feedback_oth = models.TextField(verbose_name="其他重要信息")
-    upload_date = models.DateTimeField(
-        verbose_name="记录日期", default=timezone.now
-    )
+    upload_date = models.DateTimeField(verbose_name="记录日期", default=timezone.now)
     pub_user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

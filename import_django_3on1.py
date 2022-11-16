@@ -19,6 +19,7 @@ table = "sales"
 
 D_BOOLEAN = {"是": True, "否": False}
 
+
 def importModel(dict):
     for key in dict:
         sql = "SELECT Distinct " + key + " FROM " + table
@@ -33,6 +34,35 @@ def importModel(dict):
         dict[key].objects.bulk_create(l)
 
 
+# 为KOL系统导入医院对象
+def importHp():
+    from kol.models import Hospital
+
+    sql = "SELECT Distinct HP_ID, HP_NAME, PROVINCE, CITY, LEVEL, DSM_NAME From sales where PRODUCT = '信立坦'"
+    df = pd.read_sql(sql=sql, con=engine)
+    df.dropna(inplace=True)
+    df.drop_duplicates(subset=["HP_ID"], inplace=True)
+    df.drop_duplicates(subset=["HP_NAME"], inplace=True)
+    df.to_excel("test.xlsx")
+    print(df)
+    l = []
+    for item in df.values:
+        l.append(
+            Hospital(
+                xltid=item[0],
+                name=item[1],
+                province=item[2],
+                city=item[3],
+                decile=item[4],
+                dsm=item[5],
+            )
+        )
+
+    Hospital.objects.all().delete()
+    Hospital.objects.bulk_create(l)
+
+
 if __name__ == "__main__":
     importModel(D_MODEL)
+    # importHp()
     print("Done!", time.process_time())
