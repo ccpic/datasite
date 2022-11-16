@@ -23,8 +23,16 @@
                     <i class="delete icon"></i>
                 </a>
             {% endif %}
+            {% if selected_provinces  %}
+                {% for prov in selected_provinces %}
+                    <a class="ui basic red label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov %}">
+                        省份: {{ prov }}
+                        <i class="delete icon"></i>
+                    </a>
+                {% endfor %}
+            {% endif %}
             <span> - 当前显示第
-                {{ kols.start_index }}-{{ kols.end_index }} of {{ record_n }}条记录
+                {{ kols.start_index }}-{{ kols.end_index }} of {{ record_n }}位KOLs
             </span>
         </div>
 
@@ -42,7 +50,7 @@
                                 <span>{{ kol.hospital.name }}</span>
                             </div>
                             <div class="item">
-                                <span>{{ kol.hospital.decile }}</span>
+                                <span>D{{ kol.hospital.decile }}</span>
                             </div>
                         </div>
                     </div>
@@ -68,6 +76,10 @@
                         <span>{{ client.rsp }}</span>
                     </div>
                 </div>
+                <div class="ui bottom attached button">
+                    <i class="edit outline icon"></i>
+                    详情&编辑
+                  </div>
             </div>
             {% endfor %}
         </div>
@@ -123,4 +135,5 @@
     });
 
 </script>
+
 {% endblock display %}

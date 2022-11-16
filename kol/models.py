@@ -30,7 +30,11 @@ class Hospital(models.Model):
 class Kol(models.Model):
     name = models.CharField(verbose_name="姓名", max_length=20)
     hospital = models.ForeignKey(
-        Hospital, verbose_name="供职医院", on_delete=models.SET_NULL, null=True
+        Hospital,
+        verbose_name="供职医院",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="kol_hospital",
     )
     dept = models.CharField(max_length=10, choices=DEPT_CHOICES, verbose_name="所在科室")
     rating_infl = models.IntegerField(choices=RATING_CHOICES, verbose_name="影响力")

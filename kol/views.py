@@ -14,8 +14,7 @@ DISPLAY_LENGTH = 20
 def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
 
-    # tag_param = params.getlist("tag")  # tag可能多选，需要额外处理
-    # tag_id_list = get_id_list(tag_param)
+    prov_param = params.getlist("province")  # 省份可能多选，需要额外处理
 
     # nation_param = params.getlist("nation")  # 国家参数
     # nation_id_list = get_id_list(nation_param)
@@ -38,7 +37,7 @@ def get_param(params):
 
     context = {
         "kw": kw_param,
-        # "tags": tag_id_list,
+        "provinces": prov_param,
         # "nations": nation_id_list,
         # "program": prog_param,
         "highlights": highlights,
@@ -103,7 +102,7 @@ def kols(request: request) -> HttpResponse:
 
     kols = Kol.objects.all().order_by("name")
 
-    # 根据搜索筛选文章
+    # 根据搜索筛选KOL
     kw = param_dict["kw"]
     if kw is not None:
         kw_list = kw.split(" ")
@@ -124,6 +123,11 @@ def kols(request: request) -> HttpResponse:
         sr_ids = [kol.id for kol in search_result]
         kols = Kol.objects.filter(id__in=sr_ids).order_by("name")
 
+    # 根据省份筛选Kol
+    provinces = param_dict["provinces"]
+    if provinces:
+        kols = kols.filter(hospital__province__in=provinces)
+
     paginator = Paginator(kols, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
@@ -134,12 +138,28 @@ def kols(request: request) -> HttpResponse:
     except EmptyPage:
         rows = paginator.page(paginator.num_pages)
 
+    all_provinces = (
+        Kol.objects.all()
+        .values("hospital__province")
+        .order_by("hospital__province")
+        .annotate(count=Count("hospital__province"))
+    )
+
+    filter_provinces = (
+        kols.values("hospital__province")
+        .order_by("hospital__province")
+        .annotate(count=Count("hospital__province"))
+    )
+
     context = {
         "kols": rows,
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
+        "all_provinces": all_provinces,
+        "filter_provinces": filter_provinces,
+        "selected_provinces": param_dict["provinces"],
     }
 
     return render(request, "kol/kols.html", context)

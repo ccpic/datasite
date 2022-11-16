@@ -27,44 +27,25 @@
         </form>
     </div>
     <div class="ui red vertical segment">
-        {% if "/posts/" not in request.path %}
+        {% if "kol/kols" in request.path %}
         <h3 class="ui header">
-            标签
-            {% if filter_tags.count > 20 %}
-            <div class="ui red label" id="label_top20_tags">Top20</div>
-            {% endif %}
+            省份
         </h3>
         <div class="ui labels">
-            {% for tag in filter_tags|slice:":20" %}
-            {% if tag in tag_selected %}
-            <a class="ui red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
-                <i class="delete icon"></i>
-            </a>
-            {% else %}
-            <a class="ui label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
-            </a>
-            {% endif %}
+            {% for prov in all_provinces %}
+                {% if prov.hospital__province in selected_provinces %}
+                    <a class="ui red label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov.hospital__province %}">
+                        {{ prov.hospital__province }} <div class="detail">({{ prov.count }})</div>
+                        <i class="delete icon"></i>
+                    </a>
+                {% else %}
+                    <a class="ui label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov.hospital__province %}">
+                        {{ prov.hospital__province }} <div class="detail">({{ prov.count }})</div>
+                    </a>
+                {% endif %}
             {% endfor %}
         </div>
-        <div class="ui labels" id="tags_more" style="display: none;">
-            {% for tag in filter_tags|slice:"20:" %}
-            {% if tag in tag_selected %}
-            <a class="ui red label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
-                <i class="delete icon"></i>
-            </a>
-            {% else %}
-            <a class="ui label" href="{% url 'medical_info:posts' %}?{% add_query_params request tag=tag.id %}">
-                {{ tag.name }} <div class="detail">({{ tag.post_count }})</div>
-            </a>
-            {% endif %}
-            {% endfor %}
-        </div>
-        {% if filter_tags.count > 20 %}
-        <div class="ui bottom attached red mini button" tabindex="0" id="show_all_tags">show all</div>
-        {% endif %}
+
         {% else %}
         <h3 class="ui header">
             标签
