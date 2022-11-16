@@ -7,6 +7,7 @@ from .models import Hospital, Kol, Record
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from datasite.commons import get_dt_page
 from django.db.models import Q, F, Count
+from django.db import IntegrityError
 
 DISPLAY_LENGTH = 20
 
@@ -166,7 +167,7 @@ def kols(request: request) -> HttpResponse:
 
 
 @login_required
-def add_kol(request):
+def create_kol(request):
     print(request.POST)
     if request.method == "POST":
         obj = Kol(
@@ -178,10 +179,46 @@ def add_kol(request):
             titles=request.POST.get("text_title"),
             pub_user=request.user,
         )
-        obj.save()
+        try:
+            obj.save()
+        except IntegrityError:
+            return bad_request(message="该KOL已存在")
 
         return redirect("/kol/kols")
     else:
         hospitals = Hospital.objects.all()
         context = {"hospitals": hospitals}
-        return render(request, "kol/add_kol.html", context)
+        return render(request, "kol/create_kol.html", context)
+
+
+@login_required
+def update_kol(request, pk: int):
+    print(request.POST)
+    if request.method == "POST":
+        obj = Kol.objects.get(pk=pk)
+        obj.name=request.POST.get("name")
+        obj.hospital=Hospital.objects.get(pk=int(request.POST.get("select_hp")))
+        obj.dept=request.POST.get("dept")
+        obj.rating_infl=int(request.POST.get("rating_infl"))
+        obj.rating_prof=int(request.POST.get("rating_prof"))
+        obj.titles=request.POST.get("text_title")
+        obj.pub_user=request.user
+    
+        try:
+            obj.save()
+        except IntegrityError:
+            return bad_request(message="该KOL已存在")
+
+        return redirect("/kol/kols")
+    else:
+        hospitals = Hospital.objects.all()
+        context = {"kol": Kol.objects.get(pk=pk), "hospitals": hospitals}
+        return render(request, "kol/create_kol.html", context)
+
+
+def bad_request(message):
+    response = HttpResponse(
+        json.dumps({"message": message}), content_type="application/json"
+    )
+    response.status_code = 400
+    return response

@@ -49,9 +49,6 @@
                             <div class="item">
                                 <span>{{ kol.hospital.name }}</span>
                             </div>
-                            <div class="item">
-                                <span>D{{ kol.hospital.decile }}</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -76,10 +73,10 @@
                         <span>{{ client.rsp }}</span>
                     </div>
                 </div>
-                <div class="ui bottom attached button">
+                <a class="ui bottom attached button" href="{% url 'kol:update_kol' pk=kol.pk %}">
                     <i class="edit outline icon"></i>
                     详情&编辑
-                  </div>
+                </a>
             </div>
             {% endfor %}
         </div>

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.db.models import Q, UniqueConstraint
 
 DEPT_CHOICES = [
     ("肾内科", "肾内科"),
@@ -45,9 +46,13 @@ class Kol(models.Model):
         User, on_delete=models.CASCADE, related_name="kol_pub_user"
     )
 
-    class meta:
+    class Meta:
         ordering = ["name"]
-        unique_together = ("name", "hospital", "dept")
+        constraints = [
+            UniqueConstraint(
+                fields=["name", "hospital"], name="unique kol"
+            )
+        ]
 
     def __str__(self):
         return f"{self.hospital} - {self.name}"
