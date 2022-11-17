@@ -43,16 +43,12 @@ class Kol(models.Model):
     titles = models.TextField(verbose_name="头衔&荣誉", blank=True, null=True)
     upload_date = models.DateTimeField(verbose_name="创建日期", default=timezone.now)
     pub_user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="kol_pub_user"
+        User, on_delete=models.SET_NULL, null=True, related_name="kol_pub_user"
     )
 
     class Meta:
         ordering = ["name"]
-        constraints = [
-            UniqueConstraint(
-                fields=["name", "hospital"], name="unique kol"
-            )
-        ]
+        constraints = [UniqueConstraint(fields=["name", "hospital"], name="unique kol")]
 
     def __str__(self):
         return f"{self.hospital} - {self.name}"
@@ -60,7 +56,11 @@ class Kol(models.Model):
 
 class Record(models.Model):
     kol = models.ForeignKey(
-        Kol, on_delete=models.CASCADE, verbose_name="KOL", related_name="record_kol",
+        Kol,
+        on_delete=models.SET_NULL,
+        verbose_name="KOL",
+        null=True,
+        related_name="record_kol",
     )
     visit_date = models.DateField(verbose_name="拜访日期")
     purpose = models.TextField(verbose_name="拜访目标")
@@ -69,7 +69,8 @@ class Record(models.Model):
     upload_date = models.DateTimeField(verbose_name="记录日期", default=timezone.now)
     pub_user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name="记录人",
         related_name="record_pub_user",
     )
@@ -77,7 +78,7 @@ class Record(models.Model):
     class Meta:
         verbose_name = "拜访记录"
         verbose_name_plural = "拜访记录"
-        ordering = ["-upload_date"]
+        ordering = ["-visit_date"]
 
     def __str__(self):
-        return f"{self.visit_date} - {self.kol.name} - {self.kol.hospital}"
+        return f"{self.visit_date} - {self.kol}"

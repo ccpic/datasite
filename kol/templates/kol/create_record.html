@@ -30,6 +30,7 @@
                     <option value="{{ kol.pk }}">{{ kol }}</option>
                     {% endfor %}
                 </select>
+            <a href="{% url 'kol:create_kol' %}">KOL不在列表中，点击添加</a>
             </div>
             <div class="required field">
                 <label>拜访日期</label>
@@ -41,12 +42,28 @@
                 </div>
             </div>
         </div>
-        <div class="field">
-            <label>头衔&荣誉</label>
+        <div class="required field">
+            <label>拜访目标</label>
             <textarea
-                name="text_title"
-                form="form_create_kol"
-                placeholder="请填写头衔&荣誉，可为空"
+                name="text_purpose"
+                form="form_create_record"
+                placeholder="请填写拜访目标"
+            ></textarea>
+        </div>
+        <div class="required field">
+            <label>主要反馈</label>
+            <textarea
+                name="text_feedback_main"
+                form="form_create_record"
+                placeholder="请填写主要反馈"
+            ></textarea>
+        </div>
+        <div class="field">
+            <label>其他重要信息</label>
+            <textarea
+                name="text_feedback_oth"
+                form="form_create_record"
+                placeholder="请填写其他重要信息，可为空"
             ></textarea>
         </div>
         <div class="ui error message">
@@ -79,51 +96,43 @@
     $(".ui.dropdown").dropdown({ fullTextSearch: true });
     $(".ui.form").form({
         fields: {
-            name: {
-                identifier: "name",
+            select_kol: {
+                identifier: "select_kol",
                 rules: [
                     {
                         type: "empty",
-                        prompt: "KOL姓名不可为空",
+                        prompt: "未选择KOL",
                     },
                 ],
             },
-            select_hp: {
-                identifier: "select_hp",
+            visit_date: {
+                identifier: "visit_date",
                 rules: [
                     {
                         type: "empty",
-                        prompt: "未选择供职医院",
+                        prompt: "未选择拜访日期",
                     },
                 ],
             },
-            dept: {
-                identifier: "dept",
+            text_purpose: {
+                identifier: "text_purpose",
                 rules: [
                     {
                         type: "empty",
-                        prompt: "未选择所在科室",
+                        prompt: "未填写拜访目标",
                     },
                 ],
             },
-            rating_infl: {
-                identifier: "rating_infl",
+            text_feedback_main: {
+                identifier: "text_feedback_main",
                 rules: [
                     {
-                        type: "checked",
-                        prompt: "未选择影响力",
+                        type: "empty",
+                        prompt: "未填写主要反馈",
                     },
                 ],
             },
-            rating_prof: {
-                identifier: "rating_prof",
-                rules: [
-                    {
-                        type: "checked",
-                        prompt: "未选择专业度",
-                    },
-                ],
-            },
+
         },
     });
 </script>

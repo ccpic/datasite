@@ -8,6 +8,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from datasite.commons import get_dt_page
 from django.db.models import Q, F, Count
 from django.db import IntegrityError
+import datetime
 
 DISPLAY_LENGTH = 20
 
@@ -111,7 +112,17 @@ def records(request: request) -> HttpResponse:
 def create_record(request):
     print(request.POST)
     if request.method == "POST":
-        print(request.POST)
+        obj = Record(
+            kol=Kol.objects.get(pk=int(request.POST.get("select_kol"))),
+            visit_date=datetime.datetime.strptime(
+                request.POST.get("visit_date"), "%Y-%m-%d"
+            ).date(),
+            purpose=request.POST.get("text_purpose"),
+            feedback_main=request.POST.get("text_feedback_main"),
+            feedback_oth=request.POST.get("text_feedback_oth"),
+            pub_user=request.user,
+        )
+        obj.save()
 
         return redirect(reverse("kol:records"))
     else:
