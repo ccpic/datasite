@@ -2,7 +2,7 @@
 {% extends "kol/index.html" %} 
 {% load humanize %} 
 {% load tags %} 
-{% block title %}新增KOL{% endblock title %}
+{% block title %}{% if kol %}更新{% else %}新增{% endif %}KOL{% endblock title %}
 
 <!-- 隐藏分隔条 -->
 <div class="ui hidden divider"></div>
@@ -16,19 +16,23 @@
     <div class="ui big breadcrumb">
         <a href="{% url 'kol:kols' %}">所有KOL信息</a>
         <i class="right arrow icon divider"></i>
-        <div class="active section">新增KOL</div>
+        <div class="active section">{% if kol %}更新{% else %}新增{% endif %}KOL</div>
     </div>
     <div class="ui divider"></div>
     <form class="ui form" method="post" id="form_create_kol">
         {% csrf_token %}
         <div class="required field">
             <label>KOL姓名</label>
-            <input type="text" name="name" placeholder="请填写KOL姓名" />
+            <input type="text" name="name" value="{{kol.name}}" placeholder="请填写KOL姓名" />
         </div>
         <div class="required field">
             <label>供职医院</label>
             <select class="ui search dropdown" name="select_hp">
-                <option value="">请搜索并选择KOL所在的医院</option>
+                {% if kol %}
+                    <option value="{{ kol.hospital.pk }}">{{ kol.hospital }}</option>
+                {% else %}
+                    <option value="">请搜索并选择KOL所在的医院</option>
+                {% endif %}
                 {% for hp in hospitals %}
                 <option value="{{ hp.pk }}">{{ hp }}</option>
                 {% endfor %}
@@ -37,7 +41,7 @@
         <div class="required field">
             <label>所在科室</label>
             <div class="ui selection dropdown">
-                <input type="hidden" name="dept" />
+                <input type="hidden" value="{{ kol.dept }}" name="dept" />
                 <i class="dropdown icon"></i>
                 <div class="default text">请选择科室</div>
                 <div class="menu">
@@ -50,37 +54,70 @@
             <label for="rating_infl">影响力</label>
             <div class="field">
                 <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_infl"
-                        value="3"
-                        tabindex="0"
-                        class="hidden"
-                    />
+                    {% if kol.rating_infl == 3 %}
+                        <input
+                            type="radio"
+                            name="rating_infl"
+                            value="3"
+                            tabindex="0"
+                            class="hidden"
+                            checked=""
+                        />
+                    {% else %}
+                        <input
+                            type="radio"
+                            name="rating_infl"
+                            value="3"
+                            tabindex="0"
+                            class="hidden"
+                        />
+                    {% endif %}
                     <label>高</label>
                 </div>
             </div>
             <div class="field">
                 <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_infl"
-                        value="2"
-                        tabindex="0"
-                        class="hidden"
-                    />
+                    {% if kol.rating_infl == 2 %}
+                        <input
+                            type="radio"
+                            name="rating_infl"
+                            value="2"
+                            tabindex="0"
+                            class="hidden"
+                            checked=""
+                        />
+                    {% else %}
+                        <input
+                            type="radio"
+                            name="rating_infl"
+                            value="2"
+                            tabindex="0"
+                            class="hidden"
+                        />
+                    {% endif %}
                     <label>中</label>
                 </div>
             </div>
             <div class="field">
                 <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_infl"
-                        value="1"
-                        tabindex="0"
-                        class="hidden"
-                    />
+                    {% if kol.rating_infl == 1 %}
+                        <input
+                            type="radio"
+                            name="rating_infl"
+                            value="1"
+                            tabindex="0"
+                            class="hidden"
+                            checked=""
+                        />
+                    {% else %}
+                        <input
+                            type="radio"
+                            name="rating_infl"
+                            value="1"
+                            tabindex="0"
+                            class="hidden"
+                        />
+                    {% endif %}
                     <label>低</label>
                 </div>
             </div>
@@ -89,37 +126,70 @@
             <label for="rating_prof">专业度</label>
             <div class="field">
                 <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_prof"
-                        value="3"
-                        tabindex="0"
-                        class="hidden"
-                    />
+                    {% if kol.rating_prof == 3 %}
+                        <input
+                            type="radio"
+                            name="rating_prof"
+                            value="3"
+                            tabindex="0"
+                            class="hidden"
+                            checked=""
+                        />
+                    {% else %}
+                        <input
+                            type="radio"
+                            name="rating_prof"
+                            value="3"
+                            tabindex="0"
+                            class="hidden"
+                        />
+                    {% endif %}
                     <label>高</label>
                 </div>
             </div>
             <div class="field">
                 <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_prof"
-                        value="2"
-                        tabindex="0"
-                        class="hidden"
-                    />
+                    {% if kol.rating_prof == 2 %}
+                        <input
+                            type="radio"
+                            name="rating_prof"
+                            value="2"
+                            tabindex="0"
+                            class="hidden"
+                            checked=""
+                        />
+                    {% else %}
+                        <input
+                            type="radio"
+                            name="rating_prof"
+                            value="2"
+                            tabindex="0"
+                            class="hidden"
+                        />
+                    {% endif %}
                     <label>中</label>
                 </div>
             </div>
             <div class="field">
                 <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_prof"
-                        value="1"
-                        tabindex="0"
-                        class="hidden"
-                    />
+                    {% if kol.rating_prof == 1 %}
+                        <input
+                            type="radio"
+                            name="rating_prof"
+                            value="1"
+                            tabindex="0"
+                            class="hidden"
+                            checked=""
+                        />
+                    {% else %}
+                        <input
+                            type="radio"
+                            name="rating_prof"
+                            value="1"
+                            tabindex="0"
+                            class="hidden"
+                        />
+                    {% endif %}
                     <label>低</label>
                 </div>
             </div>
@@ -129,12 +199,13 @@
             <textarea
                 name="text_title"
                 form="form_create_kol"
+                value="{{ kol.titles }}"
                 placeholder="请填写头衔&荣誉，可为空"
             ></textarea>
         </div>
         <div class="ui error message">
         </div>
-        <button class="ui primary button" type="submit" id="btn_create">新增KOL</button>
+        <button class="ui primary button" type="submit" id="btn_create">{% if kol %}更新{% else %}新增{% endif %}KOL</button>
     </form>
 </div>
 <div class="ui hidden divider"></div>

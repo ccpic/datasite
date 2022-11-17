@@ -246,7 +246,7 @@ def update_kol(request, pk: int):
             "hospitals": hospitals,
             "all_provinces": get_filters(model=Kol, field="hospital__province"),
         }
-        return render(request, "kol/update_kol.html", context)
+        return render(request, "kol/create_kol.html", context)
 
 
 @login_required
