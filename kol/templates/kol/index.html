@@ -18,7 +18,7 @@
             </div>
             <!-- 右边4/16为filter页面 -->
             <div class="four wide column">
-                {% if "record" in request.path %}
+                {% if "kol/records" in request.path %}
                     {% include 'kol/sidebar_record.html' %}
                 {% else %}
                     {% include 'kol/sidebar_kol.html' %}
