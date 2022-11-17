@@ -1,5 +1,5 @@
 import pandas as pd
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, HttpResponse, redirect,reverse
 from django.http import request
 from django.contrib.auth.decorators import login_required
 import json
@@ -182,9 +182,10 @@ def create_kol(request):
         try:
             obj.save()
         except IntegrityError:
-            return bad_request(message="该KOL已存在")
+            context = {"kol": obj}
+            return render(request, "kol/kol_duplicated.html", context)
 
-        return redirect("/kol/kols")
+        return redirect(reverse('kol:kols'))
     else:
         hospitals = Hospital.objects.all()
         context = {"hospitals": hospitals}
@@ -207,15 +208,25 @@ def update_kol(request, pk: int):
         try:
             obj.save()
         except IntegrityError:
-            return bad_request(message="该KOL已存在")
+            context = {"kol": obj}
+            return render(request, "kol/kol_duplicated.html", context)
 
-        return redirect("/kol/kols")
+        return redirect(reverse('kol:kols'))
     else:
         hospitals = Hospital.objects.all()
         context = {"kol": Kol.objects.get(pk=pk), "hospitals": hospitals}
-        return render(request, "kol/create_kol.html", context)
+        return render(request, "kol/update_kol.html", context)
 
 
+@login_required
+def delete_kol(request):
+    print(request.POST)
+    if request.method == "POST":
+        id = request.POST.get('id')
+        qs_to_delete = Kol.objects.get(id=id)  # 执行删除操作
+        qs_to_delete.delete()
+        return redirect(reverse('kol:kols'))
+    
 def bad_request(message):
     response = HttpResponse(
         json.dumps({"message": message}), content_type="application/json"

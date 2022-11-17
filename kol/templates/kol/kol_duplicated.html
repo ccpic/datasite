@@ -1,0 +1,37 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "kol/index.html" %} 
+{% load humanize %} 
+{% load tags %} 
+{% block title %}KOL已存在{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block display %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    <div class="ui big breadcrumb">
+        <a href="{% url 'kol:kols' %}">所有KOL信息</a>
+        <i class="right arrow icon divider"></i>
+        <div class="active section">KOL已存在</div>
+    </div>
+    <div class="ui divider"></div>
+    <div class="ui icon error message" id="error_message">
+        <i class="ban icon"></i>
+        <div class="content">
+            <div class="header">
+                {{ kol.name }} - {{ kol.hospital.name }} 已存在
+            </div>
+            <ul class="list">
+                <li>医生姓名-医院的组合只能唯一</li>
+                <li>如果同一医院有重名KOL，请重命名为张三1，张三2</li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="ui hidden divider"></div>
+
+{% endblock display %}
