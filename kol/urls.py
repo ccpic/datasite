@@ -9,9 +9,10 @@ from . import views
 
 app_name = "kol"
 urlpatterns = [
-    path("", views.records, name="records"),
+    path("records", views.records, name="records"),
     path("kols", views.kols, name="kols"),
     path("create_kol", views.create_kol, name="create_kol"),
     path("update_kol/<int:pk>", views.update_kol, name="update_kol"),
     path("delete_kol", views.delete_kol, name="delete_kol"),
+    path("create_record", views.create_record, name="create_record"),
 ]

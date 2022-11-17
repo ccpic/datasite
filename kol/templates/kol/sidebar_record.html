@@ -1,0 +1,25 @@
+{% load taggit_templatetags2_tags %}
+{% load tags %}
+
+<div class="ui container">
+    <a class="ui labeled icon fluid primary button" id="create_record" href="{% url 'kol:create_record' %}">
+        <i class="plus square outline icon"></i>
+        新增拜访记录
+    </a>
+    
+    <div class="ui hidden divider"></div>
+    <div class="ui blue vertical segment">
+        <h3 class="ui header">
+            搜索
+        </h3>
+        <form method="get" action="{% url 'kol:kols' %}" class="ui fluid form">
+            {% csrf_token %}
+            <div class="field">
+                <div class="ui action input">
+                    <input type="search" name="kw" placeholder="请输入关键字进行搜索" required>
+                    <button type="submit" class="ui blue submit icon button"><i class="search icon"></i></button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

@@ -14,16 +14,21 @@
 
 <div class="ui container">
     <div class="ui big breadcrumb">
-        <a href="{% url 'kol:kols' %}">所有KOL信息</a>
+        <a href="{% url 'kol:records' %}">所有拜访记录</a>
         <i class="right arrow icon divider"></i>
-        <div class="active section">新增KOL</div>
+        <div class="active section">新增拜访记录</div>
     </div>
     <div class="ui divider"></div>
-    <form class="ui form" method="post" id="form_create_kol">
+    <form class="ui form" method="post" id="form_create_record">
         {% csrf_token %}
         <div class="required field">
-            <label>KOL姓名</label>
-            <input type="text" name="name" placeholder="请填写KOL姓名" />
+            <label>KOL</label>
+            <select class="ui search dropdown" name="select_kol">
+                <option value="">请搜索并选择KOL</option>
+                {% for kol in kols %}
+                <option value="{{ kol.pk }}">{{ kol }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="required field">
             <label>供职医院</label>

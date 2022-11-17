@@ -1,3 +1,5 @@
+from kol.views import get_param
+from kol.models import Kol
 from medical_info.models import Program
 from chpa_data.models import Record
 from django import template

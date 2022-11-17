@@ -37,6 +37,17 @@
         </div>
         <a href="{% url 'medical_info:posts' %}" class="item">医学信息（测试中）</a>
         <div class="ui simple dropdown item">
+            KOL管理 <i class="dropdown icon"></i>
+            <div class="menu">
+                <a class="item" href="{% url 'kol:records' %}">
+                    拜访记录
+                </a>
+                <a class="item" href="{% url 'kol:kols' %}">
+                    KOL信息
+                </a>
+            </div>
+        </div>
+        <div class="ui simple dropdown item">
             小工具 <i class="dropdown icon"></i>
             <div class="menu">
                 <a class="item" href="{% url 'price_calc:index' %}">

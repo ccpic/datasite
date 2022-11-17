@@ -1,5 +1,5 @@
 import pandas as pd
-from django.shortcuts import render, HttpResponse, redirect,reverse
+from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.http import request
 from django.contrib.auth.decorators import login_required
 import json
@@ -10,6 +10,17 @@ from django.db.models import Q, F, Count
 from django.db import IntegrityError
 
 DISPLAY_LENGTH = 20
+
+
+def get_filters(model, field: str):
+    all_provinces = (
+        model.objects.all()
+        .values(field)
+        .order_by(field)
+        .annotate(count=Count(field))
+        .order_by(F("count").desc())
+    )
+    return all_provinces
 
 
 def get_param(params):
@@ -97,6 +108,35 @@ def records(request: request) -> HttpResponse:
 
 
 @login_required
+def create_record(request):
+    print(request.POST)
+    if request.method == "POST":
+        obj = Kol(
+            name=request.POST.get("name"),
+            hospital=Hospital.objects.get(pk=int(request.POST.get("select_hp"))),
+            dept=request.POST.get("dept"),
+            rating_infl=int(request.POST.get("rating_infl")),
+            rating_prof=int(request.POST.get("rating_prof")),
+            titles=request.POST.get("text_title"),
+            pub_user=request.user,
+        )
+        try:
+            obj.save()
+        except IntegrityError:
+            context = {"kol": obj}
+            return render(request, "kol/kol_duplicated.html", context)
+
+        return redirect(reverse("kol:records"))
+    else:
+        kols = Kol.objects.all()
+        context = {
+            "kols": kols,
+            "all_provinces": get_filters(model=Record, field="kol__hospital__province"),
+        }
+        return render(request, "kol/create_record.html", context)
+
+
+@login_required
 def kols(request: request) -> HttpResponse:
     print(request.GET)
     param_dict = get_param(request.GET)
@@ -139,27 +179,13 @@ def kols(request: request) -> HttpResponse:
     except EmptyPage:
         rows = paginator.page(paginator.num_pages)
 
-    all_provinces = (
-        Kol.objects.all()
-        .values("hospital__province")
-        .order_by("hospital__province")
-        .annotate(count=Count("hospital__province"))
-    )
-
-    filter_provinces = (
-        kols.values("hospital__province")
-        .order_by("hospital__province")
-        .annotate(count=Count("hospital__province"))
-    )
-
     context = {
         "kols": rows,
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
-        "all_provinces": all_provinces,
-        "filter_provinces": filter_provinces,
+        "all_provinces": get_filters(model=Kol, field="hospital__province"),
         "selected_provinces": param_dict["provinces"],
     }
 
@@ -185,10 +211,13 @@ def create_kol(request):
             context = {"kol": obj}
             return render(request, "kol/kol_duplicated.html", context)
 
-        return redirect(reverse('kol:kols'))
+        return redirect(reverse("kol:kols"))
     else:
         hospitals = Hospital.objects.all()
-        context = {"hospitals": hospitals}
+        context = {
+            "hospitals": hospitals,
+            "all_provinces": get_filters(model=Kol, field="hospital__province"),
+        }
         return render(request, "kol/create_kol.html", context)
 
 
@@ -197,24 +226,28 @@ def update_kol(request, pk: int):
     print(request.POST)
     if request.method == "POST":
         obj = Kol.objects.get(pk=pk)
-        obj.name=request.POST.get("name")
-        obj.hospital=Hospital.objects.get(pk=int(request.POST.get("select_hp")))
-        obj.dept=request.POST.get("dept")
-        obj.rating_infl=int(request.POST.get("rating_infl"))
-        obj.rating_prof=int(request.POST.get("rating_prof"))
-        obj.titles=request.POST.get("text_title")
-        obj.pub_user=request.user
-    
+        obj.name = request.POST.get("name")
+        obj.hospital = Hospital.objects.get(pk=int(request.POST.get("select_hp")))
+        obj.dept = request.POST.get("dept")
+        obj.rating_infl = int(request.POST.get("rating_infl"))
+        obj.rating_prof = int(request.POST.get("rating_prof"))
+        obj.titles = request.POST.get("text_title")
+        obj.pub_user = request.user
+
         try:
             obj.save()
         except IntegrityError:
             context = {"kol": obj}
             return render(request, "kol/kol_duplicated.html", context)
 
-        return redirect(reverse('kol:kols'))
+        return redirect(reverse("kol:kols"))
     else:
         hospitals = Hospital.objects.all()
-        context = {"kol": Kol.objects.get(pk=pk), "hospitals": hospitals}
+        context = {
+            "kol": Kol.objects.get(pk=pk),
+            "hospitals": hospitals,
+            "all_provinces": get_filters(model=Kol, field="hospital__province"),
+        }
         return render(request, "kol/update_kol.html", context)
 
 
@@ -222,11 +255,12 @@ def update_kol(request, pk: int):
 def delete_kol(request):
     print(request.POST)
     if request.method == "POST":
-        id = request.POST.get('id')
+        id = request.POST.get("id")
         qs_to_delete = Kol.objects.get(id=id)  # 执行删除操作
         qs_to_delete.delete()
-        return redirect(reverse('kol:kols'))
-    
+        return redirect(reverse("kol:kols"))
+
+
 def bad_request(message):
     response = HttpResponse(
         json.dumps({"message": message}), content_type="application/json"
