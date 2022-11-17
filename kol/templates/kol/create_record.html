@@ -2,7 +2,7 @@
 {% extends "kol/index.html" %} 
 {% load humanize %} 
 {% load tags %} 
-{% block title %}新增KOL{% endblock title %}
+{% block title %}新增拜访记录{% endblock title %}
 
 <!-- 隐藏分隔条 -->
 <div class="ui hidden divider"></div>
@@ -21,111 +21,23 @@
     <div class="ui divider"></div>
     <form class="ui form" method="post" id="form_create_record">
         {% csrf_token %}
-        <div class="required field">
-            <label>KOL</label>
-            <select class="ui search dropdown" name="select_kol">
-                <option value="">请搜索并选择KOL</option>
-                {% for kol in kols %}
-                <option value="{{ kol.pk }}">{{ kol }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="required field">
-            <label>供职医院</label>
-            <select class="ui search dropdown" name="select_hp">
-                <option value="">请搜索并选择KOL所在的医院</option>
-                {% for hp in hospitals %}
-                <option value="{{ hp.pk }}">{{ hp }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="required field">
-            <label>所在科室</label>
-            <div class="ui selection dropdown">
-                <input type="hidden" name="dept" />
-                <i class="dropdown icon"></i>
-                <div class="default text">请选择科室</div>
-                <div class="menu">
-                    <div class="item" data-value="肾内科">肾内科</div>
-                    <div class="item" data-value="其他科室">其他科室</div>
-                </div>
+        <div class="two fields">
+            <div class="required field">
+                <label>KOL</label>
+                <select class="ui search dropdown" name="select_kol">
+                    <option value="">请搜索并选择KOL</option>
+                    {% for kol in kols %}
+                    <option value="{{ kol.pk }}">{{ kol }}</option>
+                    {% endfor %}
+                </select>
             </div>
-        </div>
-        <div class="required inline fields">
-            <label for="rating_infl">影响力</label>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_infl"
-                        value="3"
-                        tabindex="0"
-                        class="hidden"
-                    />
-                    <label>高</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_infl"
-                        value="2"
-                        tabindex="0"
-                        class="hidden"
-                    />
-                    <label>中</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_infl"
-                        value="1"
-                        tabindex="0"
-                        class="hidden"
-                    />
-                    <label>低</label>
-                </div>
-            </div>
-        </div>
-        <div class="required inline fields">
-            <label for="rating_prof">专业度</label>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_prof"
-                        value="3"
-                        tabindex="0"
-                        class="hidden"
-                    />
-                    <label>高</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_prof"
-                        value="2"
-                        tabindex="0"
-                        class="hidden"
-                    />
-                    <label>中</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    <input
-                        type="radio"
-                        name="rating_prof"
-                        value="1"
-                        tabindex="0"
-                        class="hidden"
-                    />
-                    <label>低</label>
+            <div class="required field">
+                <label>拜访日期</label>
+                <div class="ui calendar" id="datepicker">
+                    <div class="ui input left icon">
+                    <i class="calendar icon"></i>
+                    <input type="text" name="visit_date" placeholder="请选择拜访日期">
+                    </div>
                 </div>
             </div>
         </div>
@@ -139,18 +51,30 @@
         </div>
         <div class="ui error message">
         </div>
-        <button class="ui primary button" type="submit" id="btn_create">新增KOL</button>
+        <button class="ui primary button" type="submit" id="btn_create">提交</button>
     </form>
-    <div class="ui hidden positive message" id="success_message">
-        <p>新增KOL成功</p>
-    </div>
-    <div class="ui hidden error message" id="error_message">
-        <p>该KOL已存在</p>
-    </div>
 </div>
 <div class="ui hidden divider"></div>
 
 <script>
+    $('#datepicker').calendar({
+        type: 'date',
+        today: true,
+        formatter: {
+            date: function (date, settings) {
+                var day = date.getDate() + '';
+                if (day.length < 2) {
+                    day = '0' + day;
+                }
+                var month = (date.getMonth() + 1) + '';
+                if (month.length < 2) {
+                    month = '0' + month;
+                }
+                var year = date.getFullYear();
+                return year + '-' + month + '-' + day;
+            },
+        },
+    });
     $(".ui.radio.checkbox").checkbox();
     $(".ui.dropdown").dropdown({ fullTextSearch: true });
     $(".ui.form").form({

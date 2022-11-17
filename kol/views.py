@@ -111,20 +111,7 @@ def records(request: request) -> HttpResponse:
 def create_record(request):
     print(request.POST)
     if request.method == "POST":
-        obj = Kol(
-            name=request.POST.get("name"),
-            hospital=Hospital.objects.get(pk=int(request.POST.get("select_hp"))),
-            dept=request.POST.get("dept"),
-            rating_infl=int(request.POST.get("rating_infl")),
-            rating_prof=int(request.POST.get("rating_prof")),
-            titles=request.POST.get("text_title"),
-            pub_user=request.user,
-        )
-        try:
-            obj.save()
-        except IntegrityError:
-            context = {"kol": obj}
-            return render(request, "kol/kol_duplicated.html", context)
+        print(request.POST)
 
         return redirect(reverse("kol:records"))
     else:
