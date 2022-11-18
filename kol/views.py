@@ -11,7 +11,7 @@ from django.db import IntegrityError
 from django.db.models.functions import TruncMonth
 import datetime
 
-DISPLAY_LENGTH = 20
+DISPLAY_LENGTH = 8
 
 
 def get_filters(qs: QuerySet, field: str):
@@ -109,15 +109,14 @@ def records(request: request) -> HttpResponse:
         visit_date = datetime.datetime.strptime(months[0], "%Y-%m-%d").date()
         visit_year = visit_date.year
         visit_month = visit_date.month
-        month_condition = Q(visit_date__year=visit_year, visit_date__month=visit_month)
+        records_temp = records.filter(visit_date__year=visit_year, visit_date__month=visit_month)
         for k in months[1:]:
             visit_date = datetime.datetime.strptime(k, "%Y-%m-%d").date()
             visit_year = visit_date.year
             visit_month = visit_date.month
-            month_condition = month_condition.add(
-                Q(visit_date__year=visit_year, visit_date__month=visit_month), Q.OR
-            )
-        records = records.filter(month_condition)
+            records_temp = records_temp|records.filter(visit_date__year=visit_year, visit_date__month=visit_month)
+
+        records = records_temp
 
     paginator = Paginator(records, DISPLAY_LENGTH)
     page = request.GET.get("page")
