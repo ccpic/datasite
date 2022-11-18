@@ -13,11 +13,21 @@
 <div class="ui hidden divider"></div>
 
 <div class="ui container">
+    <div class="ui modal">
+        <div class="header">确认删除以下KOL?</div>
+        <div class="content" id="modal_content">
+        </div>
+        <div class="actions">
+        <div class="ui approve red button">删除</div>
+        <div class="ui cancel button">取消</div>
+        </div>
+    </div>
     <div class="ui big breadcrumb">
         <a href="{% url 'kol:kols' %}">所有KOL信息</a>
         <i class="right arrow icon divider"></i>
         <div class="active section">{% if kol %}更新{% else %}新增{% endif %}KOL</div>
     </div>
+
     <div class="ui divider"></div>
     <form class="ui form" method="post" id="form_create_kol">
         {% csrf_token %}
@@ -199,13 +209,17 @@
             <textarea
                 name="text_title"
                 form="form_create_kol"
-                value="{{ kol.titles }}"
                 placeholder="请填写头衔&荣誉，可为空"
-            ></textarea>
+            >{{ kol.titles }}</textarea>
         </div>
         <div class="ui error message">
         </div>
-        <button class="ui primary button" type="submit" id="btn_create">{% if kol %}更新{% else %}新增{% endif %}KOL</button>
+        {% if kol %}
+            <button class="ui positive button" type="submit" id="btn_update">更新</button>
+            <div class="ui negative button" id="btn_delete">删除</div>
+        {% else %}
+            <button class="ui primary button" type="submit" id="btn_create">新增</button>
+        {% endif %}
     </form>
 </div>
 <div class="ui hidden divider"></div>
@@ -263,7 +277,35 @@
         },
     });
 </script>
-
+<script>
+    $("#btn_delete").click(function (){
+        $("#modal_content").append("{{ kol }}");
+        var kol_id = parseInt("{{ kol.pk }}");
+        $('.ui.modal')
+            .modal({
+                closable  : false,
+                onApprove : function() {
+                    var data = {
+                        "id": kol_id,
+                        "csrfmiddlewaretoken": "{{ csrf_token }}"
+                    };
+                    $.ajax({
+                        // 请求的url
+                        url: '{% url 'kol:delete_kol' %}',
+                        // 请求的type
+                        type: 'POST',
+                        // 发送的数据
+                        data: data,
+                        // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
+                        success: function (ret) {     //成功执行
+                            window.location.href = "{% url 'kol:kols' %}";
+                        }
+                    });
+                }
+            })
+            .modal('show');
+    });
+</script>
 {% comment %} <script>
     $("#btn_create").click(function (){
         $("#error_message").attr("class", "ui hidden error message");

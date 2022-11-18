@@ -135,6 +135,42 @@ def create_record(request):
 
 
 @login_required
+def update_record(request, pk: int):
+    print(request.POST)
+    if request.method == "POST":
+        obj = Record.objects.get(pk=pk)
+        obj.kol = Kol.objects.get(pk=int(request.POST.get("select_kol")))
+        obj.visit_date = datetime.datetime.strptime(
+            request.POST.get("visit_date"), "%Y-%m-%d"
+        ).date()
+        obj.purpose = request.POST.get("text_purpose")
+        obj.feedback_main = request.POST.get("text_feedback_main")
+        obj.feedback_oth = request.POST.get("text_feedback_oth")
+        obj.pub_user = request.user
+        obj.save()
+
+        return redirect(reverse("kol:records"))
+    else:
+        kols = Kol.objects.all()
+        context = {
+            "record": Record.objects.get(pk=pk),
+            "kols": kols,
+            "all_provinces": get_filters(model=Record, field="kol__hospital__province"),
+        }
+        return render(request, "kol/create_record.html", context)
+
+
+@login_required
+def delete_record(request):
+    print(request.POST)
+    if request.method == "POST":
+        id = request.POST.get("id")
+        qs_to_delete = Record.objects.get(id=id)  # 执行删除操作
+        qs_to_delete.delete()
+        return redirect(reverse("kol:records"))
+
+
+@login_required
 def kols(request: request) -> HttpResponse:
     print(request.GET)
     param_dict = get_param(request.GET)

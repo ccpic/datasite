@@ -35,7 +35,7 @@ class Kol(models.Model):
         verbose_name="供职医院",
         on_delete=models.SET_NULL,
         null=True,
-        related_name="kol_hospital",
+        related_name="hospital_kols",
     )
     dept = models.CharField(max_length=10, choices=DEPT_CHOICES, verbose_name="所在科室")
     rating_infl = models.IntegerField(choices=RATING_CHOICES, verbose_name="影响力")
@@ -60,7 +60,7 @@ class Record(models.Model):
         on_delete=models.SET_NULL,
         verbose_name="KOL",
         null=True,
-        related_name="record_kol",
+        related_name="kol_records",
     )
     visit_date = models.DateField(verbose_name="拜访日期")
     purpose = models.TextField(verbose_name="拜访目标")
@@ -72,7 +72,7 @@ class Record(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         verbose_name="记录人",
-        related_name="record_pub_user",
+        related_name="pub_user_records",
     )
 
     class Meta:

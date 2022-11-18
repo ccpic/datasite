@@ -15,15 +15,6 @@
 
 <div class="ui container">
     {% if kols %}
-        <div class="ui modal">
-            <div class="header">确认删除以下KOL?</div>
-            <div class="content" id="modal_content">
-            </div>
-            <div class="actions">
-            <div class="ui approve red button">删除</div>
-            <div class="ui cancel button">取消</div>
-            </div>
-        </div>
         <div class="ui dividing header">
             <a href="{% url 'kol:kols' %}">所有KOL信息</a>
             {% if kw %}
@@ -49,7 +40,7 @@
             {% for kol in kols %}
             <div class="card">
                 <div class="content">
-                    <a class="meta close icon" style="float: right" kol_id="{{ kol.pk }}" kol_info="{{ kol }}" data-tooltip="删除"><i class="close icon"></i></a>
+                    {% comment %} <a class="meta close icon" style="float: right" kol_id="{{ kol.pk }}" kol_info="{{ kol }}" data-tooltip="删除"><i class="close icon"></i></a> {% endcomment %}
                     <div class="header">{{ kol.name }}</div>
                 </div>
                 <div class="content">
@@ -75,7 +66,7 @@
                 </div>
                 <div class="extra">
                     <div class="left floated meta">
-                        <i class="marker icon"></i><span>{{ kol.hospital.province }}</span>
+                        <a href="">拜访记录:{{ kol.kol_records.all.count }}</a>
                     </div>
                     <div class="right floated meta">
                         <span>{{ client.dsm }}</span>
@@ -140,35 +131,5 @@
         $(".rating").rating('disable');
     });
 
-</script>
-<script>
-    $(".meta.close.icon").click(function (){
-        var kol_info = $(this).attr('kol_info');
-        $("#modal_content").append(kol_info);
-        var kol_id = $(this).attr('kol_id');
-        $('.ui.modal')
-            .modal({
-                closable  : false,
-                onApprove : function() {
-                    var data = {
-                        "id": kol_id,
-                        "csrfmiddlewaretoken": "{{ csrf_token }}"
-                    };
-                    $.ajax({
-                        // 请求的url
-                        url: '{% url 'kol:delete_kol' %}',
-                        // 请求的type
-                        type: 'POST',
-                        // 发送的数据
-                        data: data,
-                        // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
-                        success: function (ret) {     //成功执行
-                            location.reload();
-                        }
-                    });
-                }
-            })
-            .modal('show');
-    });
 </script>
 {% endblock display %}

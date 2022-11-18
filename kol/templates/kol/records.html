@@ -37,17 +37,15 @@
                     <div class="content">
                         {{ record.visit_date|date:"Y-m-d" }} 
                         {% if highlights %}
-                        {{ record.kol.name|highlight:highlights }}
+                        <a href="{% url 'kol:update_kol' pk=record.kol.pk %}">{{ record.kol.name|highlight:highlights }}</a>
                         {% else %}
-                        {{ record.kol.name}}
+                        <a href="{% url 'kol:update_kol' pk=record.kol.pk %}">{{ record.kol.name}}</a>
                         {% endif %}
                     </div>
                 </h2>
                 
                 <div class="meta">
-                    <span class="pub_agent"
-                        data-tooltip="{{ record.kol.hospital }}"><i>{{ record.kol.hospital.name }}</i></span>
-                    <span class="pub_identifier"><i>{{ post.pub_identifier }}</i></span>
+                    <span class="hospital"><i>{{ record.kol.hospital }}</i></span>
                 </div>
                 <div class="description">
                     {% if post.images.all %}
@@ -65,7 +63,7 @@
                 </div>
                 <div class="extra">
                     <a class="ui right floated primary basic button" 
-                        href="{{ record.link }}" target="_blank">
+                        href="{% url 'kol:update_record' record.pk %}" target="_blank">
                         详情
                         <i class="right chevron icon"></i>
                     </a>
@@ -76,11 +74,11 @@
                         {{ record.pub_user.username }} 记录于 {{ record.upload_date }}
                     </div>
                     
-                    {% if perms.medical_info.change_post %}
+                    {% comment %} {% if perms.medical_info.change_post %}
                         <a class="ui red basic label" href="{% url 'admin:kol_record_change' record.pk %}">
                             编辑
                         </a>
-                    {% endif %}
+                    {% endif %} {% endcomment %}
                 </div>
             </div>
         </div>

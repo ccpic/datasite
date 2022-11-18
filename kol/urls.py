@@ -15,4 +15,6 @@ urlpatterns = [
     path("kols/<int:pk>/update", views.update_kol, name="update_kol"),
     path("kols/delete_kol", views.delete_kol, name="delete_kol"),
     path("records/create", views.create_record, name="create_record"),
+    path("records/<int:pk>/update", views.update_record, name="update_record"),
+    path("records/delete_record", views.delete_record, name="delete_record"),
 ]

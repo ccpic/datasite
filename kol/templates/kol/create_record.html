@@ -2,7 +2,7 @@
 {% extends "kol/index.html" %} 
 {% load humanize %} 
 {% load tags %} 
-{% block title %}新增拜访记录{% endblock title %}
+{% block title %}{% if record %}更新{% else %}新增{% endif %}拜访记录{% endblock title %}
 
 <!-- 隐藏分隔条 -->
 <div class="ui hidden divider"></div>
@@ -13,10 +13,19 @@
 <div class="ui hidden divider"></div>
 
 <div class="ui container">
+    <div class="ui modal">
+        <div class="header">确认删除以下拜访记录?</div>
+        <div class="content" id="modal_content">
+        </div>
+        <div class="actions">
+        <div class="ui approve red button">删除</div>
+        <div class="ui cancel button">取消</div>
+        </div>
+    </div>
     <div class="ui big breadcrumb">
         <a href="{% url 'kol:records' %}">所有拜访记录</a>
         <i class="right arrow icon divider"></i>
-        <div class="active section">新增拜访记录</div>
+        <div class="active section">{% if record %}更新{% else %}新增{% endif %}拜访记录</div>
     </div>
     <div class="ui divider"></div>
     <form class="ui form" method="post" id="form_create_record">
@@ -25,7 +34,11 @@
             <div class="required field">
                 <label>KOL</label>
                 <select class="ui search dropdown" name="select_kol">
-                    <option value="">请搜索并选择KOL</option>
+                    {% if record %}
+                        <option value="{{ record.kol.pk }}">{{ record.kol }}</option>
+                    {% else %}
+                        <option value="">请搜索并选择KOL</option>
+                    {% endif %}
                     {% for kol in kols %}
                     <option value="{{ kol.pk }}">{{ kol }}</option>
                     {% endfor %}
@@ -37,7 +50,7 @@
                 <div class="ui calendar" id="datepicker">
                     <div class="ui input left icon">
                     <i class="calendar icon"></i>
-                    <input type="text" name="visit_date" placeholder="请选择拜访日期">
+                    <input type="text" name="visit_date" value="{{ record.visit_date }}" placeholder="请选择拜访日期">
                     </div>
                 </div>
             </div>
@@ -48,7 +61,7 @@
                 name="text_purpose"
                 form="form_create_record"
                 placeholder="请填写拜访目标"
-            ></textarea>
+            >{{ record.purpose }}</textarea>
         </div>
         <div class="required field">
             <label>主要反馈</label>
@@ -56,7 +69,7 @@
                 name="text_feedback_main"
                 form="form_create_record"
                 placeholder="请填写主要反馈"
-            ></textarea>
+            >{{ record.feedback_main }}</textarea>
         </div>
         <div class="field">
             <label>其他重要信息</label>
@@ -64,11 +77,16 @@
                 name="text_feedback_oth"
                 form="form_create_record"
                 placeholder="请填写其他重要信息，可为空"
-            ></textarea>
+            >{{ record.feedback_oth }}</textarea>
         </div>
         <div class="ui error message">
         </div>
-        <button class="ui primary button" type="submit" id="btn_create">提交</button>
+        {% if record %}
+            <button class="ui positive button" type="submit" id="btn_update">更新</button>
+            <div class="ui negative button" id="btn_delete">删除</div>
+        {% else %}
+            <button class="ui primary button" type="submit" id="btn_create">新增</button>
+        {% endif %}
     </form>
 </div>
 <div class="ui hidden divider"></div>
@@ -136,7 +154,35 @@
         },
     });
 </script>
-
+<script>
+    $("#btn_delete").click(function (){
+        $("#modal_content").append("{{ record }}");
+        var record_id = parseInt("{{ record.pk }}");
+        $('.ui.modal')
+            .modal({
+                closable  : false,
+                onApprove : function() {
+                    var data = {
+                        "id": record_id,
+                        "csrfmiddlewaretoken": "{{ csrf_token }}"
+                    };
+                    $.ajax({
+                        // 请求的url
+                        url: '{% url 'kol:delete_record' %}',
+                        // 请求的type
+                        type: 'POST',
+                        // 发送的数据
+                        data: data,
+                        // 回调函数，其中ret是返回的JSON，可以以字典的方式调用
+                        success: function (ret) {     //成功执行
+                            window.location.href = "{% url 'kol:records' %}";
+                        }
+                    });
+                }
+            })
+            .modal('show');
+    });
+</script>
 {% comment %} <script>
     $("#btn_create").click(function (){
         $("#error_message").attr("class", "ui hidden error message");
