@@ -66,11 +66,7 @@
                 </div>
                 <div class="extra">
                     <div class="left floated meta">
-                        <a href="">拜访记录:{{ kol.kol_records.all.count }}</a>
-                    </div>
-                    <div class="right floated meta">
-                        <span>{{ client.dsm }}</span>
-                        <span>{{ client.rsp }}</span>
+                        <a href="{% url 'kol:records' %}?{% add_query_params request kol=kol.pk %}">拜访记录:{{ kol.kol_records.all.count }}</a>
                     </div>
                 </div>
                 <a class="ui bottom attached button" href="{% url 'kol:update_kol' pk=kol.pk %}">
@@ -116,15 +112,6 @@
     {% endif %}
 </div>
 <div class="ui hidden divider"></div>
-
-<style>
-    .highlight_kw {
-        background-color: #FFEFC5;
-    }
-    .highlight_tag {
-        background-color: #BEF3D8;
-    }
-</style>
 
 <script>
     $(document).ready(function(){

@@ -6,17 +6,17 @@ import json
 from .models import Hospital, Kol, Record
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from datasite.commons import get_dt_page
-from django.db.models import Q, F, Count
+from django.db.models import Q, F, Count, QuerySet
 from django.db import IntegrityError
+from django.db.models.functions import TruncMonth
 import datetime
 
 DISPLAY_LENGTH = 20
 
 
-def get_filters(model, field: str):
+def get_filters(qs: QuerySet, field: str):
     all_provinces = (
-        model.objects.all()
-        .values(field)
+        qs.values(field)
         .order_by(field)
         .annotate(count=Count(field))
         .order_by(F("count").desc())
@@ -26,8 +26,9 @@ def get_filters(model, field: str):
 
 def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
-
+    kol_param = params.get("kol")
     prov_param = params.getlist("province")  # 省份可能多选，需要额外处理
+    month_param = params.getlist("month")
 
     # nation_param = params.getlist("nation")  # 国家参数
     # nation_id_list = get_id_list(nation_param)
@@ -44,13 +45,11 @@ def get_param(params):
     for kw in kw_list:
         highlights[kw] = '<b class="highlight_kw">{}</b>'.format(kw)
 
-    # for tag_id in tag_id_list:
-    #     tag = Tag.objects.get(pk=tag_id)
-    #     highlights[tag.name] = '<b class="highlight_tag">{}</b>'.format(tag.name)
-
     context = {
         "kw": kw_param,
+        "kol": kol_param,
         "provinces": prov_param,
+        "months": month_param,
         # "nations": nation_id_list,
         # "program": prog_param,
         "highlights": highlights,
@@ -66,26 +65,59 @@ def records(request: request) -> HttpResponse:
 
     records = Record.objects.all()
 
-    # # 根据搜索筛选文章
-    # kw = param_dict["kw"]
-    # if kw is not None:
-    #     kw_list = kw.split(" ")
+    # 根据搜索筛选KOL
+    kw = param_dict["kw"]
+    if kw is not None:
+        kw_list = kw.split(" ")
 
-    #     search_condition = Q(name__icontains=kw_list[0]) | Q(  # 搜索KOL姓名
-    #         hospital__name__icontains=kw_list[0]
-    #     )  # 搜索供职医院名称
-    #     for k in kw_list[1:]:
-    #         search_condition.add(
-    #             Q(name__icontains=k)  # 搜索KOL姓名
-    #             | Q(hospital__name__icontains=k),  # 搜索供职医院名称
-    #             Q.AND,
-    #         )
+        search_condition = (
+            Q(kol__name__icontains=kw_list[0])  # 搜索KOL姓名
+            | Q(kol__hospital__name__icontains=kw_list[0])  # 搜索供职医院名称
+            | Q(purpose__icontains=kw_list[0])  # 搜索拜访目标
+            | Q(feedback_main__icontains=kw_list[0])  # 搜索主要反馈
+            | Q(feedback_oth__icontains=kw_list[0])  # 搜索其他重要信息
+        )
+        for k in kw_list[1:]:
+            search_condition.add(
+                Q(kol__name__icontains=k)  # 搜索KOL姓名
+                | Q(kol__hospital__name__icontains=k)  # 搜索供职医院名称
+                | Q(purpose__icontains=k)  # 搜索拜访目标
+                | Q(feedback_main__icontains=k)  # 搜索主要反馈
+                | Q(feedback_oth__icontains=k),  # 搜索其他重要信息
+                Q.AND,
+            )
 
-    #     search_result = kols.filter(search_condition).distinct()
+        search_result = records.filter(search_condition).distinct()
 
-    #     #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
-    #     sr_ids = [kol.id for kol in search_result]
-    #     kols = Kol.objects.filter(id__in=sr_ids)
+        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+        sr_ids = [record.id for record in search_result]
+        records = Record.objects.filter(id__in=sr_ids).order_by("-visit_date")
+
+    # 根据Kol筛选Record
+    kol = param_dict["kol"]
+    if kol:
+        records = records.filter(kol__pk=kol)
+
+    # 根据省份筛选Record
+    provinces = param_dict["provinces"]
+    if provinces:
+        records = records.filter(kol__hospital__province__in=provinces)
+
+    # 根据月份筛选Record
+    months = param_dict["months"]
+    if months:
+        visit_date = datetime.datetime.strptime(months[0], "%Y-%m-%d").date()
+        visit_year = visit_date.year
+        visit_month = visit_date.month
+        month_condition = Q(visit_date__year=visit_year, visit_date__month=visit_month)
+        for k in months[1:]:
+            visit_date = datetime.datetime.strptime(k, "%Y-%m-%d").date()
+            visit_year = visit_date.year
+            visit_month = visit_date.month
+            month_condition = month_condition.add(
+                Q(visit_date__year=visit_year, visit_date__month=visit_month), Q.OR
+            )
+        records = records.filter(month_condition)
 
     paginator = Paginator(records, DISPLAY_LENGTH)
     page = request.GET.get("page")
@@ -97,12 +129,30 @@ def records(request: request) -> HttpResponse:
     except EmptyPage:
         rows = paginator.page(paginator.num_pages)
 
+    # 根据不同维度汇总记录数
+    filtered_provinces = get_filters(
+        qs=Record.objects.all(), field="kol__hospital__province"
+    )  # 按省份汇总
+    filtered_months = (
+        Record.objects.all()
+        .annotate(month=TruncMonth("visit_date"))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by(F("month").desc())
+    )
+
     context = {
         "records": rows,
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
+        "kol": Kol.objects.get(pk=int(param_dict["kol"])) if kol else None,
+        "highlights": param_dict["highlights"],
+        "filtered_provinces": filtered_provinces,
+        "selected_provinces": param_dict["provinces"],
+        "filtered_months": filtered_months,
+        "selected_months": param_dict["months"],
     }
 
     return render(request, "kol/records.html", context)
@@ -129,7 +179,9 @@ def create_record(request):
         kols = Kol.objects.all()
         context = {
             "kols": kols,
-            "all_provinces": get_filters(model=Record, field="kol__hospital__province"),
+            "filtered_provinces": get_filters(
+                qs=Record.objects.all(), field="kol__hospital__province"
+            ),
         }
         return render(request, "kol/create_record.html", context)
 
@@ -155,7 +207,9 @@ def update_record(request, pk: int):
         context = {
             "record": Record.objects.get(pk=pk),
             "kols": kols,
-            "all_provinces": get_filters(model=Record, field="kol__hospital__province"),
+            "filtered_provinces": get_filters(
+                qs=Record.objects.all(), field="kol__hospital__province"
+            ),
         }
         return render(request, "kol/create_record.html", context)
 
@@ -219,7 +273,7 @@ def kols(request: request) -> HttpResponse:
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
-        "all_provinces": get_filters(model=Kol, field="hospital__province"),
+        "filtered_provinces": get_filters(qs=kols, field="hospital__province"),
         "selected_provinces": param_dict["provinces"],
     }
 
@@ -250,7 +304,9 @@ def create_kol(request):
         hospitals = Hospital.objects.all()
         context = {
             "hospitals": hospitals,
-            "all_provinces": get_filters(model=Kol, field="hospital__province"),
+            "filtered_provinces": get_filters(
+                qs=Kol.objects.all(), field="hospital__province"
+            ),
         }
         return render(request, "kol/create_kol.html", context)
 
@@ -280,7 +336,9 @@ def update_kol(request, pk: int):
         context = {
             "kol": Kol.objects.get(pk=pk),
             "hospitals": hospitals,
-            "all_provinces": get_filters(model=Kol, field="hospital__province"),
+            "filtered_provinces": get_filters(
+                qs=Kol.objects.all(), field="hospital__province"
+            ),
         }
         return render(request, "kol/create_kol.html", context)
 
@@ -301,3 +359,4 @@ def bad_request(message):
     )
     response.status_code = 400
     return response
+

@@ -23,6 +23,28 @@
                 <i class="delete icon"></i>
             </a>
         {% endif %}
+        {% if kol %}
+            <a class="ui basic green label" href="{% url 'kol:records' %}?{% add_query_params request kol=kol.pk %}">
+                KOL: {{ kol }}
+                <i class="delete icon"></i>
+            </a>
+        {% endif %}
+        {% if selected_provinces  %}
+            {% for prov in selected_provinces %}
+                <a class="ui basic red label" href="{% url 'kol:records' %}?{% add_query_params request province=prov %}">
+                    省份: {{ prov }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
+        {% if selected_months  %}
+        {% for month in selected_months %}
+            <a class="ui basic purple label" href="{% url 'kol:records' %}?{% add_query_params request month=month %}">
+                年月: {{ month|slice:7 }}
+                <i class="delete icon"></i>
+            </a>
+        {% endfor %}
+    {% endif %}
         <span> - 当前显示第
             {{ records.start_index }}-{{ records.end_index }} of {{ record_n }}条记录
         </span>
@@ -125,9 +147,6 @@
 <style>
     .highlight_kw {
         background-color: #FFEFC5;
-    }
-    .highlight_tag {
-        background-color: #BEF3D8;
     }
 </style>
 

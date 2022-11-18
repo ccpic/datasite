@@ -27,7 +27,7 @@
             省份
         </h3>
         <div class="ui labels">
-            {% for prov in all_provinces %}
+            {% for prov in filtered_provinces %}
                 {% if prov.hospital__province in selected_provinces %}
                     <a class="ui red label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov.hospital__province %}">
                         {{ prov.hospital__province }} <div class="detail">({{ prov.count }})</div>
