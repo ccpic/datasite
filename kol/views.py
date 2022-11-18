@@ -139,7 +139,7 @@ def records(request: request) -> HttpResponse:
         .values("month")
         .annotate(count=Count("id"))
         .order_by(F("month").desc())
-    )
+    )  # 按拜访月份汇总
 
     context = {
         "records": rows,
@@ -177,11 +177,21 @@ def create_record(request):
         return redirect(reverse("kol:records"))
     else:
         kols = Kol.objects.all()
+        # 根据不同维度汇总记录数
+        filtered_provinces = get_filters(
+            qs=Record.objects.all(), field="kol__hospital__province"
+        )  # 按省份汇总
+        filtered_months = (
+            Record.objects.all()
+            .annotate(month=TruncMonth("visit_date"))
+            .values("month")
+            .annotate(count=Count("id"))
+            .order_by(F("month").desc())
+        )  # 按拜访月份汇总
         context = {
             "kols": kols,
-            "filtered_provinces": get_filters(
-                qs=Record.objects.all(), field="kol__hospital__province"
-            ),
+            "filtered_provinces": filtered_provinces,
+            "filtered_months": filtered_months,
         }
         return render(request, "kol/create_record.html", context)
 
@@ -204,12 +214,22 @@ def update_record(request, pk: int):
         return redirect(reverse("kol:records"))
     else:
         kols = Kol.objects.all()
+        # 根据不同维度汇总记录数
+        filtered_provinces = get_filters(
+            qs=Record.objects.all(), field="kol__hospital__province"
+        )  # 按省份汇总
+        filtered_months = (
+            Record.objects.all()
+            .annotate(month=TruncMonth("visit_date"))
+            .values("month")
+            .annotate(count=Count("id"))
+            .order_by(F("month").desc())
+        )  # 按拜访月份汇总
         context = {
             "record": Record.objects.get(pk=pk),
             "kols": kols,
-            "filtered_provinces": get_filters(
-                qs=Record.objects.all(), field="kol__hospital__province"
-            ),
+            "filtered_provinces": filtered_provinces,
+            "filtered_months": filtered_months,
         }
         return render(request, "kol/create_record.html", context)
 
