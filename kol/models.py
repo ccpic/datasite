@@ -89,7 +89,7 @@ class Record(models.Model):
     )
     visit_date = models.DateField(verbose_name="拜访日期")
     purpose = models.TextField(verbose_name="拜访目标")
-    rating_favor = models.IntegerField(choices=RATING_CHOICES, verbose_name="恩那度司他支持度")
+    # rating_favor = models.IntegerField(choices=RATING_CHOICES, verbose_name="恩那度司他支持度")
     rating_awareness = models.IntegerField(
         choices=RATING_AWARENESS_CHOICES, verbose_name="恩那度司他认知度"
     )

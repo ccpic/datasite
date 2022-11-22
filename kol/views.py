@@ -2,6 +2,7 @@ import pandas as pd
 from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.http import request
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 import json
 from .models import Hospital, Kol, Record, Attachment
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -13,6 +14,18 @@ import datetime
 
 DISPLAY_LENGTH = 8
 
+
+def records_by_auth(user:User):
+    if user.is_staff:
+        return Record.objects.all()
+    else:
+        return Record.objects.filter(pub_user=user)
+
+def kols_by_auth(user:User):
+    if user.groups.filter(name="KOL信息贡献者").exists():
+        return Kol.objects.all().order_by("name")
+    else:
+        return Kol.objects.none()
 
 def get_filters(qs: QuerySet, field: str):
     all_provinces = (
@@ -63,7 +76,8 @@ def records(request: request) -> HttpResponse:
     print(request.GET)
     param_dict = get_param(request.GET)
 
-    records = Record.objects.all()
+    # 如果是管理员，显示全部记录，否则仅显示当前用户上传的记录
+    records = records_by_auth(request.user)
 
     # 根据搜索筛选KOL
     kw = param_dict["kw"]
@@ -134,10 +148,10 @@ def records(request: request) -> HttpResponse:
 
     # 根据不同维度汇总记录数
     filtered_provinces = get_filters(
-        qs=Record.objects.all(), field="kol__hospital__province"
+        qs=records_by_auth(request.user), field="kol__hospital__province"
     )  # 按省份汇总
     filtered_months = (
-        Record.objects.all()
+        records_by_auth(request.user)
         .annotate(month=TruncMonth("visit_date"))
         .values("month")
         .annotate(count=Count("id"))
@@ -185,10 +199,10 @@ def create_record(request):
         kols = Kol.objects.all()
         # 根据不同维度汇总记录数
         filtered_provinces = get_filters(
-            qs=Record.objects.all(), field="kol__hospital__province"
+            qs=records_by_auth(request.user), field="kol__hospital__province"
         )  # 按省份汇总
         filtered_months = (
-            Record.objects.all()
+            records_by_auth(request.user)
             .annotate(month=TruncMonth("visit_date"))
             .values("month")
             .annotate(count=Count("id"))
@@ -233,10 +247,10 @@ def update_record(request, pk: int):
         kols = Kol.objects.all()
         # 根据不同维度汇总记录数
         filtered_provinces = get_filters(
-            qs=Record.objects.all(), field="kol__hospital__province"
+            qs=records_by_auth(request.user), field="kol__hospital__province"
         )  # 按省份汇总
         filtered_months = (
-            Record.objects.all()
+            records_by_auth(request.user)
             .annotate(month=TruncMonth("visit_date"))
             .values("month")
             .annotate(count=Count("id"))
@@ -271,7 +285,7 @@ def kols(request: request) -> HttpResponse:
     print(request.GET)
     param_dict = get_param(request.GET)
 
-    kols = Kol.objects.all().order_by("name")
+    kols = kols_by_auth(request.user)
 
     # 根据搜索筛选KOL
     kw = param_dict["kw"]
@@ -316,7 +330,7 @@ def kols(request: request) -> HttpResponse:
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
         "filtered_provinces": get_filters(
-            qs=Kol.objects.all(), field="hospital__province"
+            qs=kols_by_auth(request.user), field="hospital__province"
         ),
         "selected_provinces": param_dict["provinces"],
     }
@@ -349,7 +363,7 @@ def create_kol(request):
         context = {
             "hospitals": hospitals,
             "filtered_provinces": get_filters(
-                qs=Kol.objects.all(), field="hospital__province"
+                qs=kols_by_auth(request.user), field="hospital__province"
             ),
         }
         return render(request, "kol/create_kol.html", context)
@@ -378,10 +392,10 @@ def update_kol(request, pk: int):
     else:
         hospitals = Hospital.objects.all()
         context = {
-            "kol": Kol.objects.get(pk=pk),
+            "kol": kols_by_auth(request.user).get(pk=pk),
             "hospitals": hospitals,
             "filtered_provinces": get_filters(
-                qs=Kol.objects.all(), field="hospital__province"
+                qs=kols_by_auth(request.user), field="hospital__province"
             ),
         }
         return render(request, "kol/create_kol.html", context)

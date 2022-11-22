@@ -2,13 +2,13 @@ from django.contrib import admin
 from .models import *
 
 
-class AttachmentAdmin(admin.ModelAdmin):
-    pass
+# class AttachmentAdmin(admin.ModelAdmin):
+#     pass
 
-class AttachmentsInline(admin.StackedInline):
-    model = Attachment
-    max_num = 10
-    extra = 0
+# class AttachmentsInline(admin.StackedInline):
+#     model = Attachment
+#     max_num = 10
+#     extra = 0
 
 
 class RecordAdmin(admin.ModelAdmin):
@@ -21,9 +21,9 @@ class RecordAdmin(admin.ModelAdmin):
         "kol__hospital__name",
     ]
 
-    inlines = [
-        AttachmentsInline,
-    ]
+    # inlines = [
+    #     AttachmentsInline,
+    # ]
 
 admin.site.register(Record, RecordAdmin)
 admin.site.register([Hospital, Kol])

@@ -212,3 +212,8 @@ def add_query_params(request, **kwargs):
                 d = {k: v}
                 updated.update(d)
     return updated.urlencode()
+
+#检查user是否在某个权限组中
+@register.filter(name='has_group') 
+def has_group(user, group_name):
+    return user.groups.filter(name=group_name).exists() 

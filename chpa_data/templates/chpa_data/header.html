@@ -1,4 +1,5 @@
 {% load static %}
+{% load tags %} 
 
 <div class="ui large top fixed inverted menu">
     <div class="ui container">
@@ -36,17 +37,19 @@
             </div>
         </div>
         <a href="{% url 'medical_info:posts' %}" class="item">医学信息（测试中）</a>
-        <div class="ui simple dropdown item">
-            KOL管理 <i class="dropdown icon"></i>
-            <div class="menu">
-                <a class="item" href="{% url 'kol:records' %}">
-                    拜访记录
-                </a>
-                <a class="item" href="{% url 'kol:kols' %}">
-                    KOL信息
-                </a>
+        {% if request.user|has_group:"KOL信息贡献者" %}
+            <div class="ui simple dropdown item">
+                KOL管理 <i class="dropdown icon"></i>
+                <div class="menu">
+                    <a class="item" href="{% url 'kol:records' %}">
+                        拜访记录
+                    </a>
+                    <a class="item" href="{% url 'kol:kols' %}">
+                        KOL信息
+                    </a>
+                </div>
             </div>
-        </div>
+        {% endif %}
         <div class="ui simple dropdown item">
             小工具 <i class="dropdown icon"></i>
             <div class="menu">
