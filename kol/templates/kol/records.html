@@ -70,23 +70,44 @@
                     <span class="hospital"><i>{{ record.kol.hospital }}</i></span>
                 </div>
                 <div class="description">
-                    {% if post.images.all %}
-                    <div class="ui medium right floated bordered image">
-                        <img src="{{ post.images.first.image.url }}">
+                    <div class="ui padded grid">
+                        <div class="twelve wide column">
+                            <p>
+                                {% if highlights %}
+                                {{ record.feedback|highlight:highlights|truncatechars:255 }}
+                                {% else %}
+                                {{ record.feedback|truncatechars:255 }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="four wide column">
+                            <div class="ui segment">
+                                <div class="ui list">
+                                    <div class="item">
+                                        <div class="ui horizontal label">认知</div>
+                                        <div class="ui heart rating" data-rating="{{ record.rating_awareness }}" data-max-rating="4"></div>
+                                    </div>
+                                    <div class="item">
+                                        <div class="ui horizontal label">疗效</div>
+                                        <div class="ui heart rating" data-rating="{{ record.rating_efficacy }}" data-max-rating="4"></div>
+                                    </div>
+                                    <div class="item">
+                                        <div class="ui horizontal label">安全</div>
+                                        <div class="ui heart rating" data-rating="{{ record.rating_safety }}" data-max-rating="4"></div>
+                                    </div>
+                                    <div class="item">
+                                        <div class="ui horizontal label">便捷</div>
+                                        <div class="ui heart rating" data-rating="{{ record.rating_compliance }}" data-max-rating="4"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    {% endif %}
-                    <p>
-                        {% if highlights %}
-                        {{ record.feedback_main|highlight:highlights|truncatechars:255 }}
-                        {% else %}
-                        {{ record.feedback_main|truncatechars:255 }}
-                        {% endif %}
-                    </p>
                 </div>
                 <div class="extra">
                     <a class="ui right floated primary basic button" 
                         href="{% url 'kol:update_record' record.pk %}" target="_blank">
-                        详情
+                        详情&编辑
                         <i class="right chevron icon"></i>
                     </a>
 

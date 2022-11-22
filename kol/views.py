@@ -15,17 +15,19 @@ import datetime
 DISPLAY_LENGTH = 8
 
 
-def records_by_auth(user:User):
+def records_by_auth(user: User):
     if user.is_staff:
         return Record.objects.all()
     else:
         return Record.objects.filter(pub_user=user)
 
-def kols_by_auth(user:User):
+
+def kols_by_auth(user: User):
     if user.groups.filter(name="KOL信息贡献者").exists():
         return Kol.objects.all().order_by("name")
     else:
         return Kol.objects.none()
+
 
 def get_filters(qs: QuerySet, field: str):
     all_provinces = (
@@ -292,13 +294,16 @@ def kols(request: request) -> HttpResponse:
     if kw is not None:
         kw_list = kw.split(" ")
 
-        search_condition = Q(name__icontains=kw_list[0]) | Q(  # 搜索KOL姓名
-            hospital__name__icontains=kw_list[0]
-        )  # 搜索供职医院名称
+        search_condition = (
+            Q(name__icontains=kw_list[0])  # 搜索KOL姓名
+            | Q(hospital__name__icontains=kw_list[0])  # 搜索供职医院名称
+            | Q(titles__icontains=kw_list[0])  # 搜索头衔和荣誉
+        )
         for k in kw_list[1:]:
             search_condition.add(
                 Q(name__icontains=k)  # 搜索KOL姓名
-                | Q(hospital__name__icontains=k),  # 搜索供职医院名称
+                | Q(hospital__name__icontains=k)  # 搜索供职医院名称
+                | Q(titles__icontains=k),  # 搜索头衔和荣誉
                 Q.AND,
             )
 
