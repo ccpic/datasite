@@ -11,8 +11,8 @@
 {% block display%}
 
 <div class="ui hidden divider"></div>
-
 <div class="ui container">
+
     <div class="ui modal">
         <div class="header">确认删除以下拜访记录?</div>
         <div class="content" id="modal_content">
@@ -63,22 +63,77 @@
                 placeholder="请填写拜访目标"
             >{{ record.purpose }}</textarea>
         </div>
-        <div class="required field">
-            <label>主要反馈</label>
-            <textarea
-                name="text_feedback_main"
-                form="form_create_record"
-                placeholder="请填写主要反馈"
-            >{{ record.feedback_main }}</textarea>
+        <div class="two fields">                    
+            <div class="required field">
+                <label>恩那度司他认知度</label>
+                <div class="ui selection dropdown">
+                    <input type="hidden" value="{{ record.rating_awareness }}" name="rating_awareness" />
+                    <i class="dropdown icon"></i>
+                    <div class="default text">请选择本次拜访时KOL的恩那度司他认知度</div>
+                    <div class="menu">
+                        {% for k, v in rating_awareness_choices %}
+                            <div class="item" data-value="{{ k }}">{{ v }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="required field">
+                <label>恩那度司他疗效</label>
+                <div class="ui selection dropdown">
+                    <input type="hidden" value="{{ record.rating_efficacy }}" name="rating_efficacy" />
+                    <i class="dropdown icon"></i>
+                    <div class="default text">请选择本次拜访时KOL认知的恩那度司他疗效</div>
+                    <div class="menu">
+                        {% for k, v in rating_efficacy_choices %}
+                            <div class="item" data-value="{{ k }}">{{ v }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="two fields">                    
+            <div class="required field">
+                <label>恩那度司他安全性</label>
+                <div class="ui selection dropdown">
+                    <input type="hidden" value="{{ record.rating_safety }}" name="rating_safety" />
+                    <i class="dropdown icon"></i>
+                    <div class="default text">请选择本次拜访时KOL的恩那度司他便捷性</div>
+                    <div class="menu">
+                        {% for k, v in rating_safety_choices %}
+                            <div class="item" data-value="{{ k }}">{{ v }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="required field">
+                <label>恩那度司他便捷性</label>
+                <div class="ui selection dropdown">
+                    <input type="hidden" value="{{ record.rating_compliance }}" name="rating_compliance" />
+                    <i class="dropdown icon"></i>
+                    <div class="default text">请选择本次拜访时KOL认知的恩那度司他便捷性</div>
+                    <div class="menu">
+                        {% for k, v in rating_compliance_choices %}
+                            <div class="item" data-value="{{ k }}">{{ v }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="field">
-            <label>其他重要信息</label>
+            <label>主要反馈及其他重要信息</label>
             <textarea
-                name="text_feedback_oth"
+                name="text_feedback"
                 form="form_create_record"
-                placeholder="请填写其他重要信息，可为空"
-            >{{ record.feedback_oth }}</textarea>
+                placeholder="请填写主要反馈及其他重要信息，如性格、沟通风格、关系好/坏的专家、讲者发展潜力、竞品相关信息等"
+            >{{ record.feedback }}</textarea>
         </div>
+        {% comment %} <div class = "field">
+            <label>上传附件</label>
+            {% for attachment in attachments %}
+               {{ attachment }}
+            {% endfor %}
+            <input type="file" id="file-uploader" name="files" multiple="multiple">
+        </div> {% endcomment %}
         <div class="ui error message">
         </div>
         {% if record %}
@@ -142,11 +197,11 @@
                 ],
             },
             text_feedback_main: {
-                identifier: "text_feedback_main",
+                identifier: "text_feedback",
                 rules: [
                     {
                         type: "empty",
-                        prompt: "未填写主要反馈",
+                        prompt: "未填写主要反馈及其他重要信息",
                     },
                 ],
             },

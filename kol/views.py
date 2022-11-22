@@ -3,7 +3,7 @@ from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.http import request
 from django.contrib.auth.decorators import login_required
 import json
-from .models import Hospital, Kol, Record
+from .models import Hospital, Kol, Record, Attachment
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from datasite.commons import get_dt_page
 from django.db.models import Q, F, Count, QuerySet
@@ -109,12 +109,16 @@ def records(request: request) -> HttpResponse:
         visit_date = datetime.datetime.strptime(months[0], "%Y-%m-%d").date()
         visit_year = visit_date.year
         visit_month = visit_date.month
-        records_temp = records.filter(visit_date__year=visit_year, visit_date__month=visit_month)
+        records_temp = records.filter(
+            visit_date__year=visit_year, visit_date__month=visit_month
+        )
         for k in months[1:]:
             visit_date = datetime.datetime.strptime(k, "%Y-%m-%d").date()
             visit_year = visit_date.year
             visit_month = visit_date.month
-            records_temp = records_temp|records.filter(visit_date__year=visit_year, visit_date__month=visit_month)
+            records_temp = records_temp | records.filter(
+                visit_date__year=visit_year, visit_date__month=visit_month
+            )
 
         records = records_temp
 
@@ -167,8 +171,11 @@ def create_record(request):
                 request.POST.get("visit_date"), "%Y-%m-%d"
             ).date(),
             purpose=request.POST.get("text_purpose"),
-            feedback_main=request.POST.get("text_feedback_main"),
-            feedback_oth=request.POST.get("text_feedback_oth"),
+            rating_awareness=int(request.POST.get("rating_awareness")),
+            rating_efficacy=int(request.POST.get("rating_efficacy")),
+            rating_safety=int(request.POST.get("rating_safety")),
+            rating_compliance=int(request.POST.get("rating_compliance")),
+            feedback=request.POST.get("text_feedback"),
             pub_user=request.user,
         )
         obj.save()
@@ -188,6 +195,10 @@ def create_record(request):
             .order_by(F("month").desc())
         )  # 按拜访月份汇总
         context = {
+            "rating_awareness_choices": Record.RATING_AWARENESS_CHOICES,
+            "rating_efficacy_choices": Record.RATING_EFFICACY_CHOICES,
+            "rating_safety_choices": Record.RATING_SAFETY_CHOICES,
+            "rating_compliance_choices": Record.RATING_COMPLIANCE_CHOICES,
             "kols": kols,
             "filtered_provinces": filtered_provinces,
             "filtered_months": filtered_months,
@@ -197,7 +208,7 @@ def create_record(request):
 
 @login_required
 def update_record(request, pk: int):
-    print(request.POST)
+    print(request.POST, request.FILES)
     if request.method == "POST":
         obj = Record.objects.get(pk=pk)
         obj.kol = Kol.objects.get(pk=int(request.POST.get("select_kol")))
@@ -205,10 +216,17 @@ def update_record(request, pk: int):
             request.POST.get("visit_date"), "%Y-%m-%d"
         ).date()
         obj.purpose = request.POST.get("text_purpose")
-        obj.feedback_main = request.POST.get("text_feedback_main")
-        obj.feedback_oth = request.POST.get("text_feedback_oth")
+        obj.rating_awareness = int(request.POST.get("rating_awareness"))
+        obj.rating_efficacy = int(request.POST.get("rating_efficacy"))
+        obj.rating_safety = int(request.POST.get("rating_safety"))
+        obj.rating_compliance = int(request.POST.get("rating_compliance"))
+        obj.feedback = request.POST.get("text_feedback")
         obj.pub_user = request.user
         obj.save()
+
+        # for file in request.FILES:
+        #     obj_attachment = Attachment(record=obj, file=file)
+        #     obj_attachment.save()
 
         return redirect(reverse("kol:records"))
     else:
@@ -225,7 +243,12 @@ def update_record(request, pk: int):
             .order_by(F("month").desc())
         )  # 按拜访月份汇总
         context = {
+            "rating_awareness_choices": Record.RATING_AWARENESS_CHOICES,
+            "rating_efficacy_choices": Record.RATING_EFFICACY_CHOICES,
+            "rating_safety_choices": Record.RATING_SAFETY_CHOICES,
+            "rating_compliance_choices": Record.RATING_COMPLIANCE_CHOICES,
             "record": Record.objects.get(pk=pk),
+            "attachments": Attachment.objects.filter(record=Record.objects.get(pk=pk)),
             "kols": kols,
             "filtered_provinces": filtered_provinces,
             "filtered_months": filtered_months,
@@ -292,7 +315,9 @@ def kols(request: request) -> HttpResponse:
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
-        "filtered_provinces": get_filters(qs=kols, field="hospital__province"),
+        "filtered_provinces": get_filters(
+            qs=Kol.objects.all(), field="hospital__province"
+        ),
         "selected_provinces": param_dict["provinces"],
     }
 

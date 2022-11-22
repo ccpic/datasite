@@ -60,149 +60,15 @@
                 </div>
             </div>
         </div>
-        <div class="required inline fields">
-            <label for="rating_infl">影响力</label>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    {% if kol.rating_infl == 3 %}
-                        <input
-                            type="radio"
-                            name="rating_infl"
-                            value="3"
-                            tabindex="0"
-                            class="hidden"
-                            checked=""
-                        />
-                    {% else %}
-                        <input
-                            type="radio"
-                            name="rating_infl"
-                            value="3"
-                            tabindex="0"
-                            class="hidden"
-                        />
-                    {% endif %}
-                    <label>高</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    {% if kol.rating_infl == 2 %}
-                        <input
-                            type="radio"
-                            name="rating_infl"
-                            value="2"
-                            tabindex="0"
-                            class="hidden"
-                            checked=""
-                        />
-                    {% else %}
-                        <input
-                            type="radio"
-                            name="rating_infl"
-                            value="2"
-                            tabindex="0"
-                            class="hidden"
-                        />
-                    {% endif %}
-                    <label>中</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    {% if kol.rating_infl == 1 %}
-                        <input
-                            type="radio"
-                            name="rating_infl"
-                            value="1"
-                            tabindex="0"
-                            class="hidden"
-                            checked=""
-                        />
-                    {% else %}
-                        <input
-                            type="radio"
-                            name="rating_infl"
-                            value="1"
-                            tabindex="0"
-                            class="hidden"
-                        />
-                    {% endif %}
-                    <label>低</label>
-                </div>
-            </div>
+        <div class="required inline field">
+            <label>影响力</label>
+            <div class="ui star rating" id="rating_star_infl" data-rating="{{ kol.rating_infl }}"></div>
+            <input type="hidden" id="input_rating_infl" value="{{ kol.rating_infl }}" name="rating_infl" />
         </div>
-        <div class="required inline fields">
-            <label for="rating_prof">专业度</label>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    {% if kol.rating_prof == 3 %}
-                        <input
-                            type="radio"
-                            name="rating_prof"
-                            value="3"
-                            tabindex="0"
-                            class="hidden"
-                            checked=""
-                        />
-                    {% else %}
-                        <input
-                            type="radio"
-                            name="rating_prof"
-                            value="3"
-                            tabindex="0"
-                            class="hidden"
-                        />
-                    {% endif %}
-                    <label>高</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    {% if kol.rating_prof == 2 %}
-                        <input
-                            type="radio"
-                            name="rating_prof"
-                            value="2"
-                            tabindex="0"
-                            class="hidden"
-                            checked=""
-                        />
-                    {% else %}
-                        <input
-                            type="radio"
-                            name="rating_prof"
-                            value="2"
-                            tabindex="0"
-                            class="hidden"
-                        />
-                    {% endif %}
-                    <label>中</label>
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui radio checkbox">
-                    {% if kol.rating_prof == 1 %}
-                        <input
-                            type="radio"
-                            name="rating_prof"
-                            value="1"
-                            tabindex="0"
-                            class="hidden"
-                            checked=""
-                        />
-                    {% else %}
-                        <input
-                            type="radio"
-                            name="rating_prof"
-                            value="1"
-                            tabindex="0"
-                            class="hidden"
-                        />
-                    {% endif %}
-                    <label>低</label>
-                </div>
-            </div>
+        <div class="required inline field">
+            <label>专业度</label>
+            <div class="ui star rating" id="rating_star_prof" data-rating="{{ kol.rating_prof }}"></div>
+            <input type="hidden" id="input_rating_prof" value="{{ kol.rating_prof }}" name="rating_prof" />
         </div>
         <div class="field">
             <label>头衔&荣誉</label>
@@ -225,6 +91,20 @@
 <div class="ui hidden divider"></div>
 
 <script>
+    $("#rating_star_infl").rating({
+        initialRating: 0,
+        maxRating: 4,
+        onRate: function (rating) {
+            $("#input_rating_infl").val(rating)
+        }
+      });
+    $("#rating_star_prof").rating({
+        initialRating: 0,
+        maxRating: 4,
+        onRate: function (rating) {
+            $("#input_rating_prof").val(rating)
+        }
+      });
     $(".ui.radio.checkbox").checkbox();
     $(".ui.dropdown").dropdown({ fullTextSearch: true });
     $(".ui.form").form({
@@ -260,7 +140,7 @@
                 identifier: "rating_infl",
                 rules: [
                     {
-                        type: "checked",
+                        type: "empty",
                         prompt: "未选择影响力",
                     },
                 ],
@@ -269,7 +149,7 @@
                 identifier: "rating_prof",
                 rules: [
                     {
-                        type: "checked",
+                        type: "empty",
                         prompt: "未选择专业度",
                     },
                 ],

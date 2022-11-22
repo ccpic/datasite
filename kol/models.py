@@ -2,13 +2,14 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models import Q, UniqueConstraint
+import os
 
 DEPT_CHOICES = [
     ("肾内科", "肾内科"),
     ("其他科室", "其他科室"),
 ]
 
-RATING_CHOICES = [(3, "高"), (2, "中"), (1, "低")]
+RATING_CHOICES = [(4, 4), (3, 3), (2, 2), (1, 1)]
 
 
 class Hospital(models.Model):
@@ -55,6 +56,30 @@ class Kol(models.Model):
 
 
 class Record(models.Model):
+    RATING_AWARENESS_CHOICES = [
+        (3, "3_应用并熟悉产品特性"),
+        (2, "2_已开始应用"),
+        (1, "1_了解但未应用"),
+        (0, "0_不了解"),
+    ]
+    RATING_EFFICACY_CHOICES = [
+        (3, "3_Hb改善与罗沙司他类似，稳定性更好"),
+        (2, "2_Hb改善与罗沙司他类似"),
+        (1, "1_不了解"),
+        (0, "0_Hb改善不如罗沙司他"),
+    ]
+    RATING_SAFETY_CHOICES = [
+        (3, "3_较罗沙司他更安全"),
+        (2, "2_与罗沙司他无差别"),
+        (1, "1_不了解"),
+        (0, "0_不及罗沙司他安全"),
+    ]
+    RATING_COMPLIANCE_CHOICES = [
+        (3, "3_与罗沙司他比较，医嘱更方便"),
+        (2, "2_与罗沙司他无差别"),
+        (1, "1_不了解"),
+        (0, "0_不如罗沙司他用药方便"),
+    ]
     kol = models.ForeignKey(
         Kol,
         on_delete=models.SET_NULL,
@@ -64,8 +89,20 @@ class Record(models.Model):
     )
     visit_date = models.DateField(verbose_name="拜访日期")
     purpose = models.TextField(verbose_name="拜访目标")
-    feedback_main = models.TextField(verbose_name="主要反馈")
-    feedback_oth = models.TextField(verbose_name="其他重要信息")
+    rating_favor = models.IntegerField(choices=RATING_CHOICES, verbose_name="恩那度司他支持度")
+    rating_awareness = models.IntegerField(
+        choices=RATING_AWARENESS_CHOICES, verbose_name="恩那度司他认知度"
+    )
+    rating_efficacy = models.IntegerField(
+        choices=RATING_EFFICACY_CHOICES, verbose_name="恩那度司他疗效"
+    )
+    rating_safety = models.IntegerField(
+        choices=RATING_SAFETY_CHOICES, verbose_name="恩那度司他安全性"
+    )
+    rating_compliance = models.IntegerField(
+        choices=RATING_COMPLIANCE_CHOICES, verbose_name="恩那度司他便捷性"
+    )
+    feedback = models.TextField(verbose_name="主要反馈及其他重要信息")
     upload_date = models.DateTimeField(verbose_name="记录日期", default=timezone.now)
     pub_user = models.ForeignKey(
         User,
@@ -82,3 +119,28 @@ class Record(models.Model):
 
     def __str__(self):
         return f"{self.visit_date} - {self.kol}"
+
+
+def get_filename(instance, filename):
+    record_id = instance.record.pk
+    return "kol/%s-%s" % (record_id, filename)
+
+
+class Attachment(models.Model):
+    record = models.ForeignKey(
+        Record,
+        on_delete=models.CASCADE,
+        default=None,
+        related_name="record_attachments",
+    )
+    file = models.FileField(upload_to=get_filename, verbose_name="文件")
+
+    class Meta:
+        verbose_name = "上传附件"
+        verbose_name_plural = "上传附件"
+
+    def __str__(self):
+        return os.path.basename(self.file.name)
+
+    def filename(self):
+        return os.path.basename(self.file.name)

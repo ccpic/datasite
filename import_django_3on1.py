@@ -63,6 +63,5 @@ def importHp():
 
 
 if __name__ == "__main__":
-    # importModel(D_MODEL)
-    importHp()
+    importModel(D_MODEL)
     print("Done!", time.process_time())
