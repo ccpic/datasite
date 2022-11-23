@@ -11,6 +11,8 @@ from django.db.models import Q, F, Count, QuerySet
 from django.db import IntegrityError
 from django.db.models.functions import TruncMonth
 import datetime
+from django.utils import timezone
+
 
 DISPLAY_LENGTH = 8
 
@@ -237,6 +239,7 @@ def update_record(request, pk: int):
         obj.rating_safety = int(request.POST.get("rating_safety"))
         obj.rating_compliance = int(request.POST.get("rating_compliance"))
         obj.feedback = request.POST.get("text_feedback")
+        obj.upload_date = timezone.now()
         obj.pub_user = request.user
         obj.save()
 
@@ -385,6 +388,7 @@ def update_kol(request, pk: int):
         obj.rating_infl = int(request.POST.get("rating_infl"))
         obj.rating_prof = int(request.POST.get("rating_prof"))
         obj.titles = request.POST.get("text_title")
+        obj.upload_date = timezone.now()
         obj.pub_user = request.user
 
         try:
