@@ -2,10 +2,10 @@
 {% load tags %}
 
 <div class="ui container">
-    <a class="ui labeled icon fluid primary button" id="create_kol" href="{% url 'kol:create_kol' %}">
-        <i class="plus square outline icon"></i>
-        新增KOL
-    </a>
+    <div class="ui fluid buttons">
+        <a class="ui primary button" id="create_kol" href="{% url 'kol:create_kol' %}">新增</a>
+        <a class="ui basic primary button" id="export_kol" href="{% url 'kol:export_kol' %}">导出</a>
+    </div>
     
     <div class="ui hidden divider"></div>
     <div class="ui blue vertical segment">

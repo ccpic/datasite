@@ -55,18 +55,22 @@
                 <div class="content">
                     <div class="ui list">
                         <div class="item">
-                            <div class="ui red ribbon label">影响力</div>
+                            <div class="ui blue horizontal label">影响力</div>
                             <div class="ui star rating" data-rating="{{ kol.rating_infl }}" data-max-rating="4"></div>
                         </div>
                         <div class="item">
-                            <div class="ui blue ribbon label">专业度</div>
+                            <div class="ui red horizontal label">专业度</div>
                             <div class="ui star rating" data-rating="{{ kol.rating_prof }}" data-max-rating="4"></div>
+                        </div>
+                        <div class="item">
+                            <div class="ui purple horizontal label">支持度</div>
+                            <div class="ui heart rating" data-rating="{{ kol.rating_fav }}" data-max-rating="4"></div>
                         </div>
                     </div>
                 </div>
                 <div class="extra">
                     <div class="left floated meta">
-                        <a href="{% url 'kol:records' %}?{% add_query_params request kol=kol.pk %}">拜访记录:{{ kol.kol_records.all.count }}</a>
+                        <a href="{% url 'kol:records' %}?kol={{ kol.pk}}">拜访记录:{{ kol.kol_records.all.count }}</a>
                     </div>
                 </div>
                 <a class="ui bottom attached button" href="{% url 'kol:update_kol' pk=kol.pk %}">

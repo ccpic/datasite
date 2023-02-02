@@ -71,7 +71,7 @@
                 </div>
                 <div class="description">
                     <div class="ui padded grid">
-                        <div class="twelve wide column">
+                        <div class="eleven wide column">
                             <p>
                                 {% if highlights %}
                                 {{ record.feedback|highlight:highlights|truncatechars:255 }}
@@ -80,24 +80,28 @@
                                 {% endif %}
                             </p>
                         </div>
-                        <div class="four wide column">
-                            <div class="ui center aligned segment">
+                        <div class="five wide column">
+                            <div class="ui segment">
                                 <div class="ui list">
                                     <div class="item">
-                                        <div class="ui horizontal label">认知</div>
-                                        <div class="ui heart rating" data-rating="{{ record.rating_awareness }}" data-max-rating="3"></div>
+                                        <div class="ui horizontal label">EPO浓度</div>
+                                        <div class="ui heart rating" data-rating="{{ record.attitude_1 }}" data-max-rating="3" data-tooltip="{{ record.get_attitude_1_display }}"></div>
                                     </div>
                                     <div class="item">
-                                        <div class="ui horizontal label">疗效</div>
-                                        <div class="ui heart rating" data-rating="{{ record.rating_efficacy }}" data-max-rating="3"></div>
+                                        <div class="ui horizontal label">升速稳定性</div>
+                                        <div class="ui heart rating" data-rating="{{ record.attitude_2 }}" data-max-rating="3" data-tooltip="{{ record.get_attitude_2_display }}"></div>
                                     </div>
                                     <div class="item">
-                                        <div class="ui horizontal label">安全</div>
-                                        <div class="ui heart rating" data-rating="{{ record.rating_safety }}" data-max-rating="3"></div>
+                                        <div class="ui horizontal label">PHD选择性</div>
+                                        <div class="ui heart rating" data-rating="{{ record.attitude_3 }}" data-max-rating="3" data-tooltip="{{ record.get_attitude_3_display }}"></div>
                                     </div>
                                     <div class="item">
-                                        <div class="ui horizontal label">便捷</div>
-                                        <div class="ui heart rating" data-rating="{{ record.rating_compliance }}" data-max-rating="3"></div>
+                                        <div class="ui horizontal label">升速与血栓</div>
+                                        <div class="ui heart rating" data-rating="{{ record.attitude_4 }}" data-max-rating="3" data-tooltip="{{ record.get_attitude_4_display }}"></div>
+                                    </div>
+                                    <div class="item">
+                                        <div class="ui horizontal label">脱靶效应</div>
+                                        <div class="ui heart rating" data-rating="{{ record.attitude_5 }}" data-max-rating="3" data-tooltip="{{ record.get_attitude_5_display }}"></div>
                                     </div>
                                 </div>
                             </div>

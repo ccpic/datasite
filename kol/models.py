@@ -1,8 +1,9 @@
-from django.db import models
-from django.utils import timezone
-from django.contrib.auth.models import User
-from django.db.models import Q, UniqueConstraint
 import os
+
+from django.contrib.auth.models import User
+from django.db import models
+from django.db.models import Q, UniqueConstraint
+from django.utils import timezone
 
 DEPT_CHOICES = [
     ("肾内科", "肾内科"),
@@ -38,9 +39,10 @@ class Kol(models.Model):
         null=True,
         related_name="hospital_kols",
     )
-    dept = models.CharField(max_length=10, choices=DEPT_CHOICES, verbose_name="所在科室")
+    # dept = models.CharField(max_length=10, choices=DEPT_CHOICES, verbose_name="所在科室")
     rating_infl = models.IntegerField(choices=RATING_CHOICES, verbose_name="影响力")
     rating_prof = models.IntegerField(choices=RATING_CHOICES, verbose_name="专业度")
+    rating_fav = models.IntegerField(choices=RATING_CHOICES, verbose_name="支持度")
     titles = models.TextField(verbose_name="头衔&荣誉", blank=True, null=True)
     upload_date = models.DateTimeField(verbose_name="创建日期", default=timezone.now)
     pub_user = models.ForeignKey(
@@ -56,29 +58,35 @@ class Kol(models.Model):
 
 
 class Record(models.Model):
-    RATING_AWARENESS_CHOICES = [
-        (3, "3_应用并熟悉产品特性"),
-        (2, "2_已开始应用"),
-        (1, "1_了解但未应用"),
-        (0, "0_不了解"),
+    ATTITUDE_1_CHOICES = [
+        (3, "3_HIF-PHI在疗效保证前提下，刺激产生内源性EPO越接近生理浓度越好"),
+        (2, "2_HIF-PHI在疗效保证前提下，EPO浓度无所谓"),
+        (1, "1_HIF-PHI治疗，内源性EPO越高，疗效会越好"),
+        (0, "0_本次拜访未涉及"),
     ]
-    RATING_EFFICACY_CHOICES = [
-        (3, "3_Hb改善与罗沙司他类似，稳定性更好"),
-        (2, "2_Hb改善与罗沙司他类似"),
-        (1, "1_不了解"),
-        (0, "0_Hb改善不如罗沙司他"),
+    ATTITUDE_2_CHOICES = [
+        (3, "3_Hb升速需适中，1-2g/dl最佳"),
+        (2, "2_Hb升速慢点无所谓"),
+        (1, "1_Hb需尽快达标，每月＞2g/dl危害不大"),
+        (0, "0_本次拜访未涉及"),
     ]
-    RATING_SAFETY_CHOICES = [
-        (3, "3_较罗沙司他更安全"),
-        (2, "2_与罗沙司他无差别"),
-        (1, "1_不了解"),
-        (0, "0_不及罗沙司他安全"),
+    ATTITUDE_3_CHOICES = [
+        (3, "3_选择性抑制PHD1及PHD3更高的HIF-PHI，更有利于HIF2α稳定，改善铁代谢更好"),
+        (2, "2_不了解铁代谢与PHD不同亚型作用的相关性"),
+        (1, "1_铁代谢与PHD不同亚型作用无相关性"),
+        (0, "0_本次拜访未涉及"),
     ]
-    RATING_COMPLIANCE_CHOICES = [
-        (3, "3_与罗沙司他比较，医嘱更方便"),
-        (2, "2_与罗沙司他无差别"),
-        (1, "1_不了解"),
-        (0, "0_不如罗沙司他用药方便"),
+    ATTITUDE_4_CHOICES = [
+        (3, "3_Hb升速波动过大会增加血栓事件风险"),
+        (2, "2_不清楚Hb升速波动与血栓事件相关性"),
+        (1, "1_Hb升速波动过大与血栓事件无相关性"),
+        (0, "0_本次拜访未涉及"),
+    ]
+    ATTITUDE_5_CHOICES = [
+        (3, "3_HIF-PHI对脂代谢的影响是“脱靶效应”的表现，HIF应更聚焦于红细胞生成"),
+        (2, "2_不清楚HIF-PHI对脂代谢的改变对患者的远期影响"),
+        (1, "1_HIF-PHI对脂代谢的影响是对患者的获益"),
+        (0, "0_本次拜访未涉及"),
     ]
     kol = models.ForeignKey(
         Kol,
@@ -90,18 +98,22 @@ class Record(models.Model):
     visit_date = models.DateField(verbose_name="拜访日期")
     purpose = models.TextField(verbose_name="拜访目标")
     # rating_favor = models.IntegerField(choices=RATING_CHOICES, verbose_name="恩那度司他支持度")
-    rating_awareness = models.IntegerField(
-        choices=RATING_AWARENESS_CHOICES, verbose_name="恩那度司他认知度"
+    attitude_1 = models.IntegerField(
+        choices=ATTITUDE_1_CHOICES, verbose_name="治疗观念_HIF_PHI机制方面"
     )
-    rating_efficacy = models.IntegerField(
-        choices=RATING_EFFICACY_CHOICES, verbose_name="恩那度司他疗效"
+    attitude_2 = models.IntegerField(
+        choices=ATTITUDE_2_CHOICES, verbose_name="治疗观念_Hb升速稳定性"
     )
-    rating_safety = models.IntegerField(
-        choices=RATING_SAFETY_CHOICES, verbose_name="恩那度司他安全性"
+    attitude_3 = models.IntegerField(
+        choices=ATTITUDE_3_CHOICES, verbose_name="治疗观念_铁代谢调节异质性"
     )
-    rating_compliance = models.IntegerField(
-        choices=RATING_COMPLIANCE_CHOICES, verbose_name="恩那度司他便捷性"
+    attitude_4 = models.IntegerField(
+        choices=ATTITUDE_4_CHOICES, verbose_name="治疗观念_升速与血栓事件关系"
     )
+    attitude_5 = models.IntegerField(
+        choices=ATTITUDE_5_CHOICES, verbose_name="治疗观念_脱靶效应相关"
+    )
+
     feedback = models.TextField(verbose_name="主要反馈及其他重要信息")
     upload_date = models.DateTimeField(verbose_name="记录日期", default=timezone.now)
     pub_user = models.ForeignKey(

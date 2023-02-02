@@ -63,68 +63,77 @@
                 placeholder="请填写拜访目标"
             >{{ record.purpose }}</textarea>
         </div>
-        <div class="two fields">                    
-            <div class="required field">
-                <label>恩那度司他认知度</label>
-                <div class="ui selection dropdown">
-                    <input type="hidden" value="{{ record.rating_awareness }}" name="rating_awareness" />
-                    <i class="dropdown icon"></i>
-                    <div class="default text">请选择本次拜访时KOL的恩那度司他认知度</div>
-                    <div class="menu">
-                        {% for k, v in rating_awareness_choices %}
-                            <div class="item" data-value="{{ k }}">{{ v }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="required field">
-                <label>恩那度司他疗效</label>
-                <div class="ui selection dropdown">
-                    <input type="hidden" value="{{ record.rating_efficacy }}" name="rating_efficacy" />
-                    <i class="dropdown icon"></i>
-                    <div class="default text">请选择本次拜访时KOL认知的恩那度司他疗效</div>
-                    <div class="menu">
-                        {% for k, v in rating_efficacy_choices %}
-                            <div class="item" data-value="{{ k }}">{{ v }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="two fields">                    
-            <div class="required field">
-                <label>恩那度司他安全性</label>
-                <div class="ui selection dropdown">
-                    <input type="hidden" value="{{ record.rating_safety }}" name="rating_safety" />
-                    <i class="dropdown icon"></i>
-                    <div class="default text">请选择本次拜访时KOL的恩那度司他便捷性</div>
-                    <div class="menu">
-                        {% for k, v in rating_safety_choices %}
-                            <div class="item" data-value="{{ k }}">{{ v }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="required field">
-                <label>恩那度司他便捷性</label>
-                <div class="ui selection dropdown">
-                    <input type="hidden" value="{{ record.rating_compliance }}" name="rating_compliance" />
-                    <i class="dropdown icon"></i>
-                    <div class="default text">请选择本次拜访时KOL认知的恩那度司他便捷性</div>
-                    <div class="menu">
-                        {% for k, v in rating_compliance_choices %}
-                            <div class="item" data-value="{{ k }}">{{ v }}</div>
-                        {% endfor %}
-                    </div>
+        <div class="required field">
+            <label>治疗观念_HIF-PHI机制方面</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ record.attitude_1 }}" name="attitude_1" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择本次拜访时KOL的观念</div>
+                <div class="menu">
+                    {% for k, v in attitude_1_choices %}
+                        <div class="item" data-value="{{ k }}">{{ v }}</div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
         <div class="required field">
-            <label>主要反馈及其他重要信息</label>
+            <label>治疗观念_Hb升速稳定性</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ record.attitude_2 }}" name="attitude_2" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择本次拜访时KOL的观念</div>
+                <div class="menu">
+                    {% for k, v in attitude_2_choices %}
+                        <div class="item" data-value="{{ k }}">{{ v }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="required field">
+            <label>治疗观念_铁代谢调节异质性</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ record.attitude_3 }}" name="attitude_3" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择本次拜访时KOL的观念</div>
+                <div class="menu">
+                    {% for k, v in attitude_3_choices %}
+                        <div class="item" data-value="{{ k }}">{{ v }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="required field">
+            <label>治疗观念_升速与血栓事件关系</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ record.attitude_4 }}" name="attitude_4" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择本次拜访时KOL的观念</div>
+                <div class="menu">
+                    {% for k, v in attitude_4_choices %}
+                        <div class="item" data-value="{{ k }}">{{ v }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="required field">
+            <label>治疗观念_脱靶效应相关</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ record.attitude_5 }}" name="attitude_5" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择本次拜访时KOL的观念</div>
+                <div class="menu">
+                    {% for k, v in attitude_5_choices %}
+                        <div class="item" data-value="{{ k }}">{{ v }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="required field">
+            <label>拜访反馈及其他重要信息</label>
             <textarea
                 name="text_feedback"
                 form="form_create_record"
-                placeholder="请填写主要反馈及其他重要信息，如性格、沟通风格、关系好/坏的专家、讲者发展潜力、竞品相关信息等"
+                placeholder="请填写拜访反馈及其他重要信息，如性格、沟通风格、关系好/坏的专家、讲者发展潜力、竞品相关信息等"
             >{{ record.feedback }}</textarea>
         </div>
         {% comment %} <div class = "field">
@@ -196,7 +205,52 @@
                     },
                 ],
             },
-            text_feedback_main: {
+            attitude_1: {
+                identifier: "attitude_1",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择治疗观念_HIF-PHI机制方面",
+                    },
+                ],
+            },
+            attitude_2: {
+                identifier: "attitude_2",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择治疗观念_Hb升速稳定性",
+                    },
+                ],
+            },
+            attitude_3: {
+                identifier: "attitude_3",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择治疗观念_铁代谢调节异质性",
+                    },
+                ],
+            },
+            attitude_4: {
+                identifier: "attitude_4",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择治疗观念_升速与血栓事件关系",
+                    },
+                ],
+            },
+            attitude_5: {
+                identifier: "attitude_5",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择治疗观念_脱靶效应相关",
+                    },
+                ],
+            },
+            text_feedback: {
                 identifier: "text_feedback",
                 rules: [
                     {

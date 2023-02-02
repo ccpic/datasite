@@ -36,19 +36,18 @@
             <input type="text" name="name" value="{{kol.name}}" placeholder="请填写KOL姓名" />
         </div>
         <div class="required field">
-            <label>供职医院</label>
+            <label>供职医院                    <div class="ui pointing below red basic label">
+                请至少输入2个字符搜索
+            </div></label>
             <select class="ui search dropdown" name="select_hp">
                 {% if kol %}
                     <option value="{{ kol.hospital.pk }}">{{ kol.hospital }}</option>
                 {% else %}
-                    <option value="">请搜索并选择KOL所在的医院</option>
+                    <option value="">请输入关键字搜索并选择KOL所在的医院</option>
                 {% endif %}
-                {% for hp in hospitals %}
-                <option value="{{ hp.pk }}">{{ hp }}</option>
-                {% endfor %}
             </select>
         </div>
-        <div class="required field">
+        {% comment %} <div class="required field">
             <label>所在科室</label>
             <div class="ui selection dropdown">
                 <input type="hidden" value="{{ kol.dept }}" name="dept" />
@@ -59,7 +58,7 @@
                     <div class="item" data-value="其他科室">其他科室</div>
                 </div>
             </div>
-        </div>
+        </div> {% endcomment %}
         <div class="required inline field">
             <label>影响力</label>
             <div class="ui star rating" id="rating_star_infl" data-rating="{{ kol.rating_infl }}"></div>
@@ -69,6 +68,11 @@
             <label>专业度</label>
             <div class="ui star rating" id="rating_star_prof" data-rating="{{ kol.rating_prof }}"></div>
             <input type="hidden" id="input_rating_prof" value="{{ kol.rating_prof }}" name="rating_prof" />
+        </div>
+        <div class="required inline field">
+            <label>支持度</label>
+            <div class="ui heart rating" id="rating_heart_fav" data-rating="{{ kol.rating_fav }}"></div>
+            <input type="hidden" id="input_rating_fav" value="{{ kol.rating_fav }}" name="rating_fav" />
         </div>
         <div class="field">
             <label>头衔&荣誉</label>
@@ -103,6 +107,13 @@
         maxRating: 4,
         onRate: function (rating) {
             $("#input_rating_prof").val(rating)
+        }
+      });
+    $("#rating_heart_fav").rating({
+        initialRating: 0,
+        maxRating: 4,
+        onRate: function (rating) {
+            $("#input_rating_fav").val(rating)
         }
       });
     $(".ui.radio.checkbox").checkbox();
@@ -154,6 +165,24 @@
                     },
                 ],
             },
+            rating_infl: {
+                identifier: "rating_infl",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择影响力",
+                    },
+                ],
+            },
+            rating_fav: {
+                identifier: "rating_fav",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择支持度",
+                    },
+                ],
+            },
         },
     });
 </script>
@@ -186,24 +215,26 @@
             .modal('show');
     });
 </script>
-{% comment %} <script>
-    $("#btn_create").click(function (){
-        $("#error_message").attr("class", "ui hidden error message");
-        $.ajax({
-            type: "post",
-            url: "{% url 'kol:create_kol' %}",
-            data: $("#form_create_kol").serialize(),
-            success: function(result) {
-                $("#success_message").attr("class", "ui positive message");
-                window.location.href = "{% url 'kol:kols' %}";
-            },
-            error: function (result) {            //失败
-                console.log(result)
-                if (result.responseJSON.message == "该KOL已存在"){
-                    $("#error_message").attr("class", "ui error message");
-                };
-            }
-        });
-    });
-</script> {% endcomment %}
+
+<script>
+    // 还是转义问题，在Django模板中遇到带有{}的html代码必须使用replace这种方式处理
+    var url = "{% url 'kol:search_hps' 'QUERYPLACEHOLDER' %}".replace(
+        'QUERYPLACEHOLDER', '{query}'
+    );
+    // jQuery语法遍历所有多选框
+    $('.ui.search.dropdown').each(function () {
+        // Semantic UI语法获得多选框默认文本
+        $(this).dropdown(
+            {
+                apiSettings: {
+                    // 用下方URL从后端返回查询后的json
+                    url: url
+                },
+                // 输入至少2个字符后才query
+                minCharacters : 2
+            })
+        ;
+    })
+</script>
+
 {% endblock display %}
