@@ -41,4 +41,23 @@
             {% endfor %}
         </div>
     </div>
+    <div class="ui violet vertical segment">
+        <h3 class="ui header">
+            城市
+        </h3>
+        <div class="ui labels">
+            {% for city in filtered_cities %}
+                {% if city.hospital__city in selected_cities %}
+                    <a class="ui violet label" href="{% url 'kol:kols' %}?{% add_query_params request city=city.hospital__city %}">
+                        {{ city.hospital__city }} <div class="detail">({{ city.count }})</div>
+                        <i class="delete icon"></i>
+                    </a>
+                {% else %}
+                    <a class="ui label" href="{% url 'kol:kols' %}?{% add_query_params request city=city.hospital__city %}">
+                        {{ city.hospital__city }} <div class="detail">({{ city.count }})</div>
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
 </div>

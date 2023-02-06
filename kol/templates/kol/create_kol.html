@@ -74,6 +74,20 @@
             <div class="ui heart rating" id="rating_heart_fav" data-rating="{{ kol.rating_fav }}"></div>
             <input type="hidden" id="input_rating_fav" value="{{ kol.rating_fav }}" name="rating_fav" />
         </div>
+        <div class="required inline field">
+            <label>博导/硕导</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ kol.supervisor }}" name="supervisor" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择</div>
+                <div class="menu">
+                    <div class="item" data-value="博士生导师">博士生导师</div>
+                    <div class="item" data-value="硕士生导师">硕士生导师</div>
+                    <div class="item" data-value="非博导/硕导">非博导/硕导</div>
+                    <div class="item" data-value="未知">未知</div>
+                </div>
+            </div>
+        </div>
         <div class="field">
             <label>头衔&荣誉</label>
             <textarea
@@ -138,12 +152,12 @@
                     },
                 ],
             },
-            dept: {
-                identifier: "dept",
+            supervisor: {
+                identifier: "supervisor",
                 rules: [
                     {
                         type: "empty",
-                        prompt: "未选择所在科室",
+                        prompt: "未选择博导/硕导",
                     },
                 ],
             },

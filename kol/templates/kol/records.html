@@ -37,6 +37,14 @@
                 </a>
             {% endfor %}
         {% endif %}
+        {% if selected_cities  %}
+        {% for city in selected_cities %}
+            <a class="ui basic violet label" href="{% url 'kol:records' %}?{% add_query_params request city=city %}">
+                城市: {{ city }}
+                <i class="delete icon"></i>
+            </a>
+        {% endfor %}
+    {% endif %}
         {% if selected_months  %}
         {% for month in selected_months %}
             <a class="ui basic purple label" href="{% url 'kol:records' %}?{% add_query_params request month=month %}">

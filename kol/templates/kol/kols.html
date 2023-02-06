@@ -31,6 +31,14 @@
                     </a>
                 {% endfor %}
             {% endif %}
+            {% if selected_cities  %}
+                {% for city in selected_cities %}
+                    <a class="ui basic violet label" href="{% url 'kol:kols' %}?{% add_query_params request city=city %}">
+                        城市: {{ city }}
+                        <i class="delete icon"></i>
+                    </a>
+                {% endfor %}
+            {% endif %}
             <span> - 当前显示第
                 {{ kols.start_index }}-{{ kols.end_index }} of {{ record_n }}位KOLs
             </span>
@@ -40,7 +48,15 @@
             {% for kol in kols %}
             <div class="card">
                 <div class="content">
-                    {% comment %} <a class="meta close icon" style="float: right" kol_id="{{ kol.pk }}" kol_info="{{ kol }}" data-tooltip="删除"><i class="close icon"></i></a> {% endcomment %}
+                    <div class="meta" style="float: right">
+                        <span>
+                            {% if kol.supervisor == '博士生导师' %}
+                                博导
+                            {% elif kol.supervisor == '硕士生导师' %}
+                                硕导
+                            {% endif %}
+                        </span>
+                    </div>
                     <div class="header">{{ kol.name }}</div>
                 </div>
                 <div class="content">

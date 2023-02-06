@@ -31,6 +31,12 @@ class Hospital(models.Model):
 
 
 class Kol(models.Model):
+    SUPERVISOR_CHOICES = [
+        ("博士生导师","博士生导师"),
+        ("硕士生导师","硕士生导师"),
+        ("非博导/硕导","非博导/硕导"),
+        ("未知","未知"),
+    ]
     name = models.CharField(verbose_name="姓名", max_length=20)
     hospital = models.ForeignKey(
         Hospital,
@@ -43,6 +49,7 @@ class Kol(models.Model):
     rating_infl = models.IntegerField(choices=RATING_CHOICES, verbose_name="影响力")
     rating_prof = models.IntegerField(choices=RATING_CHOICES, verbose_name="专业度")
     rating_fav = models.IntegerField(choices=RATING_CHOICES, verbose_name="支持度")
+    supervisor = models.CharField(choices=SUPERVISOR_CHOICES,verbose_name="是否博导/硕导", max_length=10)
     titles = models.TextField(verbose_name="头衔&荣誉", blank=True, null=True)
     upload_date = models.DateTimeField(verbose_name="创建日期", default=timezone.now)
     pub_user = models.ForeignKey(

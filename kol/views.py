@@ -55,6 +55,7 @@ def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
     kol_param = params.get("kol")
     prov_param = params.getlist("province")  # 省份可能多选，需要额外处理
+    city_param = params.getlist("city")  # 省份可能多选，需要额外处理
     month_param = params.getlist("month")
 
     # nation_param = params.getlist("nation")  # 国家参数
@@ -76,6 +77,7 @@ def get_param(params):
         "kw": kw_param,
         "kol": kol_param,
         "provinces": prov_param,
+        "cities": city_param,
         "months": month_param,
         # "nations": nation_id_list,
         # "program": prog_param,
@@ -93,18 +95,13 @@ def records(request: request) -> HttpResponse:
     # 如果是管理员，显示全部记录，否则仅显示当前用户上传的记录
     records = records_by_auth(request.user)
 
+    search_condition = Q()
+
     # 根据搜索筛选KOL
     kw = param_dict["kw"]
     if kw is not None:
         kw_list = kw.split(" ")
-
-        search_condition = (
-            Q(kol__name__icontains=kw_list[0])  # 搜索KOL姓名
-            | Q(kol__hospital__name__icontains=kw_list[0])  # 搜索供职医院名称
-            | Q(purpose__icontains=kw_list[0])  # 搜索拜访目标
-            | Q(feedback__icontains=kw_list[0])  # 搜索主要反馈
-        )
-        for k in kw_list[1:]:
+        for k in kw_list:
             search_condition.add(
                 Q(kol__name__icontains=k)  # 搜索KOL姓名
                 | Q(kol__hospital__name__icontains=k)  # 搜索供职医院名称
@@ -113,40 +110,40 @@ def records(request: request) -> HttpResponse:
                 Q.AND,
             )
 
-        search_result = records.filter(search_condition).distinct()
-
-        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
-        sr_ids = [record.id for record in search_result]
-        records = Record.objects.filter(id__in=sr_ids).order_by("-visit_date")
-
-    # 根据Kol筛选Record
-    kol = param_dict["kol"]
-    if kol:
-        records = records.filter(kol__pk=kol)
-
     # 根据省份筛选Record
     provinces = param_dict["provinces"]
     if provinces:
-        records = records.filter(kol__hospital__province__in=provinces)
+        search_condition.add(Q(kol__hospital__province__in=provinces), Q.AND)
+
+    # 根据城市筛选Record
+    cities = param_dict["cities"]
+    if cities:
+        search_condition.add(Q(kol__hospital__city__in=cities), Q.AND)
 
     # 根据月份筛选Record
     months = param_dict["months"]
     if months:
-        visit_date = datetime.datetime.strptime(months[0], "%Y-%m-%d").date()
-        visit_year = visit_date.year
-        visit_month = visit_date.month
-        records_temp = records.filter(
-            visit_date__year=visit_year, visit_date__month=visit_month
-        )
-        for k in months[1:]:
+        search_condition_month = Q()
+        for k in months:
             visit_date = datetime.datetime.strptime(k, "%Y-%m-%d").date()
             visit_year = visit_date.year
             visit_month = visit_date.month
-            records_temp = records_temp | records.filter(
-                visit_date__year=visit_year, visit_date__month=visit_month
+            search_condition_month.add(
+                Q(visit_date__year=visit_year, visit_date__month=visit_month), Q.OR
             )
+        search_condition.add(search_condition_month, Q.AND)
 
-        records = records_temp
+    # 根据Kol筛选Record
+    kol = param_dict["kol"]
+    if kol:
+        search_condition.add(Q(kol__pk=kol), Q.AND)
+
+    # 筛选并删除重复项
+    search_result = records.filter(search_condition).distinct()
+
+    #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+    sr_ids = [record.id for record in search_result]
+    records = Record.objects.filter(id__in=sr_ids).order_by("-visit_date")
 
     paginator = Paginator(records, DISPLAY_LENGTH)
     page = request.GET.get("page")
@@ -162,6 +159,9 @@ def records(request: request) -> HttpResponse:
     filtered_provinces = get_filters(
         qs=records_by_auth(request.user), field="kol__hospital__province"
     )  # 按省份汇总
+    filtered_cities = get_filters(
+        qs=records_by_auth(request.user), field="kol__hospital__city"
+    )  # 按城市汇总
     filtered_months = (
         records_by_auth(request.user)
         .annotate(month=TruncMonth("visit_date"))
@@ -180,6 +180,8 @@ def records(request: request) -> HttpResponse:
         "highlights": param_dict["highlights"],
         "filtered_provinces": filtered_provinces,
         "selected_provinces": param_dict["provinces"],
+        "filtered_cities": filtered_cities,
+        "selected_cities": param_dict["cities"],
         "filtered_months": filtered_months,
         "selected_months": param_dict["months"],
     }
@@ -320,6 +322,7 @@ def export_record(request):
                 "kol__rating_infl",
                 "kol__rating_prof",
                 "kol__rating_fav",
+                "kol__supervisor",
                 "kol__titles",
                 "purpose",
                 "attitude_1",
@@ -347,6 +350,7 @@ def export_record(request):
         "影响力",
         "专业度",
         "支持度",
+        "博导/硕导",
         "头衔&荣誉",
         "拜访目的",
         "观念_EPO浓度\n3_HIF-PHI在疗效保证前提下，刺激产生内源性EPO越接近生理浓度越好\n2_HIF-PHI在疗效保证前提下，EPO浓度无所谓\n1_HIF-PHI治疗，内源性EPO越高，疗效会越好\n0_本次拜访未涉及",
@@ -388,17 +392,14 @@ def kols(request: request) -> HttpResponse:
 
     kols = kols_by_auth(request.user)
 
+    search_condition = Q()
+
     # 根据搜索筛选KOL
     kw = param_dict["kw"]
     if kw is not None:
         kw_list = kw.split(" ")
 
-        search_condition = (
-            Q(name__icontains=kw_list[0])  # 搜索KOL姓名
-            | Q(hospital__name__icontains=kw_list[0])  # 搜索供职医院名称
-            | Q(titles__icontains=kw_list[0])  # 搜索头衔和荣誉
-        )
-        for k in kw_list[1:]:
+        for k in kw_list:
             search_condition.add(
                 Q(name__icontains=k)  # 搜索KOL姓名
                 | Q(hospital__name__icontains=k)  # 搜索供职医院名称
@@ -406,16 +407,23 @@ def kols(request: request) -> HttpResponse:
                 Q.AND,
             )
 
-        search_result = kols.filter(search_condition).distinct()
-
-        #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
-        sr_ids = [kol.id for kol in search_result]
-        kols = Kol.objects.filter(id__in=sr_ids).order_by("name")
-
     # 根据省份筛选Kol
     provinces = param_dict["provinces"]
     if provinces:
-        kols = kols.filter(hospital__province__in=provinces)
+        search_condition = search_condition.add(
+            Q(hospital__province__in=provinces), Q.AND
+        )
+
+    # 根据城市筛选Kol
+    cities = param_dict["cities"]
+    if cities:
+        search_condition = search_condition.add(Q(hospital__city__in=cities), Q.AND)
+
+    search_result = kols.filter(search_condition).distinct()
+
+    #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
+    sr_ids = [kol.id for kol in search_result]
+    kols = Kol.objects.filter(id__in=sr_ids).order_by("name")
 
     paginator = Paginator(kols, DISPLAY_LENGTH)
     page = request.GET.get("page")
@@ -437,6 +445,10 @@ def kols(request: request) -> HttpResponse:
             qs=kols_by_auth(request.user), field="hospital__province"
         ),
         "selected_provinces": param_dict["provinces"],
+        "filtered_cities": get_filters(
+            qs=kols_by_auth(request.user), field="hospital__city"
+        ),
+        "selected_cities": param_dict["cities"],
     }
 
     return render(request, "kol/kols.html", context)
@@ -453,6 +465,7 @@ def create_kol(request):
             rating_infl=int(request.POST.get("rating_infl")),
             rating_prof=int(request.POST.get("rating_prof")),
             rating_fav=int(request.POST.get("rating_fav")),
+            supervisor=request.POST.get("supervisor"),
             titles=request.POST.get("text_title"),
             pub_user=request.user,
         )
@@ -485,6 +498,7 @@ def update_kol(request, pk: int):
         obj.rating_infl = int(request.POST.get("rating_infl"))
         obj.rating_prof = int(request.POST.get("rating_prof"))
         obj.rating_fav = int(request.POST.get("rating_fav"))
+        obj.supervisor = request.POST.get("supervisor")
         obj.titles = request.POST.get("text_title")
         obj.upload_date = timezone.now()
         # obj.pub_user = request.user
@@ -503,6 +517,9 @@ def update_kol(request, pk: int):
             "hospitals": hospitals,
             "filtered_provinces": get_filters(
                 qs=kols_by_auth(request.user), field="hospital__province"
+            ),
+            "filtered_cities": get_filters(
+                qs=kols_by_auth(request.user), field="hospital__city"
             ),
         }
         return render(request, "kol/create_kol.html", context)
@@ -533,6 +550,7 @@ def export_kol(request):
                 "rating_infl",
                 "rating_prof",
                 "rating_fav",
+                "supervisor",
                 "titles",
                 "upload_date",
                 "pub_user__username",
@@ -552,6 +570,7 @@ def export_kol(request):
         "影响力",
         "专业度",
         "支持度",
+        "博导/硕导",
         "头衔&荣誉",
         "上传日期",
         "上传用户",
