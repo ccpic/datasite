@@ -324,6 +324,7 @@ def export_record(request):
                 "kol__rating_fav",
                 "kol__supervisor",
                 "kol__titles",
+                "kol__classification",
                 "purpose",
                 "attitude_1",
                 "attitude_2",
@@ -352,6 +353,7 @@ def export_record(request):
         "支持度",
         "博导/硕导",
         "头衔&荣誉",
+        "客户分型",
         "拜访目的",
         "观念_EPO浓度\n3_HIF-PHI在疗效保证前提下，刺激产生内源性EPO越接近生理浓度越好\n2_HIF-PHI在疗效保证前提下，EPO浓度无所谓\n1_HIF-PHI治疗，内源性EPO越高，疗效会越好\n0_本次拜访未涉及",
         "观念_升速稳定性\n3_Hb升速需适中，1-2g/dl最佳\n2_Hb升速慢点无所谓\n1_Hb需尽快达标，每月＞2g/dl危害不大\n0_本次拜访未涉及",
@@ -467,6 +469,7 @@ def create_kol(request):
             rating_fav=int(request.POST.get("rating_fav")),
             supervisor=request.POST.get("supervisor"),
             titles=request.POST.get("text_title"),
+            classification=request.POST.get("classification"),
             pub_user=request.user,
         )
         try:
@@ -500,6 +503,7 @@ def update_kol(request, pk: int):
         obj.rating_fav = int(request.POST.get("rating_fav"))
         obj.supervisor = request.POST.get("supervisor")
         obj.titles = request.POST.get("text_title")
+        obj.classification = request.POST.get("classification")
         obj.upload_date = timezone.now()
         # obj.pub_user = request.user
 
@@ -552,6 +556,7 @@ def export_kol(request):
                 "rating_fav",
                 "supervisor",
                 "titles",
+                "classification",
                 "upload_date",
                 "pub_user__username",
             )
@@ -572,6 +577,7 @@ def export_kol(request):
         "支持度",
         "博导/硕导",
         "头衔&荣誉",
+        "客户分型",
         "上传日期",
         "上传用户",
     ]

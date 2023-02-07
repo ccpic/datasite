@@ -71,6 +71,14 @@
                         {% else %}
                         <a href="{% url 'kol:update_kol' pk=record.kol.pk %}">{{ record.kol.name}}</a>
                         {% endif %}
+                        <div class = "ui basic {% if record.kol.classification == '学术型' %}blue{% elif record.kol.classification == '临床型' %}red{% endif %} label">
+                            {{ record.kol.classification }}
+                        </div>
+                        {% if record.kol.supervisor == '博士生导师' or record.kol.supervisor == '硕士生导师' %}
+                            <div class = "ui basic blue label">
+                                {{ record.kol.supervisor }}
+                            </div>
+                        {% endif %}
                     </div>
                 </h2>
                 

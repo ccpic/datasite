@@ -46,7 +46,7 @@
 
         <div class="ui{% if request.user_agent.is_mobile %} two {% else %} four{% endif %} cards">
             {% for kol in kols %}
-            <div class="card">
+            <div class="{% if kol.classification == '学术型' %}blue{% elif kol.classification == '临床型' %}red{% endif %} card">
                 <div class="content">
                     <div class="meta" style="float: right">
                         <span>

@@ -47,18 +47,6 @@
                 {% endif %}
             </select>
         </div>
-        {% comment %} <div class="required field">
-            <label>所在科室</label>
-            <div class="ui selection dropdown">
-                <input type="hidden" value="{{ kol.dept }}" name="dept" />
-                <i class="dropdown icon"></i>
-                <div class="default text">请选择科室</div>
-                <div class="menu">
-                    <div class="item" data-value="肾内科">肾内科</div>
-                    <div class="item" data-value="其他科室">其他科室</div>
-                </div>
-            </div>
-        </div> {% endcomment %}
         <div class="required inline field">
             <label>影响力</label>
             <div class="ui star rating" id="rating_star_infl" data-rating="{{ kol.rating_infl }}"></div>
@@ -97,6 +85,19 @@
             >{{ kol.titles }}</textarea>
         </div>
         <div class="ui error message">
+        </div>
+        <div class="required inline field">
+            <label>客户分型</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ kol.classification }}" name="classification" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择</div>
+                <div class="menu">
+                    <div class="item" data-value="学术型">学术型</div>
+                    <div class="item" data-value="临床型">临床型</div>
+                    <div class="item" data-value="未分型">未分型</div>
+                </div>
+            </div>
         </div>
         {% if kol %}
             <button class="ui positive button" type="submit" id="btn_update">更新</button>
@@ -152,15 +153,6 @@
                     },
                 ],
             },
-            supervisor: {
-                identifier: "supervisor",
-                rules: [
-                    {
-                        type: "empty",
-                        prompt: "未选择博导/硕导",
-                    },
-                ],
-            },
             rating_infl: {
                 identifier: "rating_infl",
                 rules: [
@@ -194,6 +186,24 @@
                     {
                         type: "empty",
                         prompt: "未选择支持度",
+                    },
+                ],
+            },
+            supervisor: {
+                identifier: "supervisor",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择博导/硕导",
+                    },
+                ],
+            },
+            classification: {
+                identifier: "classification",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择客户分型",
                     },
                 ],
             },

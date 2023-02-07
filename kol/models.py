@@ -32,10 +32,15 @@ class Hospital(models.Model):
 
 class Kol(models.Model):
     SUPERVISOR_CHOICES = [
-        ("博士生导师","博士生导师"),
-        ("硕士生导师","硕士生导师"),
-        ("非博导/硕导","非博导/硕导"),
-        ("未知","未知"),
+        ("博士生导师", "博士生导师"),
+        ("硕士生导师", "硕士生导师"),
+        ("非博导/硕导", "非博导/硕导"),
+        ("未知", "未知"),
+    ]
+    CLASSFICATION_CHOICES = [
+        ("学术型", "学术型"),
+        ("临床型", "临床型"),
+        ("未分型", "未分型"),
     ]
     name = models.CharField(verbose_name="姓名", max_length=20)
     hospital = models.ForeignKey(
@@ -49,8 +54,13 @@ class Kol(models.Model):
     rating_infl = models.IntegerField(choices=RATING_CHOICES, verbose_name="影响力")
     rating_prof = models.IntegerField(choices=RATING_CHOICES, verbose_name="专业度")
     rating_fav = models.IntegerField(choices=RATING_CHOICES, verbose_name="支持度")
-    supervisor = models.CharField(choices=SUPERVISOR_CHOICES,verbose_name="是否博导/硕导", max_length=10)
+    supervisor = models.CharField(
+        choices=SUPERVISOR_CHOICES, verbose_name="是否博导/硕导", max_length=10
+    )
     titles = models.TextField(verbose_name="头衔&荣誉", blank=True, null=True)
+    classification = models.CharField(
+        choices=CLASSFICATION_CHOICES, verbose_name="客户分型", max_length=3
+    )
     upload_date = models.DateTimeField(verbose_name="创建日期", default=timezone.now)
     pub_user = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, related_name="kol_pub_user"
