@@ -18,7 +18,7 @@ class Hospital(models.Model):
     name = models.CharField(verbose_name="医院名称", max_length=200, unique=True)
     province = models.CharField(max_length=10, verbose_name="省/自治区/直辖市")
     city = models.CharField(max_length=20, verbose_name="城市")
-    decile = models.IntegerField(verbose_name="医院潜力分级")
+    decile = models.IntegerField(verbose_name="医院潜力分级", null=True)
     dsm = models.CharField(max_length=10, verbose_name="当前地区经理", null=True)
 
     class Meta:
@@ -27,7 +27,8 @@ class Hospital(models.Model):
         ordering = ["name"]
 
     def __str__(self):
-        return f"{self.province} {self.city} D{self.decile} {self.name}"
+        decile = "未分级" if self.decile is None else f"D{self.decile}"
+        return f"{self.province} {self.city} {decile} {self.name}"
 
 
 class Kol(models.Model):

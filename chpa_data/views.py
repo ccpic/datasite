@@ -37,7 +37,7 @@ D_MODEL = {
     "CORPORATION": Corporation,
     "MANUF_TYPE": Manuf_type,
     # "FORMULATION": Formulation,
-    # "STRENGTH": Strength,
+    "STRENGTH": Strength,
     "MOLECULE_TC": Molecule_TC,
     "PRODUCT_CORP": Product_Corp,
 }
@@ -54,7 +54,7 @@ D_MULTI_SELECT = {
     "生产企业 (只支持英文)": "CORPORATION",
     "企业类型": "MANUF_TYPE",
     # "剂型": "FORMULATION",
-    # "剂量": "STRENGTH",
+    "剂量": "STRENGTH",
 }
 
 D_SINGLE_SELECT = {

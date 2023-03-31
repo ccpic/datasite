@@ -1703,6 +1703,62 @@ class PlotBubble(GridFigure):
         return self.save()
 
 
+# 继承基本类，饼图类
+class PlotPie(GridFigure):
+    def plot(self, donut: bool = True, donut_title: list = [""]):
+        for j, ax in enumerate(self.axes):
+            df = self.data[j]
+
+            # Prepare the white center circle for Donat shape
+            my_circle = plt.Circle((0, 0), 0.7, color="white")
+
+            df = df.transform(lambda x: x / x.sum())
+            df_mask = []
+            for index, row in df.iterrows():
+                df_mask.append(abs(row[0]))
+
+            # Draw the pie chart
+            wedges, texts, autotexts = ax.pie(
+                df_mask,
+                labels=df.index,
+                autopct="%1.1f%%",
+                pctdistance=0.85,
+                wedgeprops={"linewidth": 3, "edgecolor": "white"},
+                textprops={"family": "Simhei", "fontsize": self.fontsize},
+            )
+
+            for i, pie_wedge in enumerate(wedges):
+                # 如果有指定颜色就颜色，否则按预设列表选取
+                if pie_wedge.get_label() in COLOR_DICT.keys():
+                    color = COLOR_DICT[pie_wedge.get_label()]
+                else:
+                    color = COLOR_LIST[i]
+
+                pie_wedge.set_facecolor(color)
+
+                if df.iloc[i, 0] < 0:
+                    pie_wedge.set_facecolor("white")
+
+            for k, autotext in enumerate(autotexts):
+                autotext.set_color("white")
+                autotext.set_fontsize(self.fontsize)
+                autotext.set_text(self.fmt[j].format(df.iloc[k, 0]))
+                if df.iloc[k, 0] < 0:
+                    autotext.set_color("r")
+
+            if donut:
+                ax.text(
+                    0,
+                    0,
+                    donut_title[j],
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    size=self.fontsize,
+                    fontproperties=MYFONT,
+                )
+                ax.add_artist(my_circle)  # 用白色圆圈覆盖饼图，变成圈图
+
+        return self.save()
 if __name__ == "__main__":
     x = np.linspace(-3, 3, 201)
     y = np.tanh(x) + 0.1 * np.cos(5 * x)

@@ -17,9 +17,9 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-DATE = datetime.datetime(year=2022, month=12, day=1)  # 目标分析月份
+DATE = datetime.datetime(year=2023, month=2, day=1)  # 目标分析月份
 
-PRODUCTS_HAVE_TARGET = ["信立坦", "欣复泰", "欣复泰Pro注射笔", "欣复泰Pro注射液"]  # 有指标的产品
+PRODUCTS_HAVE_TARGET = ["信立坦", "恩那罗", "欣复泰", "欣复泰Pro注射笔", "欣复泰Pro注射液"]  # 有指标的产品
 
 # 该字典为数据库字段名和Django Model的关联
 D_MODEL = {

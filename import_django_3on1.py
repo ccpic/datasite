@@ -35,7 +35,7 @@ def importModel(dict):
 
 
 # 为KOL系统导入医院对象
-def importHp():
+def import_hp():
     from kol.models import Hospital
 
     sql = "SELECT Distinct HP_ID, HP_NAME, PROVINCE, CITY, LEVEL, DSM_NAME From sales where PRODUCT = '信立坦'"
@@ -62,6 +62,20 @@ def importHp():
     Hospital.objects.bulk_create(l)
 
 
+def update_hp():
+    from kol.models import Hospital
+
+    hps = Hospital.objects.all()
+    df = pd.read_excel("test.xlsx", engine="openpyxl")
+    df = df.replace({np.nan: None})
+    print(df)
+    for hp in hps:
+        print(hp.name, hp.decile, df[df["xltid"] == hp.xltid]["decile_enar"].values[0])
+        hp.decile = df[df["xltid"] == hp.xltid]["decile_enar"].values[0]
+        hp.save()
+
+
 if __name__ == "__main__":
-    importModel(D_MODEL)
+    update_hp()
+    # importModel(D_MODEL)
     print("Done!", time.process_time())
