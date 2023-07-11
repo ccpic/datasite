@@ -76,6 +76,6 @@ def update_hp():
 
 
 if __name__ == "__main__":
-    update_hp()
-    # importModel(D_MODEL)
+    # update_hp()
+    importModel(D_MODEL)
     print("Done!", time.process_time())

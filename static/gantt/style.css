@@ -252,6 +252,12 @@
     color: #FFFFFF !important;
 }
 
+.fn-gantt .ganttPink {
+    background-color: #FF6781;
+}
+.fn-gantt .ganttPink .fn-label {
+    color: #FFFFFF !important;
+}
 /* === BOTTOM NAVIGATION === */
 
 .fn-gantt .bottom {

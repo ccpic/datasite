@@ -55,7 +55,7 @@
                     <h3 class="ui center aligned header">{% if tender.only_valid_spec %}▲{% endif %} {{ tender.target }}
                     </h3>
                     {% for spec in tender.get_specs %}
-                    {{ spec }}
+                        {{ spec }}<br />
                     {% endfor %}
                 </td>
                 <td style="width: 100px">
@@ -72,7 +72,11 @@
                     {{ tender.total_value_contract|fix_decimal:0 }}万
                 </td>
                 <td style="width: 70px">{{ tender.tender_begin|date:'Y年m月' }}</td>
-                <td style="width: 50px">{{ tender.tender_period }}年</td>
+                {% if tender.tender_period is None %}
+                    <td style="width: 50px">至{{ tender.tender_end|date:'Y年m月' }}</td>
+                {% else %}
+                    <td style="width: 50px">{{ tender.tender_period }}年</td>
+                {% endif %}
                 {% comment %} <td style="width: 100px">&yen{{ tender.ceiling_price }}</td> {% endcomment %}
                 <td style="width: 30%">
                     {% if tender.bids.all %}

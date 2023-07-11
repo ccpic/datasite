@@ -46,9 +46,10 @@ def import_tender(vol: str):
         "第四轮45品种": "01-05-2021",
         "第五轮62品种": "01-10-2021",
         "第七轮61品种": "01-11-2022",
+        "第八轮40品种": "01-07-2023",
         "第一轮25品种扩围联盟地区": "01-12-2019",
     }
-    df = pd.read_excel("vbp_summary_0721.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_2023.4.13.xlsx", sheet_name="汇总", header=0)
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     df = df.drop_duplicates("药品通用名")
@@ -73,7 +74,7 @@ def import_tender(vol: str):
 
 
 def import_volume(vol: str):
-    df = pd.read_excel("vbp_amount_0721.xlsx", sheet_name="汇总")
+    df = pd.read_excel("vbp_amount_2023.4.13.xlsx", sheet_name="汇总")
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     # df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
@@ -94,7 +95,7 @@ def import_volume(vol: str):
     Volume.objects.bulk_create(l)
 
 
-def import_bid(vol:str):
+def import_bid(vol: str):
 
     D_DELTA = {
         "埃索美拉唑(艾司奥美拉唑)注射剂": {
@@ -169,9 +170,46 @@ def import_bid(vol:str):
             "海南海灵": ["1g"],
             "北大医药": ["1g"],
         },
+        "氨氯地平阿托伐他汀口服常释剂型": {
+            "福建海西": ["5mg/10mg(以氨氯地平/阿托伐他汀计)"],
+            "正大天晴": ["5mg/10mg(以氨氯地平/阿托伐他汀计)"],
+            "华润赛科": ["5mg/10mg(以氨氯地平/阿托伐他汀计)"],
+            "北京嘉林": ["5mg/10mg(以氨氯地平/阿托伐他汀计)"],
+        },
+        "氯沙坦氢氯噻嗪口服常释剂型": {
+            "浙江华海": ["氯沙坦钾50mg和氢氯噻嗪12.5mg"],
+            "乐普医疗": ["氯沙坦钾50mg和氢氯噻嗪12.5mg", "氯沙坦钾100mg和氢氯噻嗪25mg"],
+            "浙江诺得": ["氯沙坦钾100mg和氢氯噻嗪25mg"],
+            "苏州东瑞": ["氯沙坦钾50mg和氢氯噻嗪12.5mg"],
+        },
+        "阿莫西林克拉维酸口服常释剂型": {
+            "鲁南制药": ["0.375g(2:1)"],
+            "湘北威尔曼": ["1g(7:1)"],
+            "瑞阳制药": ["0.375g(2:1)"],
+            "石药集团": ["0.375g(2:1)"],
+            "华北制药": ["0.375g(2:1)"],
+        },
+        "头孢哌酮舒巴坦注射剂": {
+            "苏州东瑞": ["1g(1:1)"],
+            "齐鲁安替": ["1g(1:1)", "2g(1:1)"],
+            "广东金城金素": ["1g(1:1)", "1.5g(1:1)", "2g(1:1)"],
+            "山东润泽": ["1g(1:1)", "2g(1:1)"],
+            "成都倍特": ["1g(1:1)", "2g(1:1)"],
+            "科伦药业": ["1g(1:1)", "2g(1:1)"],
+            "深圳立健": ["1g(1:1)", "2g(1:1)"],
+            "海南合瑞": ["1g(1:1)"],
+            "福安药业": ["1g(1:1)", "1.5g(1:1)", "2g(1:1)"],
+            "苏州二叶": ["1g(1:1)", "2g(1:1)", "3g(1:1)"],
+        },
+        "骨化三醇口服常释剂型": {
+            "四川国为": ["0.25μg", "0.5μg"],
+            "正大制药": ["0.25μg", "0.5μg"],
+            "南京海融": ["0.5μg"],
+            "河南泰丰": ["0.25μg", "0.5μg"],
+        },
     }
 
-    df = pd.read_excel("vbp_summary_0721.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_2023.4.13.xlsx", sheet_name="汇总", header=0)
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     df.fillna("-", inplace=True)
@@ -385,12 +423,12 @@ def import_tc():
 
 if __name__ == "__main__":
     importModel(D_MODEL)
-    # import_tender("第七轮61品种")
-    # import_volume("第七批集采")
-    # import_bid("第七轮61品种")
-    
+    # import_tender("第八轮40品种")
+    # import_volume("第八批集采")
+    # import_bid("第八轮40品种")
+
     # update_tender()
-    
+
     # import_company()
     # import_drug()
     # import_sales()
