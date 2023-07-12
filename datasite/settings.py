@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "policy_feed",
     "kol",
     "django_user_agents",
+    "nrdl_price"
 ]
 
 MIDDLEWARE = [
