@@ -1,6 +1,6 @@
 from django.db import models
 import numpy as np
-from typing import Union
+from typing import Union, Optional
 
 
 class TC1(models.Model):
@@ -80,6 +80,8 @@ class Molecule(models.Model):
     )
 
     class Meta:
+        verbose_name = "通用名"
+        verbose_name_plural = "通用名"
         ordering = ["name_cn"]
 
     def __str__(self) -> str:
@@ -117,6 +119,13 @@ class Subject(models.Model):
         related_name="company_subjects",
     )
 
+    class Meta:
+        verbose_name = "谈判主体"
+        verbose_name_plural = "谈判主体"
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.molecule__name_cn}|{self.molecule__name_en})"
 
 class Negotiation(models.Model):
     TYPE_CHOICES = [
@@ -154,14 +163,14 @@ class Negotiation(models.Model):
         ordering = ["subject__molecule__name_cn", "nego_date"]
 
     def __str__(self) -> str:
-        return f"{self.abbr_name} ({self.full_name})"
+        return f"{self.subject__molecule__name_cn} ({self.year})"
 
     @property
     def year(self) -> int:
         return int(self.date.year)
 
     @property
-    def price_change(self) -> Union[np.nan, float]:
+    def price_change(self) -> Optional[float]:
         try:
             change = self.price_new / self.price_old - 1
         except:
