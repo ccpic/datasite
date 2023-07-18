@@ -17,7 +17,7 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-DATE = datetime.datetime(year=2023, month=5, day=1)  # 目标分析月份
+DATE = datetime.datetime(year=2023, month=6, day=1)  # 目标分析月份
 
 PRODUCTS_HAVE_TARGET = ["信立坦", "恩那罗", "欣复泰", "欣复泰Pro注射笔", "欣复泰Pro注射液"]  # 有指标的产品
 
