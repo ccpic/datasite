@@ -5,20 +5,20 @@ from typing import Union, Optional
 
 class TC1(models.Model):
     code = models.CharField(verbose_name="编码", max_length=1)
-    name_cn = models.CharField(verbose_name="中文名称", max_length=30)
-    name_en = models.CharField(verbose_name="英文名称", max_length=30)
+    name_cn = models.CharField(verbose_name="中文名称", max_length=50)
+    name_en = models.CharField(verbose_name="英文名称", max_length=50)
 
     class Meta:
         ordering = ["code"]
 
     def __str__(self) -> str:
-        return f"{self.code} {self.name_cn}|{self.name_en}"
+        return f"{self.code} {self.name_en}|{self.name_cn}"
 
 
 class TC2(models.Model):
     code = models.CharField(verbose_name="编码", max_length=3)
-    name_cn = models.CharField(verbose_name="中文名称", max_length=30)
-    name_en = models.CharField(verbose_name="英文名称", max_length=30)
+    name_cn = models.CharField(verbose_name="中文名称", max_length=50)
+    name_en = models.CharField(verbose_name="英文名称", max_length=50)
     tc1 = models.ForeignKey(
         TC1,
         verbose_name="TC I",
@@ -30,13 +30,13 @@ class TC2(models.Model):
         ordering = ["code"]
 
     def __str__(self) -> str:
-        return f"{self.code} {self.name_cn}|{self.name_en}"
+        return f"{self.code} {self.name_en}|{self.name_cn}"
 
 
 class TC3(models.Model):
     code = models.CharField(verbose_name="编码", max_length=4)
-    name_cn = models.CharField(verbose_name="中文名称", max_length=30)
-    name_en = models.CharField(verbose_name="英文名称", max_length=30)
+    name_cn = models.CharField(verbose_name="中文名称", max_length=50)
+    name_en = models.CharField(verbose_name="英文名称", max_length=50)
     tc2 = models.ForeignKey(
         TC2,
         verbose_name="TC II",
@@ -48,13 +48,13 @@ class TC3(models.Model):
         ordering = ["code"]
 
     def __str__(self) -> str:
-        return f"{self.code} {self.name_cn}|{self.name_en}"
+        return f"{self.code} {self.name_en}|{self.name_cn}"
 
 
 class TC4(models.Model):
     code = models.CharField(verbose_name="编码", max_length=5)
-    name_cn = models.CharField(verbose_name="中文名称", max_length=30)
-    name_en = models.CharField(verbose_name="英文名称", max_length=30)
+    name_cn = models.CharField(verbose_name="中文名称", max_length=50)
+    name_en = models.CharField(verbose_name="英文名称", max_length=50)
     tc3 = models.ForeignKey(
         TC3,
         verbose_name="TC III",
@@ -66,58 +66,19 @@ class TC4(models.Model):
         ordering = ["code"]
 
     def __str__(self) -> str:
-        return f"{self.code} {self.name_cn}|{self.name_en}"
+        return f"{self.code} {self.name_en}|{self.name_cn}"
 
 
-class Molecule(models.Model):
-    name_cn = models.CharField(verbose_name="中文名称", max_length=50)
-    name_en = models.CharField(verbose_name="英文名称", max_length=50)
+class Subject(models.Model):
+    name = models.CharField(verbose_name="名称", max_length=50)
     tc4 = models.ForeignKey(
         TC4,
         verbose_name="TC IV",
         on_delete=models.CASCADE,
-        related_name="tc4_molecules",
-    )
-
-    class Meta:
-        verbose_name = "通用名"
-        verbose_name_plural = "通用名"
-        ordering = ["name_cn"]
-
-    def __str__(self) -> str:
-        return f"{self.name_cn}|{self.name_en}"
-
-
-class Company(models.Model):
-    full_name = models.CharField(max_length=100, verbose_name="企业全称", unique=True)
-    abbr_name = models.CharField(max_length=50, verbose_name="企业简称")
-    mnc_or_local = models.BooleanField(verbose_name="是否跨国企业")
-
-    class Meta:
-        verbose_name = "制药企业"
-        verbose_name_plural = "制药企业"
-        ordering = ["abbr_name", "full_name"]
-
-    def __str__(self) -> str:
-        return f"{self.abbr_name} ({self.full_name})"
-
-
-class Subject(models.Model):
-    name = formulation = models.CharField(verbose_name="名称", max_length=50)
-    molecule = models.ForeignKey(
-        Molecule,
-        verbose_name="通用名",
-        on_delete=models.CASCADE,
-        related_name="molecule_subjects",
+        related_name="tc4_subjects",
     )
     formulation = models.CharField(verbose_name="剂型", max_length=20)
-    therapy_class = models.CharField(verbose_name="治疗领域", max_length=20)
-    origin_company = models.ForeignKey(
-        Company,
-        verbose_name="原研公司",
-        on_delete=models.CASCADE,
-        related_name="company_subjects",
-    )
+    origin_company = models.CharField(verbose_name="原研公司", max_length=50, null=True, blank=True)
 
     class Meta:
         verbose_name = "谈判主体"
@@ -125,7 +86,8 @@ class Subject(models.Model):
         ordering = ["name"]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.molecule__name_cn}|{self.molecule__name_en})"
+        return f"{self.name} ({self.tc4})"
+
 
 class Negotiation(models.Model):
     TYPE_CHOICES = [
@@ -154,20 +116,20 @@ class Negotiation(models.Model):
         blank=True,
         null=True,
     )
-    dosage_for_price = models.CharField(verbose_name="价格对应规格", max_length=100)
+    dosage_for_price = models.CharField(verbose_name="价格对应规格", max_length=200)
     note = models.TextField(verbose_name="备注", blank=True, null=True)
 
     class Meta:
         verbose_name = "医保谈判"
         verbose_name_plural = "医保谈判"
-        ordering = ["subject__molecule__name_cn", "nego_date"]
+        ordering = ["subject__name", "nego_date"]
 
     def __str__(self) -> str:
-        return f"{self.subject__molecule__name_cn} ({self.year})"
+        return f"{self.subject} ({self.year})"
 
     @property
     def year(self) -> int:
-        return int(self.date.year)
+        return int(self.nego_date.year)
 
     @property
     def price_change(self) -> Optional[float]:
