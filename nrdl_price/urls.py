@@ -4,5 +4,5 @@ from . import views
 
 app_name = "nrdl_price"
 urlpatterns = [
-    path("negos", views.negos, name="negos"),
+    path("index", views.subjects, name="subjects"),
 ]

@@ -42,6 +42,7 @@ D_MULTI_SELECT = {
     "城市": "CITY",
     "区县": "COUNTY",
     "潜力分位": "DECILE",
+    # "经营类型": "OUTSOURCE"
     # "医院": "HOSPITAL",
     # "信立坦销售状态": "STATUS",
 }

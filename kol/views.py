@@ -37,18 +37,20 @@ def kols_by_auth(user: User):
             return Kol.objects.all().order_by("name")
         else:
             return Kol.objects.filter(pub_user=user)
+    elif user.groups.filter(name="医学顾问").exists():
+        return Kol.objects.all().order_by("name")
     else:
         return Kol.objects.none()
 
 
 def get_filters(qs: QuerySet, field: str):
-    all_provinces = (
+    all_records = (
         qs.values(field)
         .order_by(field)
         .annotate(count=Count(field))
         .order_by(F("count").desc())
     )
-    return all_provinces
+    return all_records
 
 
 def get_param(params):

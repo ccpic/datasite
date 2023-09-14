@@ -1,14 +1,25 @@
 from django.shortcuts import HttpResponse, redirect, render, reverse
 from django.http import request
-from .models import Negotiation
+from .models import Subject, Subject
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Count, F, Q, QuerySet
+from datetime import datetime
+
+
+def get_filters(qs: QuerySet, field: str):
+    all_records = (
+        qs.values(field)
+        .order_by(field)
+        .annotate(count=Count(field))
+        .order_by(F("count").desc())
+    )
+    return all_records
+
 
 def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
-    kol_param = params.get("kol")
-    prov_param = params.getlist("province")  # 省份可能多选，需要额外处理
+    year_param = params.getlist("year")  # 年份可能多选，需要额外处理
     city_param = params.getlist("city")  # 省份可能多选，需要额外处理
     month_param = params.getlist("month")
 
@@ -29,8 +40,7 @@ def get_param(params):
 
     context = {
         "kw": kw_param,
-        "kol": kol_param,
-        "provinces": prov_param,
+        "years": [datetime.strptime(year, "%Y-%m-%d").date() for year in year_param],
         "cities": city_param,
         "months": month_param,
         # "nations": nation_id_list,
@@ -40,34 +50,46 @@ def get_param(params):
 
     return context
 
+
 DISPLAY_LENGTH = 10
 
+
 @login_required
-def negos(request: request) -> HttpResponse:
+def subjects(request: request) -> HttpResponse:
     print(request.GET)
     param_dict = get_param(request.GET)
 
-    negos = Negotiation.objects.all()
-    
+    subjects = Subject.objects.all()
+
     search_condition = Q()
 
-    # # 根据搜索筛选KOL
-    # kw = param_dict["kw"]
-    # if kw is not None:
-    #     kw_list = kw.split(" ")
-    #     for k in kw_list:
-    #         search_condition.add(
-    #             Q(kol__name__icontains=k)  # 搜索KOL姓名
-    #             | Q(kol__hospital__name__icontains=k)  # 搜索供职医院名称
-    #             | Q(purpose__icontains=k)  # 搜索拜访目标
-    #             | Q(feedback__icontains=k),  # 搜索主要反馈
-    #             Q.AND,
-    #         )
+    # 根据搜索筛选KOL
+    kw = param_dict["kw"]
 
-    # # 根据省份筛选Record
-    # provinces = param_dict["provinces"]
-    # if provinces:
-    #     search_condition.add(Q(kol__hospital__province__in=provinces), Q.AND)
+    if kw is not None:
+        kw_list = kw.split(" ")
+        for k in kw_list:
+            search_condition.add(
+                Q(name__icontains=k)  # 品种名称
+                | Q(tc4__code__icontains=k)  # tc4 code
+                | Q(tc4__name_cn__icontains=k)  # tc4 中文名
+                | Q(tc4__name_en__icontains=k)  # tc4 英文名
+                | Q(tc4__tc3__code__icontains=k)  # tc3 code
+                | Q(tc4__tc3__name_cn__icontains=k)  # tc3 中文名
+                | Q(tc4__tc3__name_en__icontains=k)  # tc3 英文名
+                | Q(tc4__tc3__tc2__code__icontains=k)  # tc2 code
+                | Q(tc4__tc3__tc2__name_cn__icontains=k)  # tc2 中文名
+                | Q(tc4__tc3__tc2__name_en__icontains=k)  # tc2 英文名
+                | Q(tc4__tc3__tc2__tc1__code__icontains=k)  # tc1 code
+                | Q(tc4__tc3__tc2__tc1__name_cn__icontains=k)  # tc1 中文名
+                | Q(tc4__tc3__tc2__tc1__name_en__icontains=k),  # tc1 英文名
+                Q.AND,
+            )
+
+    # 根据年份筛选Record
+    years = param_dict["years"]
+    if years:
+        search_condition.add(Q(subject_negotiations__nego_date__in=years), Q.AND)
 
     # # 根据城市筛选Record
     # cities = param_dict["cities"]
@@ -93,13 +115,13 @@ def negos(request: request) -> HttpResponse:
     #     search_condition.add(Q(kol__pk=kol), Q.AND)
 
     # 筛选并删除重复项
-    search_result = negos.filter(search_condition).distinct()
+    search_result = subjects.filter(search_condition).distinct()
 
     #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
     sr_ids = [nego.id for nego in search_result]
-    negos = Negotiation.objects.filter(id__in=sr_ids).order_by("subject__name")
+    subjects = Subject.objects.filter(id__in=sr_ids).order_by("name")
 
-    paginator = Paginator(negos, DISPLAY_LENGTH)
+    paginator = Paginator(subjects, DISPLAY_LENGTH)
     page = request.GET.get("page")
 
     try:
@@ -109,10 +131,10 @@ def negos(request: request) -> HttpResponse:
     except EmptyPage:
         rows = paginator.page(paginator.num_pages)
 
-    # # 根据不同维度汇总记录数
-    # filtered_provinces = get_filters(
-    #     qs=records_by_auth(request.user), field="kol__hospital__province"
-    # )  # 按省份汇总
+    # 根据不同维度汇总记录数
+    filtered_years = get_filters(
+        qs=subjects, field="subject_negotiations__nego_date"
+    )  # 按年份汇总
     # filtered_cities = get_filters(
     #     qs=records_by_auth(request.user), field="kol__hospital__city"
     # )  # 按城市汇总
@@ -124,20 +146,21 @@ def negos(request: request) -> HttpResponse:
     #     .order_by(F("month").desc())
     # )  # 按拜访月份汇总
 
+    print(filtered_years, param_dict["years"])
     context = {
-        "negos": rows,
+        "subjects": rows,
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
-        # "kw": param_dict["kw"],
+        "kw": param_dict["kw"],
         # "kol": Kol.objects.get(pk=int(param_dict["kol"])) if kol else None,
         # "highlights": param_dict["highlights"],
-        # "filtered_provinces": filtered_provinces,
-        # "selected_provinces": param_dict["provinces"],
+        "filtered_years": filtered_years,
+        "selected_years": param_dict["years"],
         # "filtered_cities": filtered_cities,
         # "selected_cities": param_dict["cities"],
         # "filtered_months": filtered_months,
         # "selected_months": param_dict["months"],
     }
 
-    return render(request, "nrdl_price/negos.html", context)
+    return render(request, "nrdl_price/subjects.html", context)

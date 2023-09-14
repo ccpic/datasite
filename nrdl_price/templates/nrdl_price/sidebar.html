@@ -3,7 +3,6 @@
 
 <div class="ui container">
     <div class="ui fluid buttons">
-        <a class="ui primary button" id="create_record" href="{% url 'kol:create_record' %}">新增</a>
         <a class="ui basic primary button" id="export_record" href="{% url 'kol:export_record' %}">导出</a>
     </div>
     <div class="ui hidden divider"></div>
@@ -11,7 +10,7 @@
         <h3 class="ui header">
             搜索
         </h3>
-        <form method="get" action="{% url 'kol:records' %}" class="ui fluid form">
+        <form method="get" action="{% url 'nrdl_price:subjects' %}" class="ui fluid form">
             {% csrf_token %}
             <div class="field">
                 <div class="ui action input">
@@ -23,18 +22,18 @@
     </div>
     <div class="ui red vertical segment">
         <h3 class="ui header">
-            省份
+            谈判年份
         </h3>
         <div class="ui labels">
-            {% for prov in filtered_provinces %}
-                {% if prov.kol__hospital__province in selected_provinces %}
-                    <a class="ui red label" href="{% url 'kol:records' %}?{% add_query_params request province=prov.kol__hospital__province %}">
-                        {{ prov.kol__hospital__province }} <div class="detail">({{ prov.count }})</div>
+            {% for year in filtered_years %}
+                {% if year.subject_negotiations__nego_date in selected_years %}
+                    <a class="ui red label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request year=year.subject_negotiations__nego_date %}">
+                        {{ year.subject_negotiations__nego_date|date:"Y" }} <div class="detail">({{ year.count }})</div>
                         <i class="delete icon"></i>
                     </a>
                 {% else %}
-                    <a class="ui label" href="{% url 'kol:records' %}?{% add_query_params request province=prov.kol__hospital__province %}">
-                        {{ prov.kol__hospital__province }} <div class="detail">({{ prov.count }})</div>
+                    <a class="ui label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request year=year.subject_negotiations__nego_date %}">
+                        {{ year.subject_negotiations__nego_date|date:"Y"}} <div class="detail">({{ year.count }})</div>
                     </a>
                 {% endif %}
             {% endfor %}

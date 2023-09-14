@@ -1,0 +1,152 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "nrdl_price/index.html" %}
+{% load humanize %}
+{% load tags %}
+
+{% block title %}NRDL谈判数据{% endblock title %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+<!-- 写入 base.html 中定义的 body content -->
+{% block display %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    {% if subjects %}
+    <div class="ui dividing header">
+        <a href="{% url 'nrdl_price:subjects' %}">所有品种</a>
+        {% if kw %}
+            <a class="ui basic blue label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request kw=kw %}">
+                搜索关键字: {{ kw }}
+                <i class="delete icon"></i>
+            </a>
+        {% endif %}
+        {% if kol %}
+            <a class="ui basic green label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request kol=kol.pk %}">
+                KOL: {{ kol }}
+                <i class="delete icon"></i>
+            </a>
+        {% endif %}
+        {% if selected_years  %}
+            {% for year in selected_years %}
+                <a class="ui basic red label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request year=year %}">
+                    谈判年份: {{ year|date:"Y" }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
+        {% if selected_cities  %}
+        {% for city in selected_cities %}
+            <a class="ui basic violet label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request city=city %}">
+                城市: {{ city }}
+                <i class="delete icon"></i>
+            </a>
+        {% endfor %}
+    {% endif %}
+        {% if selected_months  %}
+        {% for month in selected_months %}
+            <a class="ui basic purple label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request month=month %}">
+                年月: {{ month|slice:7 }}
+                <i class="delete icon"></i>
+            </a>
+        {% endfor %}
+    {% endif %}
+        <span> - 当前显示第
+            {{ subjects.start_index }}-{{ subjects.end_index }} of {{ record_n }}个品种
+        </span>
+    </div>
+    <div class="ui one column grid">
+        <div class="column">
+            {% for subject in subjects %}
+                <div class="ui segment">
+                    <div class="ui top left attached large label">{{ subject.name}}</div>
+                    <div class="ui four cards">
+                        {% for nego in subject.subject_negotiations.all %}
+                        <div class="card">
+                            <div class="content">
+                                <div class="header">
+                                    {% if nego.new_indication %}
+                                        <div class="right floated" data-tooltip="适应症改变">
+                                            <i class="red info circle icon"></i>
+                                        </div>
+                                    {% endif %}
+                                    ¥{{ nego.price_new|fix_decimal:2 }}</div>
+                                <div class="meta">
+                                    <P>{{ nego.price_change|percentage:1 }}</P>
+                                </div>
+                                <div class="description">
+                                    {{ nego.dosage_for_price }}
+                                </div>
+                            </div>
+                            <div class="extra content">
+                                <span>
+                                <i class="{% if nego.nego_type == '续约' %}redo{% else %}check{% endif %} icon"></i>
+                                {{ nego.nego_date|date:"Y" }}年{{ nego.nego_type }}
+                                </span>
+                            </div>
+                            <div class="extra content">
+                                <i class="calendar alternate icon"></i>
+                                <span>
+                                    {{ nego.reimbursement_start|date:"Y-m" }}至{{ nego.reimbursement_end|date:"Y-m" }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>  
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="ui hidden divider"></div>
+
+    <div class="ui pagination menu">
+        <a class="item" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request page=1 %}">&lt;&lt;</a>
+
+        {% if subjects.number|add:'-4' > 1 %}
+        <a class="item"
+            href="{% url 'nrdl_price:subjects' %}?{% add_query_params request page=subjects.number|add:'-5' %}">&hellip;</a>
+        {% endif %}
+
+
+        {% for n in num_pages|times %}
+        {% if n == subjects.number %}
+        <span class="active item"
+            href="{% url 'nrdl_price:subjects' %}?{% add_query_params request page=n %}">{{ n }}</span>
+        {% elif n > subjects.number|add:'-5' and n < subjects.number|add:'5' %}
+        <a class="item" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request page=n %}">{{ n }}</a>
+        {% endif %}
+        {% endfor %}
+
+
+        {% if num_pages > subjects.number|add:'4' %}
+        <a class="item"
+            href="{% url 'nrdl_price:subjects' %}?{% add_query_params request page=subjects.number|add:'5' %}">&hellip;</a>
+        {% endif %}
+
+        <a class="item"
+            href="{% url 'nrdl_price:subjects' %}?{% add_query_params request page=num_pages %}">&gt;&gt;</a>
+    </div>
+    {% else %}
+    <div class="ui error message">
+        没有搜索到符合条件的品种，返回<a href="{% url 'nrdl_price:subjects' %}">所有品种</a>
+    </div>
+    {% endif %}
+</div>
+<div class="ui hidden divider"></div>
+
+<style>
+    .highlight_kw {
+        background-color: #FFEFC5;
+    }
+</style>
+
+<script>
+    $(document).ready(function(){
+        $(".rating").rating('disable');
+    });
+
+</script>
+{% endblock display %}

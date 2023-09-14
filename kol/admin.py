@@ -41,6 +41,7 @@ class RecordAdmin(admin.ModelAdmin):
         "kol__name",
         "kol__hospital__xltid",
         "kol__hospital__name",
+        'user__username'
     ]
 
     # inlines = [
