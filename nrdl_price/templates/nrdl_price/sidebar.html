@@ -25,7 +25,7 @@
             谈判年份
         </h3>
         <div class="ui labels">
-            {% for year in filtered_years %}
+            {% for year in qs_years %}
                 {% if year.subject_negotiations__nego_date in selected_years %}
                     <a class="ui red label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request year=year.subject_negotiations__nego_date %}">
                         {{ year.subject_negotiations__nego_date|date:"Y" }} <div class="detail">({{ year.count }})</div>
@@ -41,18 +41,18 @@
     </div>
     <div class="ui violet vertical segment">
         <h3 class="ui header">
-            城市
+            TC I
         </h3>
         <div class="ui labels">
-            {% for city in filtered_cities %}
-                {% if city.kol__hospital__city in selected_cities %}
-                    <a class="ui violet label" href="{% url 'kol:records' %}?{% add_query_params request city=city.kol__hospital__city %}">
-                        {{ city.kol__hospital__city }} <div class="detail">({{ city.count }})</div>
+            {% for tc1 in qs_tc1s %}
+                {% if tc1.tc4__tc3__tc2__tc1__name_cn in selected_tc1s %}
+                    <a class="ui violet label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request tc1=tc1.tc4__tc3__tc2__tc1__name_cn %}">
+                        {{ tc1.tc4__tc3__tc2__tc1__name_cn }} <div class="detail">({{ tc1.count }})</div>
                         <i class="delete icon"></i>
                     </a>
                 {% else %}
-                    <a class="ui label" href="{% url 'kol:records' %}?{% add_query_params request city=city.kol__hospital__city %}">
-                        {{ city.kol__hospital__city }} <div class="detail">({{ city.count }})</div>
+                    <a class="ui label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request tc1=tc1.tc4__tc3__tc2__tc1__name_cn %}">
+                        {{ tc1.tc4__tc3__tc2__tc1__name_cn }} <div class="detail">({{ tc1.count }})</div>
                     </a>
                 {% endif %}
             {% endfor %}
@@ -60,18 +60,18 @@
     </div>
     <div class="ui purple vertical segment">
         <h3 class="ui header">
-            拜访日期
+            TC II
         </h3>
         <div class="ui labels">
-            {% for month in filtered_months %}
-                {% if month.month|date:"Y-m-d" in selected_months %}
-                    <a class="ui purple label" href="{% url 'kol:records' %}?{% add_query_params request month=month.month %}">
-                        {{ month.month|date:"Y-m" }} <div class="detail">({{ month.count }})</div>
+            {% for tc2 in qs_tc2s %}
+                {% if tc2.tc4__tc3__tc2__name_cn in selected_tc2s %}
+                    <a class="ui purple label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request tc2=tc2.tc4__tc3__tc2__name_cn %}">
+                        {{ tc2.tc4__tc3__tc2__name_cn }} <div class="detail">({{ tc2.count }})</div>
                         <i class="delete icon"></i>
                     </a>
                 {% else %}
-                    <a class="ui label" href="{% url 'kol:records' %}?{% add_query_params request month=month.month %}">
-                        {{ month.month|date:"Y-m" }} <div class="detail">({{ month.count }})</div>
+                    <a class="ui label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request tc2=tc2.tc4__tc3__tc2__name_cn %}">
+                        {{ tc2.tc4__tc3__tc2__name_cn }} <div class="detail">({{ tc2.count }})</div>
                     </a>
                 {% endif %}
             {% endfor %}

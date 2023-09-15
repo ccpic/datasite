@@ -3,11 +3,12 @@ from django.http import request
 from .models import Subject, Subject
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Count, F, Q, QuerySet
+from django.db.models import Case, When, Value, Count, CharField, F, Q, QuerySet
 from datetime import datetime
 
 
 def get_filters(qs: QuerySet, field: str):
+    print(qs.values(field))
     all_records = (
         qs.values(field)
         .order_by(field)
@@ -19,14 +20,9 @@ def get_filters(qs: QuerySet, field: str):
 
 def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
-    year_param = params.getlist("year")  # 年份可能多选，需要额外处理
-    city_param = params.getlist("city")  # 省份可能多选，需要额外处理
-    month_param = params.getlist("month")
-
-    # nation_param = params.getlist("nation")  # 国家参数
-    # nation_id_list = get_id_list(nation_param)
-
-    # prog_param = params.get("program")  # 栏目参数
+    year_param = params.getlist("year")  # 年份
+    tc1_param = params.getlist("tc1")  # tc1
+    tc2_param = params.getlist("tc2")  # tc2
 
     # 下面部分准备所有高亮关键字
     highlights = {}
@@ -41,10 +37,8 @@ def get_param(params):
     context = {
         "kw": kw_param,
         "years": [datetime.strptime(year, "%Y-%m-%d").date() for year in year_param],
-        "cities": city_param,
-        "months": month_param,
-        # "nations": nation_id_list,
-        # "program": prog_param,
+        "tc1s": tc1_param,
+        "tc2s": tc2_param,
         "highlights": highlights,
     }
 
@@ -91,28 +85,15 @@ def subjects(request: request) -> HttpResponse:
     if years:
         search_condition.add(Q(subject_negotiations__nego_date__in=years), Q.AND)
 
-    # # 根据城市筛选Record
-    # cities = param_dict["cities"]
-    # if cities:
-    #     search_condition.add(Q(kol__hospital__city__in=cities), Q.AND)
+    # 根据TC1筛选Record
+    tc1s = param_dict["tc1s"]
+    if tc1s:
+        search_condition.add(Q(tc4__tc3__tc2__tc1__name_cn__in=tc1s), Q.AND)
 
-    # # 根据月份筛选Record
-    # months = param_dict["months"]
-    # if months:
-    #     search_condition_month = Q()
-    #     for k in months:
-    #         visit_date = datetime.datetime.strptime(k, "%Y-%m-%d").date()
-    #         visit_year = visit_date.year
-    #         visit_month = visit_date.month
-    #         search_condition_month.add(
-    #             Q(visit_date__year=visit_year, visit_date__month=visit_month), Q.OR
-    #         )
-    #     search_condition.add(search_condition_month, Q.AND)
-
-    # # 根据Kol筛选Record
-    # kol = param_dict["kol"]
-    # if kol:
-    #     search_condition.add(Q(kol__pk=kol), Q.AND)
+    # 根据TC2筛选Record
+    tc2s = param_dict["tc2s"]
+    if tc2s:
+        search_condition.add(Q(tc4__tc3__tc2__name_cn__in=tc2s), Q.AND)
 
     # 筛选并删除重复项
     search_result = subjects.filter(search_condition).distinct()
@@ -132,35 +113,29 @@ def subjects(request: request) -> HttpResponse:
         rows = paginator.page(paginator.num_pages)
 
     # 根据不同维度汇总记录数
-    filtered_years = get_filters(
+    qs_years = get_filters(
         qs=subjects, field="subject_negotiations__nego_date"
     )  # 按年份汇总
-    # filtered_cities = get_filters(
-    #     qs=records_by_auth(request.user), field="kol__hospital__city"
-    # )  # 按城市汇总
-    # filtered_months = (
-    #     records_by_auth(request.user)
-    #     .annotate(month=TruncMonth("visit_date"))
-    #     .values("month")
-    #     .annotate(count=Count("id"))
-    #     .order_by(F("month").desc())
-    # )  # 按拜访月份汇总
 
-    print(filtered_years, param_dict["years"])
+    qs_years = qs_years.order_by("subject_negotiations__nego_date")  # 按年份从早到晚排序
+
+    qs_tc1s = get_filters(qs=subjects, field="tc4__tc3__tc2__tc1__name_cn")  # 按TC1汇总
+
+    qs_tc2s = get_filters(qs=subjects, field="tc4__tc3__tc2__name_cn")  # 按TC2汇总
+
     context = {
         "subjects": rows,
         "num_pages": paginator.num_pages,
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
-        # "kol": Kol.objects.get(pk=int(param_dict["kol"])) if kol else None,
         # "highlights": param_dict["highlights"],
-        "filtered_years": filtered_years,
+        "qs_years": qs_years,
         "selected_years": param_dict["years"],
-        # "filtered_cities": filtered_cities,
-        # "selected_cities": param_dict["cities"],
-        # "filtered_months": filtered_months,
-        # "selected_months": param_dict["months"],
+        "qs_tc1s": qs_tc1s,
+        "selected_tc1s": param_dict["tc1s"],
+        "qs_tc2s": qs_tc2s,
+        "selected_tc2s": param_dict["tc2s"],
     }
 
     return render(request, "nrdl_price/subjects.html", context)

@@ -37,22 +37,22 @@
                 </a>
             {% endfor %}
         {% endif %}
-        {% if selected_cities  %}
-        {% for city in selected_cities %}
-            <a class="ui basic violet label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request city=city %}">
-                城市: {{ city }}
-                <i class="delete icon"></i>
-            </a>
-        {% endfor %}
-    {% endif %}
-        {% if selected_months  %}
-        {% for month in selected_months %}
-            <a class="ui basic purple label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request month=month %}">
-                年月: {{ month|slice:7 }}
-                <i class="delete icon"></i>
-            </a>
-        {% endfor %}
-    {% endif %}
+        {% if selected_tc1s  %}
+            {% for tc1 in selected_tc1s %}
+                <a class="ui basic violet label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request tc1=tc1 %}">
+                    TC I: {{ tc1 }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
+        {% if selected_tc2s  %}
+            {% for tc2 in selected_tc2s %}
+                <a class="ui basic purple label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request tc2=tc2 %}">
+                    TC II: {{ tc2 }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
         <span> - 当前显示第
             {{ subjects.start_index }}-{{ subjects.end_index }} of {{ record_n }}个品种
         </span>
