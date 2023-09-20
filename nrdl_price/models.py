@@ -83,7 +83,7 @@ class Subject(models.Model):
     class Meta:
         verbose_name = "谈判主体"
         verbose_name_plural = "谈判主体"
-        ordering = ["name"]
+        ordering = ["tc4__code", "name"]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.tc4})"

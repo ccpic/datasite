@@ -28,6 +28,8 @@ def get_param(params):
     year_param = params.getlist("year")  # 年份
     tc1_param = params.getlist("tc1")  # tc1
     tc2_param = params.getlist("tc2")  # tc2
+    ni_param = params.get("new_indication") # 适应症改变
+    ne_param = params.get("no_exclusive") # 非独家品种
 
     # 下面部分准备所有高亮关键字
     highlights = {}
@@ -44,6 +46,8 @@ def get_param(params):
         "years": [datetime.strptime(year, "%Y-%m-%d").date() for year in year_param],
         "tc1s": tc1_param,
         "tc2s": tc2_param,
+        "new_indication": True if ni_param == "True" else None,
+        "no_exclusive": True if ne_param == "True" else None,
         "highlights": highlights,
     }
 
@@ -100,12 +104,26 @@ def subjects(request: request) -> HttpResponse:
     if tc2s:
         search_condition.add(Q(tc4__tc3__tc2__name_cn__in=tc2s), Q.AND)
 
+    # 筛选适应症改变品种的Record
+    new_indication = param_dict["new_indication"]
+    if new_indication:
+        search_condition.add(
+            Q(subject_negotiations__new_indication=new_indication), Q.AND
+        )
+        
+    # 筛选非独家品种
+    no_exclusive= param_dict["no_exclusive"]
+    if no_exclusive:
+        search_condition.add(
+            Q(subject_negotiations__is_exclusive=False), Q.AND
+        )
+
     # 筛选并删除重复项
     search_result = subjects.filter(search_condition).distinct()
 
     #  下方两行代码为了克服MSSQL数据库和Django pagination在distinct(),order_by()等queryset时出现重复对象的bug
     sr_ids = [nego.id for nego in search_result]
-    subjects = Subject.objects.filter(id__in=sr_ids).order_by("name")
+    subjects = Subject.objects.filter(id__in=sr_ids).order_by("tc4__code", "name")
 
     paginator = Paginator(subjects, DISPLAY_LENGTH)
     page = request.GET.get("page")
@@ -128,6 +146,14 @@ def subjects(request: request) -> HttpResponse:
 
     qs_tc2s = get_filters(qs=subjects, field="tc4__tc3__tc2__name_cn")  # 按TC2汇总
 
+    qs_new_indication = get_filters(
+        qs=subjects, field="subject_negotiations__new_indication"
+    )  # 按是否适应症改变
+
+    qs_is_exclusive = get_filters(
+        qs=subjects, field="subject_negotiations__is_exclusive"
+    )  # 按是否独家品种
+
     context = {
         "subjects": rows,
         "num_pages": paginator.num_pages,
@@ -141,6 +167,10 @@ def subjects(request: request) -> HttpResponse:
         "selected_tc1s": param_dict["tc1s"],
         "qs_tc2s": qs_tc2s,
         "selected_tc2s": param_dict["tc2s"],
+        "qs_new_indication": qs_new_indication,
+        "selected_new_indication": param_dict["new_indication"],
+        "qs_is_exclusive": qs_is_exclusive,
+        "selected_no_exclusive": param_dict["no_exclusive"],
     }
 
     return render(request, "nrdl_price/subjects.html", context)

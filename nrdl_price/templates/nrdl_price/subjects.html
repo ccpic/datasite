@@ -23,9 +23,15 @@
                 <i class="delete icon"></i>
             </a>
         {% endif %}
-        {% if kol %}
-            <a class="ui basic green label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request kol=kol.pk %}">
-                KOL: {{ kol }}
+        {% if selected_new_indication %}
+            <a class="ui basic orange label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request new_indication=True %}">
+                特殊品种: 适应症改变
+                <i class="delete icon"></i>
+            </a>
+        {% endif %}
+        {% if selected_no_exclusive %}
+            <a class="ui basic orange label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request no_exclusive=True %}">
+                特殊品种: 非独家品种
                 <i class="delete icon"></i>
             </a>
         {% endif %}

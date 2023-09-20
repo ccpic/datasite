@@ -20,6 +20,41 @@
             </div>
         </form>
     </div>
+    <div class="ui orange vertical segment">
+        <h3 class="ui header">
+            特殊品种
+        </h3>
+        <div class="ui labels">
+            {% for ni in qs_new_indication %}
+                {% if ni.subject_negotiations__new_indication == True %}
+                    {% if selected_new_indication == True %}
+                        <a class="ui orange label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request new_indication=True %}">
+                            适应症改变 <div class="detail">({{ ni.count }})</div>
+                            <i class="delete icon"></i>
+                        </a>
+                    {% else %}
+                        <a class="ui label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request new_indication=True %}">
+                            适应症改变 <div class="detail">({{ ni.count }})</div>
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            {% for ne in qs_is_exclusive %}
+                {% if ne.subject_negotiations__is_exclusive == False %}
+                    {% if selected_no_exclusive == True %}
+                        <a class="ui orange label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request no_exclusive=True %}">
+                            非独家品种 <div class="detail">({{ ne.count }})</div>
+                            <i class="delete icon"></i>
+                        </a>
+                    {% else %}
+                        <a class="ui label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request no_exclusive=True %}">
+                            非独家品种 <div class="detail">({{ ne.count }})</div>
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
     <div class="ui red vertical segment">
         <h3 class="ui header">
             谈判年份
@@ -33,7 +68,7 @@
                     </a>
                 {% else %}
                     <a class="ui label" href="{% url 'nrdl_price:subjects' %}?{% add_query_params request year=year.subject_negotiations__nego_date %}">
-                        {{ year.subject_negotiations__nego_date|date:"Y"}} <div class="detail">({{ year.count }})</div>
+                        {{ year.subject_negotiations__nego_date|date:"Y" }} <div class="detail">({{ year.count }})</div>
                     </a>
                 {% endif %}
             {% endfor %}
