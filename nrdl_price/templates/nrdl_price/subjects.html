@@ -61,7 +61,8 @@
         <div class="column">
             {% for subject in subjects %}
                 <div class="ui segment">
-                    <div class="ui top left attached large label">{{ subject.name}}</div>
+                    <div class="ui top left attached large label">{{ subject.name}} ({{ subject.tc4.code }} {{ subject.tc4.name_cn }})</div>
+                    
                     <div class="ui four cards">
                         {% for nego in subject.subject_negotiations.all %}
                         <div class="card">

@@ -15,10 +15,10 @@ D_BOOLEAN = {"是": True, "否": False}
 def import_nego():
     from nrdl_price.models import TC1, TC2, TC3, TC4, Subject, Negotiation
 
-    df = pd.read_excel("医保谈判品种价格汇总-2017-2022-V1.xlsx")
+    df = pd.read_excel("医保谈判品种价格汇总-2017-2022-V4.xlsx")
     print(df)
     Negotiation.objects.all().delete()
-    for _, row in df.iterrows():
+    for _, row in df.iterrows(): 
         tc1, _ = TC1.objects.get_or_create(
             code=row["TC I"][0],
             name_cn=row["TC I"].split("|")[1],

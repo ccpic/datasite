@@ -1,14 +1,19 @@
 from django.shortcuts import HttpResponse, redirect, render, reverse
 from django.http import request
-from .models import Subject, Subject
+from .models import Negotiation, Subject
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Case, When, Value, Count, CharField, F, Q, QuerySet
 from datetime import datetime
+import pandas as pd
+
+try:
+    from io import BytesIO as IO  # for modern python
+except ImportError:
+    from io import StringIO as IO  # for legacy python
 
 
 def get_filters(qs: QuerySet, field: str):
-    print(qs.values(field))
     all_records = (
         qs.values(field)
         .order_by(field)
@@ -139,3 +144,80 @@ def subjects(request: request) -> HttpResponse:
     }
 
     return render(request, "nrdl_price/subjects.html", context)
+
+
+@login_required()
+def export(request):
+    negos = Negotiation.objects.all()
+    df = pd.DataFrame(
+        list(
+            negos.values(
+                "subject__name",
+                "subject__tc4__tc3__tc2__tc1__code",
+                "subject__tc4__tc3__tc2__tc1__name_cn",
+                "subject__tc4__tc3__tc2__code",
+                "subject__tc4__tc3__tc2__name_cn",
+                "subject__tc4__tc3__code",
+                "subject__tc4__tc3__name_cn",
+                "subject__tc4__code",
+                "subject__tc4__name_cn",
+                "nego_date",
+                "reimbursement_start",
+                "reimbursement_end",
+                "nego_type",
+                "new_indication",
+                "is_exclusive",
+                "price_new",
+                "price_old",
+                "dosage_for_price",
+                "note",
+            )
+        )
+    )
+
+    df.columns = [
+        "谈判品种名称",
+        "TC I编码",
+        "TC I名称",
+        "TC II编码",
+        "TC II名称",
+        "TC III编码",
+        "TC III名称",
+        "TC IV编码",
+        "TC IV名称",
+        "谈判年份",
+        "执行开始",
+        "执行结束",
+        "谈判类型",
+        "是否更高适应症范围",
+        "是否独家品种",
+        "谈判后价格",
+        "谈判前价格",
+        "谈判价格对应剂型",
+        "备注",
+    ]
+
+    df["谈判年份"] = pd.to_datetime(df["谈判年份"])
+    df["谈判年份"] = df["谈判年份"].dt.year
+
+    excel_file = IO()
+
+    xlwriter = pd.ExcelWriter(excel_file, engine="xlsxwriter")
+
+    df.to_excel(xlwriter, "data", index=False)
+
+    xlwriter.save()
+    xlwriter.close()
+
+    excel_file.seek(0)
+
+    # 设置浏览器mime类型
+    response = HttpResponse(
+        excel_file.read(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    # 设置文件名
+    now = datetime.now().strftime("%Y%m%d%H%M%S")
+    response["Content-Disposition"] = "attachment; filename=" + now + ".xlsx"
+    return response
