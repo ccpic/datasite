@@ -1,0 +1,55 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "chpa_data/base.html" %}
+{% load static %}
+
+{% block title %}NRDL谈判药品续约价格模拟器{% endblock title%}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block body %}
+
+<div class="ui hidden divider"></div>
+
+<div class="ui container">
+    <div id="pusher" class="pusher" style="padding-top:50px">
+        <div class="ui pointing secondary menu">
+            <a class="item active" data-tab="calc">NRDL谈判药品续约价格模拟</a>
+            <a class="item" data-tab="doc">NRDL谈判药品续约规则</a>
+        </div>
+        <div class="ui tab segment active" data-tab="calc">
+            {% block display %}{% endblock display %}
+        </div>
+        <div class="ui tab segment" data-tab="doc">
+
+            <iframe src="{% static 'pdf/谈判药品续约规则.pdf' %}" width="100%" height="768"></iframe>
+
+        </div>
+    </div>
+</div>
+
+<script>
+  $('.message .close').click(function(){
+       $(this).closest('.message').transition('fade');
+  });
+</script>
+<script>
+  $('.pointing.secondary.menu .item').tab();
+
+</script>
+<script>
+$('.ui.fluid.dropdown')
+.dropdown({
+  clearable: false
+})
+;
+</script>
+
+{% endblock body %}
+
+
+
+
+

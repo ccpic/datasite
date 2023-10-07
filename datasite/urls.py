@@ -33,6 +33,7 @@ urlpatterns = [
     path("policy_feed/", include("policy_feed.urls")),
     path("kol/", include("kol.urls")),
     path("nrdl_price/", include("nrdl_price.urls")),
+    path("nrdl_renewal/", include("nrdl_renewal.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
 ]

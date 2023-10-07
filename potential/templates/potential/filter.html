@@ -133,10 +133,6 @@
                 data: "city"
             },
             {
-                title: "区县",
-                data: "county"
-            },
-            {
                 title: "地区经理",
                 data: "am"
             },
@@ -171,14 +167,14 @@
         ];
         var columnDefs_table_hp = [{
                 "width": "5%",
-                "targets": [8, 9, 12]
+                "targets": [7, 8, 11]
             }, // 保持表格相对列宽度固定
             {
                 "width": "10%",
-                "targets": [0, 5, 7, 10,11]
+                "targets": [0, 4, 6, 9,10]
             }, // 保持表格相对列宽度固定
             {
-                "targets": [12],
+                "targets": [11],
                 "render": $.fn.dataTable.render.percentBar('square', '#000', '#BCBCBC', '#00bfff',
                     '#E6E6E6', 1, 'ridge')
             }, // 根据一定的色彩方案初始化条形图
@@ -186,7 +182,7 @@
 
         // 终端明细表格太大，采用Ajax服务器端更新数据的方法，因此单独与后端通信
         $("#table_hp").DataTable(
-            initAjaxDataTable(url_table_hp, columns_table_hp, form_data, 10, columnDefs_table_hp)
+            initAjaxDataTable(url_table_hp, columns_table_hp, form_data, 9, columnDefs_table_hp)
         )
 
         var columnDefs_table_pivot = [{

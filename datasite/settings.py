@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     "policy_feed",
     "kol",
     "django_user_agents",
-    "nrdl_price"
+    "nrdl_price",
+    "nrdl_renewal",
 ]
 
 MIDDLEWARE = [

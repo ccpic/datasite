@@ -1,0 +1,133 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "nrdl_renewal/index.html" %}
+{% load static %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block display %}
+
+<div class="ui container">
+  <form class="ui form" action="{% url 'nrdl_renewal:general_catalog' %}" method="post">
+    {% csrf_token %}
+    <div class="ui celled grid">
+      <div class="row">
+        <div class="ui sixteen wide column">
+          <div class="ui unstackable fluid ordered four steps">
+            <div class="active step">
+              <div class="content">
+                <div class="title">是否纳入常规目录</div>
+              </div>
+            </div>
+            <div class="disabled step">
+              <div class="content">
+                <div class="title">简易续约 or 重新谈判？</div>
+              </div>
+            </div>
+            <div class="disabled step">
+              <div class="content">
+                <div class="title">降价幅度计算</div>
+              </div>
+            </div>
+            <div class="disabled step">
+              <div class="content">
+                <div class="title">测算结果</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="ui six wide column">
+          <div class="field" id="field_exclusive">
+              <label>是否独家品种</label>
+              <select class="ui fluid dropdown" name="select_exclusive">
+                <option value="">是否独家品种</option>
+                <option value="独家品种">独家品种</option>
+                <option value="非独家品种">非独家品种</option>
+              </select>
+              <div class="ui pointing label">
+                以国家药监部门批准的同通用名药品数量为准， 截至目录调整当年 6 月 30 日（ 含）
+              </div>
+          </div>
+          <div class="field" id="field_nonchange">
+            <label>连续几个协议期未调整支付标准和支付范围</label>
+            <select class="ui fluid dropdown" name="select_nonchange">
+              <option value="">协议期数</option>
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">>=2</option>
+            </select>
+          </div>
+          <div class="field" id="field_continuous">
+            <label>连续几年纳入谈判目录</label>
+            <select class="ui fluid dropdown" name="select_continuous">
+              <option value="">连续纳入年</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">>=8</option>
+            </select>
+          </div>
+        </div>
+        <div class="ui ten wide column">
+          <img class="ui fluid image" src="{% static 'pdf/纳入常规目录标准.png' %}">
+        </div>
+      </div>
+    </div>
+
+    <div class="ui hidden divider">
+
+    </div>
+    <button type="submit" class="ui blue submit button" name="next">下一步</button>
+    <div class="ui error message"></div>
+  </form>
+</div>
+
+<script>
+$('.ui.form')
+.form({
+    select_exclusive: {
+    identifier  : 'select_exclusive',
+    rules: [
+      {
+        type   : 'empty',
+        prompt : '未选择是否独家品种'
+      },
+    ]
+  },
+  select_nonchange: {
+    identifier  : 'select_nonchange',
+    rules: [
+      {
+        type   : 'empty',
+        prompt : '未选择连续几个协议期未调整支付标准和支付范围'
+      },
+    ]
+  },
+  select_continuous: {
+    identifier  : 'select_continuous',
+    rules: [
+      {
+        type   : 'empty',
+        prompt : '未选择连续几年纳入谈判目录'
+      },
+    ]
+  },
+})
+;
+
+</script>
+
+{% endblock display %}
+
+
+
+
+

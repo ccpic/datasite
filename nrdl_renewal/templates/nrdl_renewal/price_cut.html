@@ -1,0 +1,194 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "nrdl_renewal/index.html" %}
+{% load static %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block display %}
+
+<div class="ui container">
+  <form class="ui form" action="{% url 'nrdl_renewal:price_cut' %}" method="post">
+    {% csrf_token %}
+        <div class="ui celled grid">
+          <div class="row">
+            <div class="ui sixteen wide column">
+              <div class="ui unstackable fluid ordered four steps">
+                <a class="completed step" href="{% url 'nrdl_renewal:index' %}">
+                  <div class="content">
+                    <div class="title">是否纳入常规目录</div>
+                    <div class="description">{{ general_catalog }}</div>
+                  </div>
+                </a>
+                <a class="completed step" href="{% url 'nrdl_renewal:general_catalog' %}">
+                  <div class="content">
+                    <div class="title">简易续约 or 重新谈判？</div>
+                    <div class="description">{{ if_simple }}</div>
+                  </div>
+                </a>
+                <div class="active step">
+                  <div class="content">
+                    <div class="title">降价幅度计算</div>
+                  </div>
+                </div>
+                <div class="disabled step">
+                  <div class="content">
+                    <div class="title">测算结果</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="ui six wide column">
+              <div class="field" id="field_annual">
+                  <label>基金年均实际支出</label>
+                  <select class="ui fluid dropdown" name="select_annual">
+                    <option value="">亿元</option>
+                    <option value="<=2亿元"><=2亿元</option>
+                    <option value="2-10亿元">2-10亿元</option>
+                    <option value="10-20亿元">10-20亿元</option>
+                    <option value="20-40亿元">20-40亿元</option>
+                    <option value=">40亿元">>40亿元</option>
+                  </select>
+              </div>
+              <div class="field" id="field_ratio">
+                <label>基金实际支出/基金支出预算</label>
+                <select class="ui fluid dropdown" name="select_ratio">
+                  <option value="">比值</option>
+                  <option value="<=110%"><=110%</option>
+                  <option value="110%-140%">110%-140%</option>
+                  <option value="140%-170%">140%-170%</option>
+                  <option value="170%-200%">170%-200%</option>
+                </select>
+              </div>
+              <div class="field" id="field_annual_new">
+                <label>调整支付范围——基金年均支出预算增加金额</label>
+                <select class="ui fluid dropdown" name="select_annual_new" id="select_annual_new">
+                  <option value="">亿元</option>
+                  <option value="0">不调整支付范围</option>
+                  <option value="<=2亿元"><=2亿元</option>
+                  <option value="2-10亿元">2-10亿元</option>
+                  <option value="10-20亿元">10-20亿元</option>
+                  <option value="20-40亿元">20-40亿元</option>
+                  <option value=">40亿元">>40亿元</option>
+                </select>
+              </div>
+              <div class="field" id="field_ratio_new">
+                <label>调整支付范围——基金预算增加金额/调整前支出预算和实际支出高者</label>
+                <select class="ui fluid dropdown" name="select_ratio_new" id="select_ratio_new">
+                  <option value="">比值</option>
+                  <option value="0">不调整支付范围</option>
+                  <option value="<=10%"><=10%</option>
+                  <option value="10%-40%">10%-40%</option>
+                  <option value="40%-70%">40%-70%</option>
+                  <option value="70%-100%">70%-100%</option>
+                </select>
+              </div>
+              <div class="field" id="field_continuous">
+                <label>连续几年纳入谈判目录</label>
+                <select class="ui fluid dropdown" name="select_continuous" id="select_continuous">
+                  <option value="">连续纳入年</option>
+                  <option value="1" {% if select_continuous == "1" %}selected{% endif %}>1</option>
+                  <option value="2" {% if select_continuous == "2" %}selected{% endif %}>2</option>
+                  <option value="3" {% if select_continuous == "3" %}selected{% endif %}>3</option>
+                  <option value="4" {% if select_continuous == "4" %}selected{% endif %}>4</option>
+                  <option value="5" {% if select_continuous == "5" %}selected{% endif %}>5</option>
+                  <option value="6" {% if select_continuous == "6" %}selected{% endif %}>6</option>
+                  <option value="7" {% if select_continuous == "7" %}selected{% endif %}>7</option>
+                  <option value="8" {% if select_continuous == "8" %}selected{% endif %}>>=8</option>
+                </select>
+              </div>
+            </div>
+            <div class="ui ten wide column">``
+              <img class="ui fluid image" src="{% static 'pdf/简易续约降幅.png' %}">
+            </div>
+          </div>
+        </div>
+
+        <div class="ui hidden divider">
+
+        </div>
+        <button type="submit" class="ui blue submit button" name="next">下一步</button>
+        <div class="ui error message"></div>
+    </form>
+</div>
+
+<script>
+$.fn.form.settings.rules.noChange = function(value) {
+  var select1Value = $('#select_annual_new').val();
+  var select2Value = $('#select_ratio_new').val();
+
+  if ((select1Value === '0' && select2Value !== '0') || (select1Value !== '0' && select2Value === '0')) {
+    return false
+  } else {
+    return true
+  }
+};
+$('.ui.form')
+  .form({
+    select_annual: {
+      identifier  : 'select_annual',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '未选择基金年均实际支出'
+        },
+      ]
+    },
+    select_ratio: {
+      identifier  : 'select_ratio',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '未选择基金实际支出/基金支出预算'
+        },
+      ]
+    },
+    select_continuous: {
+      identifier  : 'select_continuous',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '未选择连续几年纳入谈判目录'
+        },
+      ]
+    },
+    select_annual_new: {
+      identifier: 'select_annual_new',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '未选择调整支付范围——基金年均支出预算增加金额'
+        },
+        {
+          type: 'noChange',
+          prompt: '关于调整支付范围有下拉选择矛盾'
+        }
+      ]
+    },
+    select_ratio_new: {
+      identifier: 'select_ratio_new',
+      rules: [
+        {
+          type   : 'empty',
+          prompt : '未选择调整支付范围——基金预算增加金额/调整前支出预算和实际支出高者'
+        },
+        {
+          type: 'noChange',
+          prompt: '关于调整支付范围有下拉选择矛盾'
+        }
+      ]
+    }
+
+  })
+;
+</script>
+{% endblock display %}
+
+
+
+
+

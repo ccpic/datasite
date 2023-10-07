@@ -1,0 +1,139 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "nrdl_renewal/index.html" %}
+{% load static %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block display %}
+
+<div class="ui container">
+  <form class="ui form" action="{% url 'nrdl_renewal:if_simple' %}" method="post">
+    {% csrf_token %}
+    <div class="ui celled grid">
+      <div class="row">
+        <div class="ui sixteen wide column">
+          <div class="ui unstackable fluid ordered four steps">
+            <a class="completed step" href="{% url 'nrdl_renewal:index' %}">
+              <div class="content">
+                <div class="title">是否纳入常规目录</div>
+                <div class="description">{{ general_catalog }}</div>
+              </div>
+            </a>
+            <div class="active step">
+              <div class="content">
+                <div class="title">简易续约 or 重新谈判？</div>
+              </div>
+            </div>
+            <div class="disabled step">
+              <div class="content">
+                <div class="title">降价幅度计算</div>
+              </div>
+            </div>
+            <div class="disabled step">
+              <div class="content">
+                <div class="title">测算结果</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="ui six wide column">
+          <div class="field" id="field_200">
+              <label>本协议期基金是否超支200%</label>
+              <select class="ui fluid dropdown" name="select_200">
+                <option value="">是否超支200%</option>
+                <option value="超支200%以内">超支200%以内</option>
+                <option value="超支200%以上">超支200%以上</option>
+              </select>
+              <div class="ui pointing label">
+                本协议期基金实际支出未超过基金支出预算（ 企业预估值， 下同） 的 200%
+              </div>
+          </div>
+          <div class="field" id="field_uplift">
+            <label>未来两年的基金支出预算增幅是否超过100%</label>
+            <select class="ui fluid dropdown" name="select_uplift">
+              <option value="">预期增幅是否超100%</option>
+              <option value="预期增幅低于100%">预期增幅低于100%</option>
+              <option value="预期增幅超过100%">预期增幅超过100%</option>
+            </select>
+            <div class="ui pointing label">
+              （ 1） 不调整支付范围的药品： 未来两年的基金支出预算增幅不超过 100%（ 与本协议期的基金支出预算和本协议期的基金实际支出两者中的高者相比， 下同）。<br>
+              （ 2） 调整支付范围的药品： 原支付范围满足条件（ 1）的情况下， 因调整支付范围所致未来两年的基金支出预算增幅不超过 100%。
+            </div>  
+          </div>
+          <div class="field" id="field_env">
+            <label>市场环境是否发生重大变化</label>
+            <select class="ui fluid dropdown" name="select_env">
+              <option value="">市场环境是否发生重大变化</option>
+              <option value="市场环境发生重大变化">市场环境发生重大变化</option>
+              <option value="市场环境未发生重大变化">市场环境未发生重大变化</option>
+            </select>
+            <div class="ui pointing label">
+              “重大变化” 主要是指在同治疗领域中价格或治疗费用明显偏高、 该药国内外实际销售价格或赠药折算后的价格明显低于现行支付标准、 本轮调整有同类竞品通过评审且可能对价格产生较大影响等。
+            </div>
+            <input type="hidden" name="select_continuous" value="{{ select_continuous }}" />
+          </div>
+        </div>
+        <div class="ui ten wide column">
+          <img class="ui fluid image" src="{% static 'pdf/简易续约标准.png' %}">
+        </div>
+      </div>
+    </div>
+
+    <div class="ui hidden divider">
+
+    </div>
+    <button type="submit" class="ui blue submit button" name="next">下一步</button>
+    <div class="ui error message"></div>
+  </form>
+</div>
+<script>
+$('.ui.form')
+.form({
+  select_200: {
+    identifier  : 'select_200',
+    rules: [
+      {
+        type   : 'empty',
+        prompt : '未选择本协议期基金是否超支200%'
+      },
+    ]
+  },
+  select_uplift: {
+    identifier  : 'select_uplift',
+    rules: [
+      {
+        type   : 'empty',
+        prompt : '未选择未来两年的基金支出预算增幅是否超过100%'
+      },
+    ]
+  },
+  select_env: {
+    identifier  : 'select_env',
+    rules: [
+      {
+        type   : 'empty',
+        prompt : '未选择市场是否发生重大变化'
+      },
+    ]
+  },
+})
+;
+
+</script>
+{% endblock display %}
+
+
+
+
+
+
+
+
+
+
+

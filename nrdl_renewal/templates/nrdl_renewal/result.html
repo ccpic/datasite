@@ -1,0 +1,129 @@
+<!-- extends表明此页面继承自 base.html 文件 -->
+{% extends "nrdl_renewal/index.html" %}
+{% load static %}
+{% load tags %}
+
+<!-- 隐藏分隔条 -->
+<div class="ui hidden divider"></div>
+
+
+<!-- 写入 base.html 中定义的 content -->
+{% block display %}
+
+<style>
+  .ui.message {
+    height: 100%;
+  }
+</style>
+
+<div class="ui container">
+  <form class="ui form" action="{% url 'nrdl_renewal:general_catalog' %}" method="post">
+    {% csrf_token %}
+        <div class="ui celled grid">
+          <div class="row">
+            <div class="ui sixteen wide column">
+              <div class="ui unstackable fluid ordered four steps">
+                <a class="completed step" href="{% url 'nrdl_renewal:index' %}">
+                  <div class="content">
+                    <div class="title">是否纳入常规目录</div>
+                    <div class="description">{{ general_catalog }}</div>
+                  </div>
+                </a>
+                <a class="completed step" href="{% url 'nrdl_renewal:general_catalog' %}">
+                  <div class="content">
+                    <div class="title">简易续约 or 重新谈判？</div>
+                    <div class="description">{{ if_simple }}</div>
+                  </div>
+                </a>
+                <a class="completed step" href="{% url 'nrdl_renewal:if_simple' %}">
+                  <div class="content">
+                    <div class="title">降价幅度计算</div>
+                  </div>
+                </a>
+                <div class="active step">
+                  <div class="content">
+                    <div class="title">测算结果</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="ui six wide column">
+              <div class="ui large icon message">
+                <i class="info circle icon"></i>
+                <div class="content">
+                  <div class="header">
+                    模拟结果：{{ main_result }}<br>
+                    <div class="ui red horizontal large label">预计降价：{{ price_cut|percentage:1 }}</div>
+                  </div>
+                  <ul class="list">
+                    {% if select_exclusive == '非独家品种' %}
+                      <li>{{ select_exclusive }}</li>
+                    {% endif %}
+                    {% if select_nonchange == '2' %}
+                      <li>连续{{ select_nonchange }}个协议期未调整支付标准和支付范围</li>
+                    {% endif %}
+                    {% if select_200 == '超支200%以上' %}
+                      <li>本协议期基金{{ select_200 }}</li>
+                    {% endif %}
+                    {% if select_uplift == '预期增幅超过100%' %}
+                      <li>未来两年的基金支出预算{{ select_uplift }}</li>
+                    {% endif %}
+                    {% if select_env == '市场环境发生重大变化' %}
+                      <li>{{ select_env }}</li>
+                    {% endif %}
+                    {% if select_annual %}
+                      <li>基金年均实际支出{{ select_annual }}</li>
+                    {% endif %}
+                    {% if select_ratio %}
+                      <li>基金实际支出/基金支出预算{{ select_ratio }}</li>
+                    {% endif %}
+                    {% if a %}
+                      <li>a值{{ a }}</li>
+                    {% endif %}
+                    {% if select_annual_new == "0" or select_ratio_new == "0" %}
+                      <li>不调整支付范围</li>
+                    {% elif select_annual_new %}
+                      <li>调整支付范围——基金年均支出预算增加金额{{ select_annual_new }}</li>
+                      <li>调整支付范围——基金预算增加金额/调整前支出预算和实际支出高者{{ select_ratio_new }}</li>
+                    {% endif %}
+                    {% if b %}
+                      <li>b值{{ b }}</li>
+                    {% endif %}
+                    {% if select_continuous in '4,5,6,7,8' %}
+                      <li>连续{{ select_continuous }}年纳入谈判目录</li>
+                    {% endif %}
+                    {% if index %}
+                      <li>降幅系数{{ index }}</li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="ui ten wide column">
+              {% if main_result == "纳入常规目录管理" %}
+                <img class="ui fluid image" src="{% static 'pdf/纳入常规目录标准.png' %}">
+              {% elif main_result == "不能简易续约，重新谈判" %}
+                <img class="ui fluid image" src="{% static 'pdf/简易续约标准.png' %}">
+              {% elif main_result == "简易续约" %}
+                <img class="ui fluid image" src="{% static 'pdf/简易续约降幅.png' %}">
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ui hidden divider">
+
+        </div>
+
+        <div class="ui error message"></div>
+    </form>
+</div>
+
+{% endblock display %}
+
+
+
+
+
