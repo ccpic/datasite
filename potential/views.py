@@ -40,9 +40,10 @@ D_MULTI_SELECT = {
     "医院类型": "HP_TYPE",
     "省份": "PROVINCE",
     "城市": "CITY",
-    # "区县": "COUNTY",
+    "区县": "COUNTY",
+    "市区/县域": "COUNTY_AREA",
     "潜力分位": "DECILE",
-    # "经营类型": "OUTSOURCE"
+    "经营类型": "OUTSOURCE"
     # "医院": "HOSPITAL",
     # "信立坦销售状态": "STATUS",
 }
