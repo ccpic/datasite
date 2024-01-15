@@ -2,6 +2,7 @@
 {% extends "nrdl_price/index.html" %}
 {% load humanize %}
 {% load tags %}
+{% load static %}
 
 {% block title %}NRDL谈判数据{% endblock title %}
 
@@ -98,6 +99,16 @@
                                 <span>
                                     {{ nego.reimbursement_start|date:"Y-m" }}至{{ nego.reimbursement_end|date:"Y-m" }}
                                 </span>
+                            </div>
+                            <div class="extra content">
+                                {% if nego.year > 2020 %}
+                                    <i class="download icon"></i>
+                                    <span>
+                                        <a href="{% static nego.doc_url %}">申报材料下载</a>
+                                    </span>
+                                {% else %}
+                                    <span>无公示材料</span>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}

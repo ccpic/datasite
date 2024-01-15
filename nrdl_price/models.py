@@ -78,7 +78,9 @@ class Subject(models.Model):
         related_name="tc4_subjects",
     )
     formulation = models.CharField(verbose_name="剂型", max_length=20)
-    origin_company = models.CharField(verbose_name="原研公司", max_length=50, null=True, blank=True)
+    origin_company = models.CharField(
+        verbose_name="原研公司", max_length=50, null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "谈判主体"
@@ -138,3 +140,10 @@ class Negotiation(models.Model):
         except:
             change = np.nan
         return change
+
+    @property
+    def doc_url(self) -> str:
+        base_url = "/NRDL_pdf/"
+        year = str(self.year)
+        if_in = "目录外" if self.nego_type == "新增分子" else "目录内"
+        return f"{base_url}{year}/{if_in}/{self.subject.name}/{self.subject.name}_申报材料.pdf"

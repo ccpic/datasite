@@ -8,6 +8,7 @@ import requests
 import time
 import os
 import io
+import pandas as pd
 
 try:
     from typing import Literal
@@ -122,9 +123,12 @@ class NHSA_Crawler(object):
             pdf_link1 = self.wait_and_get("XPATH", xpath + "/a[1]").get_attribute(
                 "href"
             )
+            file_type1 = "pptx" if pdf_link1.endswith("pptx") else "pdf"
 
             if pdf_link1:
-                save_path = os.path.join(save_folder, f"{product_name}_申报材料.pdf")
+                save_path = os.path.join(
+                    save_folder, f"{product_name}_申报材料.{file_type1}"
+                )
                 self.download_pdf(save_path, pdf_link1)
 
             # 获取信息摘要的pdf链接，并不是每个产品都有
@@ -132,12 +136,15 @@ class NHSA_Crawler(object):
                 pdf_link2 = self.wait_and_get("XPATH", xpath + "/a[2]").get_attribute(
                     "href"
                 )
+                file_type2 = "pptx" if pdf_link2.endswith("pptx") else "pdf"
             except:
                 pdf_link2 = None
                 pass
 
             if pdf_link2:
-                save_path = os.path.join(save_folder, f"{product_name}_信息摘要.pptx")
+                save_path = os.path.join(
+                    save_folder, f"{product_name}_信息摘要.{file_type2}"
+                )
                 self.download_pdf(save_path, pdf_link2)
 
     def download_pdf(self, save_path: str, pdf_url: str) -> None:
@@ -161,11 +168,33 @@ class NHSA_Crawler(object):
             print(f"{save_path}下载成功！")
 
 
+def get_subdirectories(path: str) -> pd.DataFrame:
+    subdirectories = [
+        d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))
+    ]
+    df = pd.DataFrame({"Subdirectory": subdirectories})
+    print(df)
+    return df
+
+
 if __name__ == "__main__":
     url_2022 = "http://www.nhsa.gov.cn/art/2022/9/6/art_152_8853.html"
     url_2023 = "http://www.nhsa.gov.cn/art/2023/8/18/art_152_11182.html"
     c = NHSA_Crawler()
     # c.get_pdf(url_2022, 2, 233, "目录外", "2022")
     # c.get_pdf(url_2022, 234, 389, "目录内", "2022")
-    c.get_pdf(url_2023, 55, 269, "目录外", "2023")  # 目录外品种
-    c.get_pdf(url_2023, 270, 440, "目录内", "2023")  # 目录内品种
+    # c.get_pdf(url_2023, 55, 269, "目录外", "2023")  # 目录外品种
+    # c.get_pdf(url_2023, 270, 440, "目录内", "2023")  # 目录内品种
+
+    path_list = [
+        "NRDL_pdf/2022/目录外",
+        "NRDL_pdf/2022/目录内",
+        "NRDL_pdf/2023/目录外",
+        "NRDL_pdf/2023/目录内",
+        "NRDL_pdf/2021/目录外/",
+    ]
+
+    df_combined = pd.DataFrame()
+    for path in path_list:
+        df = get_subdirectories(path)
+        df_combined = pd.concat([df_combined, df], axis=0)
