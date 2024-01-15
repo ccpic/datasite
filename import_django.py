@@ -12,9 +12,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "datasite.settings")
 django.setup()
 
 from chpa_data.views import *
-from vbp.models import *
-
-# from rdpac.models import *
+from vbp.models import Company, Tender, Volume, Bid
+from rdpac.models import Drug, Sales
 
 engine = create_engine("mssql+pymssql://(local)/CHPA_1806")
 table = "data"
@@ -47,9 +46,10 @@ def import_tender(vol: str):
         "第五轮62品种": "01-10-2021",
         "第七轮61品种": "01-11-2022",
         "第八轮40品种": "01-07-2023",
+        "第九轮42品种": "01-03-2024",
         "第一轮25品种扩围联盟地区": "01-12-2019",
     }
-    df = pd.read_excel("vbp_summary_2023.4.13.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_2023.11.29.xlsx", sheet_name="汇总", header=0)
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     df = df.drop_duplicates("药品通用名")
@@ -74,7 +74,7 @@ def import_tender(vol: str):
 
 
 def import_volume(vol: str):
-    df = pd.read_excel("vbp_amount_2023.4.13.xlsx", sheet_name="汇总")
+    df = pd.read_excel("vbp_amount_2023.11.29.xlsx", sheet_name="汇总")
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     # df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
@@ -96,7 +96,6 @@ def import_volume(vol: str):
 
 
 def import_bid(vol: str):
-
     D_DELTA = {
         "埃索美拉唑(艾司奥美拉唑)注射剂": {
             "重庆莱美": ["40mg"],
@@ -133,7 +132,11 @@ def import_bid(vol: str):
             "正大天晴": ["100ml:32g(I)"],
             "扬子江药业": ["100ml:32g(I)"],
         },
-        "脂肪乳氨基酸葡萄糖注射剂": {"海思科制药": ["1440ml"], "科伦药业": ["1440ml"], "费森": ["1440ml"],},
+        "脂肪乳氨基酸葡萄糖注射剂": {
+            "海思科制药": ["1440ml"],
+            "科伦药业": ["1440ml"],
+            "费森": ["1440ml"],
+        },
         "中/长链脂肪乳(C8-24Ve)注射剂": {
             "科伦药业": ["250ml(20%)"],
             "广东嘉博": ["250ml(20%)"],
@@ -161,7 +164,11 @@ def import_bid(vol: str):
             "青岛百洋": ["7mg"],
             "江苏长泰": ["28mg"],
         },
-        "甲泼尼龙口服常释剂型": {"浙江仙琚": ["16mg"], "天津天药": ["4mg"], "山东新华鲁抗": ["4mg"],},
+        "甲泼尼龙口服常释剂型": {
+            "浙江仙琚": ["16mg"],
+            "天津天药": ["4mg"],
+            "山东新华鲁抗": ["4mg"],
+        },
         "头孢米诺注射剂": {
             "齐鲁安替": ["1g"],
             "四川合信": ["0.25g"],
@@ -207,9 +214,72 @@ def import_bid(vol: str):
             "南京海融": ["0.5μg"],
             "河南泰丰": ["0.25μg", "0.5μg"],
         },
+        "奥美拉唑碳酸氢钠口服常释剂型": {
+            "鲁南制药": ["奥美拉唑20mg与碳酸氢钠1100mg", "奥美拉唑40mg与碳酸氢钠1100mg"],
+            "厦门恩成": ["奥美拉唑20mg与碳酸氢钠1100mg"],
+            "浙江花园药业": ["奥美拉唑20mg与碳酸氢钠1100mg", "奥美拉唑40mg与碳酸氢钠1100mg"],
+            "北京百奥": ["奥美拉唑20mg与碳酸氢钠1100mg", "奥美拉唑40mg与碳酸氢钠1100mg"],
+            "重庆华森": ["奥美拉唑20mg与碳酸氢钠1100mg"],
+        },
+        "奥美沙坦酯氨氯地平口服常释剂型": {
+            "国药集团": ["每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）"],
+            "安庆回音": ["每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）"],
+            "江苏诺泰澳赛诺": ["每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）"],
+            "江苏万高": ["每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）"],
+            "扬子江药业": ["每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）"],
+            "重庆华森": ["每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）"],
+            "正大天晴": ["每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）"],
+            "奥罗宾多": [
+                "每片含奥美沙坦酯20mg和苯磺酸氨氯地平5mg（以氨氯地平计）",
+                "每片含奥美沙坦酯40mg和苯磺酸氨氯地平5mg（以氨氯地平计）",
+                "每片含奥美沙坦酯40mg和苯磺酸氨氯地平10mg（以氨氯地平计）",
+            ],
+        },
+        "奥美沙坦酯氢氯噻嗪口服常释剂型": {
+            "宁波美舒": ["每片含奥美沙坦酯20mg与氢氯噻嗪12.5mg"],
+            "江苏万高": ["每片含奥美沙坦酯20mg与氢氯噻嗪12.5mg"],
+            "浙江华海": ["每片含奥美沙坦酯20mg与氢氯噻嗪12.5mg", "每片含奥美沙坦酯40mg与氢氯噻嗪12.5mg"],
+            "上海现代": ["每片含奥美沙坦酯20mg与氢氯噻嗪12.5mg"],
+            "华润赛科": ["每片含奥美沙坦酯20mg与氢氯噻嗪12.5mg"],
+            "北京元延": ["每片含奥美沙坦酯20mg与氢氯噻嗪12.5mg"],
+            "浙江诺得": ["每片含奥美沙坦酯20mg与氢氯噻嗪12.5mg"],
+        },
+        "硫酸镁注射剂型": {
+            "天津金耀": ["2ml:1g", "10ml:5g", "20ml:10g"],
+            "石家庄凯达": ["10ml:5g", "20ml:10g"],
+            "扬州中宝": ["10ml:5g", "20ml:10g"],
+            "科伦药业": ["10ml:5g", "20ml:10g"],
+            "上海禾丰": ["2ml:1g", "10ml:5g", "20ml:10g"],
+            "江苏华阳": ["10ml:5g", "20ml:10g"],
+            "海南倍特": ["2ml:1g", "10ml:5g", "20ml:10g"],
+        },
+        "帕罗西汀肠溶缓释片": {
+            "北京福元": ["12.5mg", "25mg", "37.5mg"],
+            "华益泰康": ["37.5mg"],
+            "上海宣泰": ["25mg", "37.5mg"],
+            "深圳信立泰": ["12.5mg", "25mg", "37.5mg"],
+        },
+        "卡泊芬净注射剂": {
+            "广州一品红": ["50mg"],
+            "江苏恒瑞": ["50mg"],
+            "正大天晴": ["50mg", "70mg"],
+            "海思科制药": ["50mg"],
+            "齐鲁制药": ["50mg"],
+            "海南海灵": ["50mg"],
+        },
+        "雷贝拉唑口服常释剂型": {
+            "珠海润都": ["20mg"],
+            "重庆药友": ["20mg"],
+            "晋城海斯": ["20mg"],
+            "山东新华": ["10mg", "20mg"],
+            "上海安必生": ["20mg"],
+            "湖南九典": ["10mg", "20mg"],
+            "江西山香": ["10mg", "20mg"],
+            "济川药业": ["20mg"],
+        },
     }
 
-    df = pd.read_excel("vbp_summary_2023.4.13.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_2023.11.29.xlsx", sheet_name="汇总", header=0)
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     df.fillna("-", inplace=True)
@@ -263,7 +333,8 @@ def import_bid(vol: str):
                     list_region = [x.strip() for x in region_win.split(",")]
                     for region in list_region:
                         volume_objs = Volume.objects.filter(
-                            tender__target=tender_name, region=region,
+                            tender__target=tender_name,
+                            region=region,
                         )
                         for obj in volume_objs:
                             if tender.target in D_DELTA:  # 处理第五轮的特殊规则，带三角标志的标的
@@ -422,10 +493,10 @@ def import_tc():
 
 
 if __name__ == "__main__":
-    importModel(D_MODEL)
-    # import_tender("第八轮40品种")
-    # import_volume("第八批集采")
-    # import_bid("第八轮40品种")
+    # importModel(D_MODEL)
+    import_tender("第九轮42品种")
+    import_volume("第九批集采")
+    import_bid("第九轮42品种")
 
     # update_tender()
 
