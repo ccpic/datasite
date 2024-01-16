@@ -54,41 +54,41 @@
             </div>
             <div class="statistic">
                 <div class="value" id="share_total"></div>
-                <div class="label">信立坦所有终端销售份额(DOT %)</div>
+                <div class="label" id="label_share_total">所有终端销售份额(DOT %)</div>
             </div>
         </div>
     </div>
     <div class="ui segment">
-        <a class="ui blue ribbon label">信立坦目标</a>
+        <div class="ui blue ribbon label" id="label_ribbon_target">目标</div>
         <div class="ui small three statistics">
             <div class="statistic">
                 <div class="value" id="potential_target"></div>
-                <div class="label">信立坦目标终端覆盖潜力(DOT %)</div>
+                <div class="label" id="label_potential_target">目标终端覆盖潜力(DOT %)</div>
             </div>
             <div class="statistic">
                 <div class="value" id="number_target"></div>
-                <div class="label">信立坦目标终端数量</div>
+                <div class="label" id="label_number_target">目标终端数量</div>
             </div>
             <div class="statistic">
                 <div class="value" id="share_target"></div>
-                <div class="label">信立坦目标终端销售份额(DOT %)</div>
+                <div class="label" id="label_share_target">目标终端销售份额(DOT %)</div>
             </div>
         </div>
     </div>
     <div class="ui segment">
-        <a class="ui purple ribbon label">信立坦有量（开户概念）</a>
+        <div class="ui purple ribbon label" id="label_ribbon_sales">有量（开户概念）</div>
         <div class="ui small three statistics">
             <div class="statistic">
                 <div class="value" id="potential_sales"></div>
-                <div class="label">信立坦有量终端覆盖潜力(DOT %)</div>
+                <div class="label" id="label_potential_sales">有量终端覆盖潜力(DOT %)</div>
             </div>
             <div class="statistic">
                 <div class="value" id="number_sales"></div>
-                <div class="label">信立坦有量终端数量</div>
+                <div class="label" id="label_number_sales">有量终端数量</div>
             </div>
             <div class="statistic">
                 <div class="value" id="share_sales"></div>
-                <div class="label">信立坦有量终端销售份额(DOT %)</div>
+                <div class="label" id="label_share_sales">有量终端销售份额(DOT %)</div>
             </div>
         </div>
     </div>
@@ -146,7 +146,7 @@
 <div class="ui tab segment" data-tab="plot_bubble_contrib">
     <h3 class="ui header">
         <div class="content">
-            潜力贡献（所有终端） versus 信立坦销售贡献
+            潜力贡献（所有终端） versus 销售贡献
             <div class="ui orange basic label" id="bubble_label1"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
@@ -157,7 +157,7 @@
     </div>
     <h3 class="ui header">
         <div class="content">
-            潜力贡献（信立坦有量终端） versus 信立坦销售贡献
+            潜力贡献（有量终端） versus 销售贡献
             <div class="ui orange basic label" id="bubble_label2"></div>
             <div class="sub header">带线性拟合的气泡图</div>
         </div>
@@ -170,9 +170,9 @@
 <div class="ui tab segment" data-tab="plot_bubble_allocation">
     <h3 class="ui header">
         <div class="content">
-            覆盖 versus 上量（按信立坦销量排序）
+            覆盖 versus 上量（按销量排序）
             <div class="ui orange basic label" id="bubble_label3"></div>
-            <div class="sub header">气泡图（气泡大小=信立坦MAT销量）</div>
+            <div class="sub header">气泡图（气泡大小=MAT销量）</div>
         </div>
     </h3>
     <div class="ui divider"></div>
@@ -195,7 +195,7 @@
 <div class="ui tab segment" data-tab="scatter">
     <h3 class="ui header">
         <div class="content">
-            终端潜力 versus 信立坦销量
+            终端潜力 versus 销量
             <div class="sub header">可交互散点图            
                 <div class="ui red basic label">
                     滚动鼠标滚轮或拖动坐标轴滚动条可缩放显示区域

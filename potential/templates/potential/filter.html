@@ -11,7 +11,9 @@
                     class="ui fluid tiny search dropdown"
                 >
                     {% for key, value in mselect_dict.items %}
-                    <option value="{{ value.select }}">{{ key }}</option>
+                        {% if key != "产品" %}
+                            <option value="{{ value.select }}">{{ key }}</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>
@@ -19,15 +21,15 @@
             <!-- prettier-ignore -->
             <div class="field">
                 {% for key, value in mselect_dict.items %}
-                <div class="field">
-                    <select name='{{ value.select|add:"_select[]" }}' id='{{ value.select|add:"_select" }}' multiple=""
-                        class="ui fluid tiny search dropdown">
-                        <option value="">{{ key }}</option>
-                        {% for item in value.options %}
-                        <option value="{{ item }}">{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    <div class="field">
+                        <select name='{{ value.select|add:"_select[]" }}' id='{{ value.select|add:"_select" }}' {% if key != "产品" %}multiple=""{% endif %}
+                            class="ui fluid tiny search dropdown">
+                            <option value="">{{ key }}</option>
+                            {% for item in value.options %}
+                            <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 {% endfor %}
             </div>
             <br />
@@ -92,6 +94,7 @@
 
         // 获取交互表单数据
         var form_data = getForm();
+        var product = form_data["PRODUCT_select"];
 
         // 根据参数生成终端echarts scatter图
         // Echarts初始化
@@ -157,11 +160,11 @@
                 data: "potential_dot"
             },
             {
-                title: "信立坦MAT销售(DOT)",
+                title: product + "MAT销售(DOT)",
                 data: "mat_sales"
             },
             {
-                title: "信立坦份额(%)",
+                title: product + "份额(%)",
                 data: "share"
             },
         ];
@@ -267,15 +270,26 @@
 
                 // 总体指标
                 var kpi = ret["kpi"]
-                $("#potential_total").html(kpi["潜力(DOT)"].toLocaleString())
-                $("#number_total").html(kpi["终端数量"].toLocaleString())
-                $("#share_total").html(toPercent(kpi["信立坦所有终端份额(DOT %)"]))
-                $("#potential_target").html(toPercent(kpi["信立坦目标终端覆盖潜力(DOT %)"]))
-                $("#number_target").html(kpi["信立坦目标终端数"].toLocaleString())
-                $("#share_target").html(toPercent(kpi["信立坦目标终端份额(DOT %)"]))
-                $("#potential_sales").html(toPercent(kpi["信立坦有量终端覆盖潜力(DOT %)"]))
-                $("#number_sales").html(kpi["信立坦有量终端数"].toLocaleString())
-                $("#share_sales").html(toPercent(kpi["信立坦有量终端份额(DOT %)"]))
+                var product = ret["product"]
+                $("#potential_total").html(kpi["潜力(DOT)"].toLocaleString());
+                $("#number_total").html(kpi["终端数量"].toLocaleString());
+                $("#share_total").html(toPercent(kpi[product + "所有终端份额(DOT %)"]));
+                $("#label_share_total").html(product + "所有终端份额(DOT %)");
+                $("#potential_target").html(toPercent(kpi[product + "目标终端覆盖潜力(DOT %)"]));
+                $("#label_potential_target").html(product + "目标终端覆盖潜力(DOT %)");
+                $("#number_target").html(kpi[product + "目标终端数"].toLocaleString());
+                $("#label_number_target").html(product + "目标终端数");
+                $("#share_target").html(toPercent(kpi[product + "目标终端份额(DOT %)"]));
+                $("#label_share_target").html(product + "目标终端份额(DOT %)");
+                $("#potential_sales").html(toPercent(kpi[product + "有量终端覆盖潜力(DOT %)"]));
+                $("#label_potential_sales").html(product + "有量终端覆盖潜力(DOT %)");
+                $("#number_sales").html(kpi[product + "有量终端数"].toLocaleString());
+                $("#label_number_sales").html(product + "有量终端数");
+                $("#share_sales").html(toPercent(kpi[product + "有量终端份额(DOT %)"]));
+                $("#label_share_sales").html(product + "有量终端份额(DOT %)");
+
+                $("#label_ribbon_target").html(product + "目标");
+                $("#label_ribbon_sales").html(product + "有量（开户概念）");
 
                 // 展示datatables表格
                 $("#table_pivot_div").html(ret['table_pivot']);
@@ -593,7 +607,7 @@
             ],
             yAxis: [
                 {
-                    name: "信立坦MAT销售(DOT)",
+                    name: "MAT销售(DOT)",
                     type: "value",
                 },
             ],
