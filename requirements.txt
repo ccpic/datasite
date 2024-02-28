@@ -14,7 +14,7 @@ cycler==0.10.0
 Django==3.0.8
 django-classy-tags==2.0.0
 django-crispy-forms==1.9.2
-django-filter==2.3.0
+django-filter==2.4.0
 django-guardian==2.3.0
 django-mssql-backend==2.8.1
 django-picklefield==3.0.1
