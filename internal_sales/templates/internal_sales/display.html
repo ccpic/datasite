@@ -17,8 +17,8 @@
     <a class="item" data-tab="metrics"><i class="trophy icon"></i>指标汇总</a>
     <a class="item" data-tab="trend"><i class="signal icon"></i>月度明细</a>
     <a class="item" data-tab="productivity"><i class="bolt icon"></i>生产力分析</a>
-    <a class="item" data-tab="community"><i class="viadeo icon"></i>社区指标汇总</a>
-    <a class="item" data-tab="comm_trend"><i class="signal icon"></i>社区月度明细</a>
+    {% comment %} <a class="item" data-tab="community"><i class="viadeo icon"></i>社区指标汇总</a>
+    <a class="item" data-tab="comm_trend"><i class="signal icon"></i>社区月度明细</a> {% endcomment %}
 {#    <a class="item" data-tab="price"><i class="yen sign icon"></i>价格分析</a>#}
     <a class="item" data-tab="export"><i class="download icon"></i>导出数据</a>
 {#    <a class="item" data-tab="mpl" id="tab_npl"><i class="braille icon"></i>高级绘图</a>#}
@@ -190,7 +190,7 @@
     <div class="ui container" id='ptable_rsppdt_monthly_div' style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
     </div>
 </div>
-<div class="ui tab segment" data-tab="community">
+{% comment %} <div class="ui tab segment" data-tab="community">
     <h3 class="ui header">
         <div class="content">
             社区指标汇总
@@ -267,7 +267,7 @@
     <div class="ui hidden divider"></div>
     <div class="ui container" id="ptable_comm_ratio_monthly_div" style="width: 100%; overflow-x: scroll; overflow-y: hidden;">
     </div>
-</div>
+</div> {% endcomment %}
 
 <div class="ui tab segment" data-tab="export">
     <div class="ui buttons">

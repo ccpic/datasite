@@ -89,3 +89,17 @@ class HP_TYPE(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class City_tier(models.Model):
+    name = models.CharField(max_length=3)
+
+    def __str__(self):
+        return self.name
+
+
+class Outsourced(models.Model):
+    name = models.CharField(max_length=2)
+
+    def __str__(self):
+        return self.name

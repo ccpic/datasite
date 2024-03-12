@@ -1,5 +1,3 @@
-import imp
-from os import stat
 from django.shortcuts import render, HttpResponseRedirect
 from sqlalchemy import create_engine
 import pandas as pd

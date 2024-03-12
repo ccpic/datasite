@@ -119,7 +119,7 @@
         // Pyecharts图表初始化
         var bar_total_monthly_trend = initChart('bar_total_monthly_trend');
         var scatter_sales_abs_diff = initChart('scatter_sales_abs_diff');
-        var scatter_sales_comm_abs_diff = initChart('scatter_sales_comm_abs_diff');
+        {% comment %} var scatter_sales_comm_abs_diff = initChart('scatter_sales_comm_abs_diff'); {% endcomment %}
         {#var pie_product = initChart('pie_product')#}
         {#var stackarea_abs_trend = initChart('stackarea_abs_trend');#}
         {#var stackarea_share_trend = initChart('stackarea_share_trend');#}
@@ -172,20 +172,20 @@
                 // 展示ptable表格
                 $("#ptable_div").html(ret['ptable']);
                 initPTable($("#ptable"));
-                $("#ptable_comm_div").html(ret['ptable_comm']);
-                initPTableComm($("#ptable_comm"));
+                {% comment %} $("#ptable_comm_div").html(ret['ptable_comm']);
+                initPTableComm($("#ptable_comm")); {% endcomment %}
 
                 var d = {{ monthly_metric_dict|safe }};
                 for (k in d) {
                     $("#ptable_"+d[k]+"_div").html(ret['ptable_'+d[k]]);
                     initPTableMonthly($("#ptable_"+d[k]));
-                    $("#ptable_comm_"+d[k]+"_div").html(ret['ptable_comm_'+d[k]]);
-                    initPTableMonthly($("#ptable_comm_"+d[k]));
+                    {% comment %} $("#ptable_comm_"+d[k]+"_div").html(ret['ptable_comm_'+d[k]]);
+                    initPTableMonthly($("#ptable_comm_"+d[k])); {% endcomment %}
                 }
 
-                // 社区月度占比趋势
+                {% comment %} // 社区月度占比趋势
                 $("#ptable_comm_ratio_monthly_div").html(ret["ptable_comm_ratio_monthly"]);
-                initPTableMonthly($("#ptable_comm_ratio_monthly"));
+                initPTableMonthly($("#ptable_comm_ratio_monthly")); {% endcomment %}
 
                 // 开户医院单产趋势
                 $("#ptable_hppdt_monthly_div").html(ret["ptable_hppdt_monthly"]);
@@ -198,7 +198,7 @@
                 // 展示Pyecharts图表 - 总体定义市场趋势图 - 总体月度趋势图
                 updateChart(bar_total_monthly_trend, ret['bar_total_monthly_trend']);
                 updateChart(scatter_sales_abs_diff, ret['scatter_sales_abs_diff']);
-                updateChart(scatter_sales_comm_abs_diff, ret['scatter_sales_comm_abs_diff']);
+                {% comment %} updateChart(scatter_sales_comm_abs_diff, ret['scatter_sales_comm_abs_diff']); {% endcomment %}
                 {#updateChart(pie_product, ret['pie_product'])#}
 
             },
@@ -340,7 +340,7 @@
         });
     }
 </script>
-<script>
+{% comment %} <script>
     function initPTableComm(table) {
         table.DataTable(
             {
@@ -417,7 +417,7 @@
             }
         });
     }
-</script>
+</script> {% endcomment %}
 <script>
     function initPTableMonthly(table) {
         var indexLastColumn = table.find('tr')[0].cells.length - 2;

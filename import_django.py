@@ -493,10 +493,10 @@ def import_tc():
 
 
 if __name__ == "__main__":
-    # importModel(D_MODEL)
-    import_tender("第九轮42品种")
-    import_volume("第九批集采")
-    import_bid("第九轮42品种")
+    importModel(D_MODEL)
+    # import_tender("第九轮42品种")
+    # import_volume("第九批集采")
+    # import_bid("第九轮42品种")
 
     # update_tender()
 

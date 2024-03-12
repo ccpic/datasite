@@ -17,15 +17,17 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-DATE = datetime.datetime(year=2023, month=12, day=1)  # 目标分析月份
+DATE = datetime.datetime(year=2024, month=1, day=1)  # 目标分析月份
 
 PRODUCTS_HAVE_TARGET = ["信立坦", "恩那罗", "欣复泰", "欣复泰Pro注射笔", "欣复泰Pro注射液"]  # 有指标的产品
 
 # 该字典为数据库字段名和Django Model的关联
 D_MODEL = {
+    "OUTSOURCED": Outsourced,
     "PROVINCE": Province,
     "CITY": City,
     "COUNTY": County,
+    "CITY_TIER": City_tier,
     "HOSPITAL": Hospital,
     "HP_TYPE": HP_TYPE,
     "LEVEL": Level,
@@ -41,13 +43,15 @@ D_MODEL = {
 # 该字典key为前端准备显示的所有多选字段名, value为数据库对应的字段名
 D_MULTI_SELECT = {
     "产品": "PRODUCT",
+    "经营类型": "OUTSOURCED",
     "省份": "PROVINCE",
     "城市": "CITY",
     "区县": "COUNTY",
+    "城市级别": "CITY_TIER",
     "医院类型": "HP_TYPE",
     "医院等级": "LEVEL",
     "医院": "HOSPITAL",
-    "南北中国": "BU",
+    "事业部": "BU",
     "区域": "RD",
     "大区经理": "RM_POS_NAME",
     "地区经理": "DSM_POS_NAME",
@@ -110,39 +114,39 @@ def query(request):
         ),
         "ptable",
     )
-    ptable_comm = format_table(
-        get_ptable_comm(
-            df_sales=df["销售"],
-            df_sales_comm=df["社区销售"],
-            df_target_comm=df["社区指标"],
-            show_limit_results=show_limit_results,
-        ),
-        "ptable_comm",
-    )
+    # ptable_comm = format_table(
+    #     get_ptable_comm(
+    #         df_sales=df["销售"],
+    #         df_sales_comm=df["社区销售"],
+    #         df_target_comm=df["社区指标"],
+    #         show_limit_results=show_limit_results,
+    #     ),
+    #     "ptable_comm",
+    # )
 
     # 月度表现趋势表格
     ptable_monthly = get_ptable_monthly(
         df_sales=df["销售"], show_limit_results=show_limit_results
     )
-    ptable_comm_monthly = {}
-    temp = get_ptable_monthly(
-        df_sales=df["社区销售"], show_limit_results=show_limit_results
-    )
-    for k, v in temp.items():
-        ptable_comm_monthly[
-            k.replace("ptable_monthly", "ptable_comm_monthly")
-        ] = v.replace("ptable_monthly", "ptable_comm_monthly")
+    # ptable_comm_monthly = {}
+    # temp = get_ptable_monthly(
+    #     df_sales=df["社区销售"], show_limit_results=show_limit_results
+    # )
+    # for k, v in temp.items():
+    #     ptable_comm_monthly[
+    #         k.replace("ptable_monthly", "ptable_comm_monthly")
+    #     ] = v.replace("ptable_monthly", "ptable_comm_monthly")
 
-    # 月度社区销售占比趋势
-    ptable_comm_ratio_monthly = format_table(
-        get_ratio_monthly(
-            df1=df["社区销售"],
-            df2=df["销售"],
-            table_name="社区销售占比趋势",
-            show_limit_results=show_limit_results,
-        ),
-        "ptable_comm_ratio_monthly",
-    )
+    # # 月度社区销售占比趋势
+    # ptable_comm_ratio_monthly = format_table(
+    #     get_ratio_monthly(
+    #         df1=df["社区销售"],
+    #         df2=df["销售"],
+    #         table_name="社区销售占比趋势",
+    #         show_limit_results=show_limit_results,
+    #     ),
+    #     "ptable_comm_ratio_monthly",
+    # )
 
     # 开户医院单产趋势
     ptable_hppdt_monthly = format_table(
@@ -173,28 +177,28 @@ def query(request):
     scatter_sales_abs_diff = prepare_chart(
         df["销售"], df["指标"], "scatter_sales_abs_diff", form_dict
     )
-    scatter_sales_comm_abs_diff = prepare_chart(
-        df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict
-    )
+    # scatter_sales_comm_abs_diff = prepare_chart(
+    #     df["社区销售"], df["社区指标"], "scatter_sales_abs_diff", form_dict
+    # )
     # pie_product = json.loads(prepare_chart(df_sales, df_target, "pie_product", form_dict))
 
     context = {
         "show_limit_results": show_limit_results,
         "dimension_select": dimension_select,
         "ptable": ptable,
-        "ptable_comm": ptable_comm,
-        "ptable_comm_ratio_monthly": ptable_comm_ratio_monthly,
+        # "ptable_comm": ptable_comm,
+        # "ptable_comm_ratio_monthly": ptable_comm_ratio_monthly,
         "ptable_hppdt_monthly": ptable_hppdt_monthly,
         "ptable_rsppdt_monthly": ptable_rsppdt_monthly,
         "bar_total_monthly_trend": bar_total_monthly_trend,
         "scatter_sales_abs_diff": scatter_sales_abs_diff,
-        "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
+        # "scatter_sales_comm_abs_diff": scatter_sales_comm_abs_diff,
         # "pie_product": pie_product,
     }
 
     context = dict(context, **kpi)
     context = dict(context, **ptable_monthly)
-    context = dict(context, **ptable_comm_monthly)
+    # context = dict(context, **ptable_comm_monthly)
 
     return HttpResponse(
         json.dumps(context, ensure_ascii=False),
@@ -499,11 +503,11 @@ def get_df(form_dict, is_pivoted=True):
     if is_pivoted is True:
         return {
             "销售": pivot(df=df[df.TAG != "指标"], form_dict=form_dict),
-            "社区销售": pivot(
-                df=df[(df.TAG != "指标") & (df.HP_TYPE.isin(["旗舰社区", "普通社区"]))],
-                # df=df[(df.TAG != "指标") & (df.IF_COMMUNITY == 1)],
-                form_dict=form_dict,
-            ),
+            # "社区销售": pivot(
+            #     df=df[(df.TAG != "指标") & (df.HP_TYPE.isin(["旗舰社区", "普通社区"]))],
+            #     # df=df[(df.TAG != "指标") & (df.IF_COMMUNITY == 1)],
+            #     form_dict=form_dict,
+            # ),
             "带指标销售": pivot(
                 df=df[(df.TAG != "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
                 form_dict=form_dict,
@@ -512,11 +516,11 @@ def get_df(form_dict, is_pivoted=True):
                 df=df[(df.TAG == "指标") & (df.PRODUCT.isin(PRODUCTS_HAVE_TARGET))],
                 form_dict=form_dict,
             ),
-            "社区指标": pivot(
-                df=df[(df.TAG == "指标") & (df.HP_TYPE.isin(["旗舰社区", "普通社区"]))],
-                # df=df[(df.TAG == "指标") & (df.IF_COMMUNITY == 1)],
-                form_dict=form_dict,
-            ),
+            # "社区指标": pivot(
+            #     df=df[(df.TAG == "指标") & (df.HP_TYPE.isin(["旗舰社区", "普通社区"]))],
+            #     # df=df[(df.TAG == "指标") & (df.IF_COMMUNITY == 1)],
+            #     form_dict=form_dict,
+            # ),
             "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
             "代表数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_rsp"),
         }
