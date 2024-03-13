@@ -24,12 +24,31 @@
     </div>
     <div class="ui red vertical segment">
         <h3 class="ui header">
+            KOL分类
+        </h3>
+        <div class="ui labels">
+            {% for type in filtered_types %}
+                {% if type.type in selected_types %}
+                    <a class="ui red label" href="{% url 'kol:kols' %}?{% add_query_params request type=type.type %}">
+                        {{ type.type }} <div class="detail">({{ type.count }})</div>
+                        <i class="delete icon"></i>
+                    </a>
+                {% else %}
+                    <a class="ui label" href="{% url 'kol:kols' %}?{% add_query_params request type=type.type %}">
+                        {{ type.type }} <div class="detail">({{ type.count }})</div>
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="ui purple vertical segment">
+        <h3 class="ui header">
             省份
         </h3>
         <div class="ui labels">
             {% for prov in filtered_provinces %}
                 {% if prov.hospital__province in selected_provinces %}
-                    <a class="ui red label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov.hospital__province %}">
+                    <a class="ui purple label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov.hospital__province %}">
                         {{ prov.hospital__province }} <div class="detail">({{ prov.count }})</div>
                         <i class="delete icon"></i>
                     </a>

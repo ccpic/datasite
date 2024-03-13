@@ -29,9 +29,17 @@
                 <i class="delete icon"></i>
             </a>
         {% endif %}
+        {% if selected_types  %}
+            {% for type in selected_types %}
+                <a class="ui basic red label" href="{% url 'kol:records' %}?{% add_query_params request type=type %}">
+                    KOL分类: {{ type }}
+                    <i class="delete icon"></i>
+                </a>
+            {% endfor %}
+        {% endif %}
         {% if selected_provinces  %}
             {% for prov in selected_provinces %}
-                <a class="ui basic red label" href="{% url 'kol:records' %}?{% add_query_params request province=prov %}">
+                <a class="ui basic purple label" href="{% url 'kol:records' %}?{% add_query_params request province=prov %}">
                     省份: {{ prov }}
                     <i class="delete icon"></i>
                 </a>
@@ -47,7 +55,7 @@
     {% endif %}
         {% if selected_months  %}
         {% for month in selected_months %}
-            <a class="ui basic purple label" href="{% url 'kol:records' %}?{% add_query_params request month=month %}">
+            <a class="ui basic orange label" href="{% url 'kol:records' %}?{% add_query_params request month=month %}">
                 年月: {{ month|slice:7 }}
                 <i class="delete icon"></i>
             </a>

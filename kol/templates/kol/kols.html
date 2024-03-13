@@ -23,9 +23,17 @@
                     <i class="delete icon"></i>
                 </a>
             {% endif %}
+            {% if selected_types  %}
+                {% for type in selected_types %}
+                    <a class="ui basic red label" href="{% url 'kol:kols' %}?{% add_query_params request type=type %}">
+                        KOL分类: {{ type }}
+                        <i class="delete icon"></i>
+                    </a>
+                {% endfor %}
+            {% endif %}
             {% if selected_provinces  %}
                 {% for prov in selected_provinces %}
-                    <a class="ui basic red label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov %}">
+                    <a class="ui basic purple label" href="{% url 'kol:kols' %}?{% add_query_params request province=prov %}">
                         省份: {{ prov }}
                         <i class="delete icon"></i>
                     </a>
@@ -46,8 +54,8 @@
 
         <div class="ui{% if request.user_agent.is_mobile %} two {% else %} four{% endif %} cards">
             {% for kol in kols %}
-            <div class="{% if kol.classification == '学术型' %}blue{% elif kol.classification == '临床型' %}red{% endif %} card">
-                <div class="content">
+            <div class="card">
+                <div class="content" >
                     <div class="meta" style="float: right">
                         <span>
                             {% if kol.supervisor == '博士生导师' %}
@@ -89,7 +97,7 @@
                         <a href="{% url 'kol:records' %}?kol={{ kol.pk}}">拜访记录:{{ kol.kol_records.all.count }}</a>
                     </div>
                 </div>
-                <a class="ui bottom attached button" href="{% url 'kol:update_kol' pk=kol.pk %}">
+                <a class="ui bottom attached {% if kol.type == '全国KOL' %}blue{% elif kol.type == '区域KOL' %}red{% elif kol.type == '其他KOL' %}purple{% endif %} button" href="{% url 'kol:update_kol' pk=kol.pk %}">
                     <i class="edit outline icon"></i>
                     详情&编辑
                 </a>

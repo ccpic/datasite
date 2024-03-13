@@ -31,6 +31,19 @@
     <div class="ui divider"></div>
     <form class="ui form" method="post" id="form_create_kol">
         {% csrf_token %}
+        <div class="required inline field">
+            <label>KOL分类</label>
+            <div class="ui selection dropdown">
+                <input type="hidden" value="{{ kol.type }}" name="type" />
+                <i class="dropdown icon"></i>
+                <div class="default text">请选择</div>
+                <div class="menu">
+                    <div class="item" data-value="全国KOL">全国KOL</div>
+                    <div class="item" data-value="区域KOL">区域KOL</div>
+                    <div class="item" data-value="其他KOL">其他KOL</div>
+                </div>
+            </div>
+        </div>
         <div class="required field">
             <label>KOL姓名</label>
             <input type="text" name="name" value="{{kol.name}}" placeholder="请填写KOL姓名" />
@@ -135,6 +148,15 @@
     $(".ui.dropdown").dropdown({ fullTextSearch: true });
     $(".ui.form").form({
         fields: {
+            type: {
+                identifier: "type",
+                rules: [
+                    {
+                        type: "empty",
+                        prompt: "未选择KOL分类",
+                    },
+                ],
+            },
             name: {
                 identifier: "name",
                 rules: [

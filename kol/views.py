@@ -48,14 +48,17 @@ def get_filters(qs: QuerySet, field: str):
         qs.values(field)
         .order_by(field)
         .annotate(count=Count(field))
+        .filter(count__gt=0)  # 过滤掉计数为零的项
         .order_by(F("count").desc())
     )
+
     return all_records
 
 
 def get_param(params):
     kw_param = params.get("kw")  # 根据空格拆分搜索关键字
     kol_param = params.get("kol")
+    type_param = params.getlist("type")
     prov_param = params.getlist("province")  # 省份可能多选，需要额外处理
     city_param = params.getlist("city")  # 省份可能多选，需要额外处理
     month_param = params.getlist("month")
@@ -78,6 +81,7 @@ def get_param(params):
     context = {
         "kw": kw_param,
         "kol": kol_param,
+        "types": type_param,
         "provinces": prov_param,
         "cities": city_param,
         "months": month_param,
@@ -111,6 +115,10 @@ def records(request: request) -> HttpResponse:
                 | Q(feedback__icontains=k),  # 搜索主要反馈
                 Q.AND,
             )
+    # 根据KOL分类筛选Record
+    types = param_dict["types"]
+    if types:
+        search_condition.add(Q(kol__type__in=types), Q.AND)
 
     # 根据省份筛选Record
     provinces = param_dict["provinces"]
@@ -158,6 +166,9 @@ def records(request: request) -> HttpResponse:
         rows = paginator.page(paginator.num_pages)
 
     # 根据不同维度汇总记录数
+    filtered_types = get_filters(
+        qs=records_by_auth(request.user), field="kol__type"
+    )  # 按KOL分类汇总
     filtered_provinces = get_filters(
         qs=records_by_auth(request.user), field="kol__hospital__province"
     )  # 按省份汇总
@@ -169,6 +180,7 @@ def records(request: request) -> HttpResponse:
         .annotate(month=TruncMonth("visit_date"))
         .values("month")
         .annotate(count=Count("id"))
+        .filter(count__gt=0)  # 过滤掉计数为零的项
         .order_by(F("month").desc())
     )  # 按拜访月份汇总
 
@@ -180,6 +192,8 @@ def records(request: request) -> HttpResponse:
         "kw": param_dict["kw"],
         "kol": Kol.objects.get(pk=int(param_dict["kol"])) if kol else None,
         "highlights": param_dict["highlights"],
+        "filtered_types": filtered_types, 
+        "selected_types": param_dict["types"],
         "filtered_provinces": filtered_provinces,
         "selected_provinces": param_dict["provinces"],
         "filtered_cities": filtered_cities,
@@ -215,9 +229,15 @@ def create_record(request):
     else:
         kols = kols_by_auth(request.user)
         # 根据不同维度汇总记录数
+        filtered_types = get_filters(
+            qs=records_by_auth(request.user), field="kol__type"
+        )  # 按KOL分类汇总
         filtered_provinces = get_filters(
             qs=records_by_auth(request.user), field="kol__hospital__province"
         )  # 按省份汇总
+        filtered_cities = get_filters(
+            qs=records_by_auth(request.user), field="kol__hospital__city"
+        )  # 按城市汇总
         filtered_months = (
             records_by_auth(request.user)
             .annotate(month=TruncMonth("visit_date"))
@@ -239,7 +259,9 @@ def create_record(request):
             "attitude_4_choices": Record.ATTITUDE_4_CHOICES,
             "attitude_5_choices": Record.ATTITUDE_5_CHOICES,
             "kols": kols,
+            "filtered_types": filtered_types,
             "filtered_provinces": filtered_provinces,
+            "filtered_cities": filtered_cities,
             "filtered_months": filtered_months,
         }
         return render(request, "kol/create_record.html", context)
@@ -273,9 +295,15 @@ def update_record(request, pk: int):
     else:
         kols = kols_by_auth(request.user)
         # 根据不同维度汇总记录数
+        filtered_types = get_filters(
+            qs=records_by_auth(request.user), field="kol__type"
+        )  # 按KOL分类汇总
         filtered_provinces = get_filters(
             qs=records_by_auth(request.user), field="kol__hospital__province"
         )  # 按省份汇总
+        filtered_cities = get_filters(
+            qs=records_by_auth(request.user), field="kol__hospital__city"
+        )  # 按城市汇总
         filtered_months = (
             records_by_auth(request.user)
             .annotate(month=TruncMonth("visit_date"))
@@ -292,7 +320,9 @@ def update_record(request, pk: int):
             "record": Record.objects.get(pk=pk),
             # "attachments": Attachment.objects.filter(record=Record.objects.get(pk=pk)),
             "kols": kols,
+            "filtered_types": filtered_types,  
             "filtered_provinces": filtered_provinces,
+            "filtered_cities": filtered_cities, 
             "filtered_months": filtered_months,
         }
         return render(request, "kol/create_record.html", context)
@@ -315,6 +345,7 @@ def export_record(request):
         list(
             records.values(
                 "visit_date",
+                "kol__type",
                 "kol__name",
                 "kol__hospital__xltid",
                 "kol__hospital__province",
@@ -344,6 +375,7 @@ def export_record(request):
     )  # Excel不支持带有时区的时间格式，导出会报错
     df.columns = [
         "拜访日期",
+        "KOL分类",
         "KOL姓名",
         "医院编码",
         "省份",
@@ -411,6 +443,11 @@ def kols(request: request) -> HttpResponse:
                 Q.AND,
             )
 
+    # 根据KOL分类筛选Kol
+    types = param_dict["types"]
+    if types:
+        search_condition = search_condition.add(Q(type__in=types), Q.AND)
+
     # 根据省份筛选Kol
     provinces = param_dict["provinces"]
     if provinces:
@@ -445,6 +482,8 @@ def kols(request: request) -> HttpResponse:
         "record_n": paginator.count,
         "display_length": DISPLAY_LENGTH,
         "kw": param_dict["kw"],
+        "filtered_types": get_filters(qs=kols_by_auth(request.user), field="type"),
+        "selected_types": param_dict["types"],
         "filtered_provinces": get_filters(
             qs=kols_by_auth(request.user), field="hospital__province"
         ),
@@ -463,6 +502,7 @@ def create_kol(request):
     print(request.POST)
     if request.method == "POST":
         obj = Kol(
+            type=request.POST.get("type"),
             name=request.POST.get("name"),
             hospital=Hospital.objects.get(pk=int(request.POST.get("select_hp"))),
             # dept=request.POST.get("dept"),
@@ -485,8 +525,12 @@ def create_kol(request):
         hospitals = Hospital.objects.all()
         context = {
             "hospitals": hospitals,
+            "filtered_types": get_filters(qs=kols_by_auth(request.user), field="type"),
             "filtered_provinces": get_filters(
                 qs=kols_by_auth(request.user), field="hospital__province"
+            ),
+            "filtered_cities": get_filters(
+                qs=kols_by_auth(request.user), field="hospital__city"
             ),
         }
         return render(request, "kol/create_kol.html", context)
@@ -497,6 +541,7 @@ def update_kol(request, pk: int):
     print(request.POST)
     if request.method == "POST":
         obj = Kol.objects.get(pk=pk)
+        obj.type = request.POST.get("type")
         obj.name = request.POST.get("name")
         obj.hospital = Hospital.objects.get(pk=int(request.POST.get("select_hp")))
         # obj.dept = request.POST.get("dept")
@@ -521,6 +566,7 @@ def update_kol(request, pk: int):
         context = {
             "kol": kols_by_auth(request.user).get(pk=pk),
             "hospitals": hospitals,
+            "filtered_types": get_filters(qs=kols_by_auth(request.user), field="type"),
             "filtered_provinces": get_filters(
                 qs=kols_by_auth(request.user), field="hospital__province"
             ),
@@ -547,6 +593,7 @@ def export_kol(request):
     df = pd.DataFrame(
         list(
             kols.values(
+                "type",
                 "name",
                 "hospital__xltid",
                 "hospital__province",
@@ -568,6 +615,7 @@ def export_kol(request):
         None
     )  # Excel不支持带有时区的时间格式，导出会报错
     df.columns = [
+        "KOL分类",
         "KOL姓名",
         "医院编码",
         "省份",
@@ -639,4 +687,3 @@ def search_hps(request, kw):
         json.dumps(res, ensure_ascii=False),
         content_type="application/json charset=utf-8",
     )  # 返回结果必须是json格式
-

@@ -38,11 +38,23 @@ class Kol(models.Model):
         ("非博导/硕导", "非博导/硕导"),
         ("未知", "未知"),
     ]
-    CLASSFICATION_CHOICES = [
+    CLASSIFICATION_CHOICES = [
         ("学术型", "学术型"),
         ("临床型", "临床型"),
         ("未分型", "未分型"),
     ]
+    TYPE_CHOICES = [
+        ("全国KOL", "全国KOL"),
+        ("区域KOL", "区域KOL"),
+        ("其他KOL", "其他KOL"),   
+    ]
+    type = models.CharField(
+        choices=TYPE_CHOICES,
+        verbose_name="KOL分类",
+        max_length=5,
+        null=True,
+        blank=True,
+    )
     name = models.CharField(verbose_name="姓名", max_length=20)
     hospital = models.ForeignKey(
         Hospital,
@@ -60,7 +72,7 @@ class Kol(models.Model):
     )
     titles = models.TextField(verbose_name="头衔&荣誉", blank=True, null=True)
     classification = models.CharField(
-        choices=CLASSFICATION_CHOICES, verbose_name="客户分型", max_length=3
+        choices=CLASSIFICATION_CHOICES, verbose_name="客户分型", max_length=3
     )
     upload_date = models.DateTimeField(verbose_name="创建日期", default=timezone.now)
     pub_user = models.ForeignKey(
@@ -72,7 +84,8 @@ class Kol(models.Model):
         constraints = [UniqueConstraint(fields=["name", "hospital"], name="unique kol")]
 
     def __str__(self):
-        return f"{self.hospital} - {self.name}"
+        kol_type = "未分类" if self.type is None else self.type
+        return f"{kol_type} - {self.hospital} - {self.name}"
 
 
 class Record(models.Model):
