@@ -4,15 +4,12 @@ import time
 from sqlalchemy import create_engine
 import pandas as pd
 import django
-import datetime
-import math
 import numpy as np
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "datasite.settings")
 django.setup()
 
-from internal_sales.views import *
-
+from internal_sales.views import D_MODEL  # noqa: E402
 
 engine = create_engine("mssql+pymssql://(local)/Internal_sales")
 table = "sales"
@@ -26,12 +23,12 @@ def importModel(dict):
         df = pd.read_sql(sql=sql, con=engine)
         df.dropna(inplace=True)
         print(df)
-        l = []
+        li = []
         for item in df.values:
-            l.append(dict[key](name=item[0]))
+            li.append(dict[key](name=item[0]))
 
         dict[key].objects.all().delete()
-        dict[key].objects.bulk_create(l)
+        dict[key].objects.bulk_create(li)
 
 
 # 为KOL系统导入医院对象
@@ -45,9 +42,9 @@ def import_hp():
     df.drop_duplicates(subset=["HP_NAME"], inplace=True)
     df.to_excel("test.xlsx")
     print(df)
-    l = []
+    li = []
     for item in df.values:
-        l.append(
+        li.append(
             Hospital(
                 xltid=item[0],
                 name=item[1],
@@ -59,7 +56,7 @@ def import_hp():
         )
 
     Hospital.objects.all().delete()
-    Hospital.objects.bulk_create(l)
+    Hospital.objects.bulk_create(li)
 
 
 def update_hp():

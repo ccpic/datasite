@@ -4,11 +4,32 @@ from sqlalchemy import create_engine
 import pandas as pd
 import json
 import numpy as np
-from .models import *
+from .models import (
+    Outsourced,
+    Province,
+    City,
+    County,
+    City_tier,
+    Hospital,
+    HP_TYPE,
+    Level,
+    Product,
+    BU,
+    RD,
+    RM_POS_NAME,
+    DSM_POS_NAME,
+    RSP_POS_NAME,
+)
 import datetime
 from dateutil.relativedelta import relativedelta
-from chpa_data.charts import *
-from datasite.commons import format_table, get_distinct_list, sql_extent, qdict_to_dict, date_mask
+from chpa_data.charts import echarts_stackbar, pie_radius, echarts_scatter
+from datasite.commons import (
+    format_table,
+    get_distinct_list,
+    sql_extent,
+    qdict_to_dict,
+    date_mask,
+)
 
 try:
     from io import BytesIO as IO  # for modern python
@@ -17,9 +38,15 @@ except ImportError:
 
 ENGINE = create_engine("mssql+pymssql://(local)/Internal_sales")  # 创建数据库连接引擎
 DB_TABLE = "sales"
-DATE = datetime.datetime(year=2024, month=1, day=1)  # 目标分析月份
+DATE = datetime.datetime(year=2024, month=2, day=1)  # 目标分析月份
 
-PRODUCTS_HAVE_TARGET = ["信立坦", "恩那罗", "欣复泰", "欣复泰Pro注射笔", "欣复泰Pro注射液"]  # 有指标的产品
+PRODUCTS_HAVE_TARGET = [
+    "信立坦",
+    "恩那罗",
+    "欣复泰",
+    "欣复泰Pro注射笔",
+    "欣复泰Pro注射液",
+]  # 有指标的产品
 
 # 该字典为数据库字段名和Django Model的关联
 D_MODEL = {
@@ -106,11 +133,13 @@ def query(request):
 
     # 返回所选的分析维度
     dimension_select = form_dict["DIMENSION_select"]
-    
+
     # 综合表现指标汇总
     ptable = format_table(
         get_ptable(
-            df_sales=df["销售"], df_target=df["指标"], show_limit_results=show_limit_results
+            df_sales=df["销售"],
+            df_target=df["指标"],
+            show_limit_results=show_limit_results,
         ),
         "ptable",
     )
@@ -233,7 +262,9 @@ def export(request, type):
     )
 
     # 设置文件名
-    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # 当前精确时间不会重复，适合用来命名默认导出文件
+    now = datetime.datetime.now().strftime(
+        "%Y%m%d%H%M%S"
+    )  # 当前精确时间不会重复，适合用来命名默认导出文件
     response["Content-Disposition"] = "attachment; filename=" + now + ".xlsx"
     return response
 
@@ -263,7 +294,9 @@ def get_ratio_monthly(
             df = df.T
             df.columns = df.columns.strftime("%Y-%m")
             if df.empty is False:
-                df.sort_values(by=df.columns.tolist()[-1], ascending=False, inplace=True)
+                df.sort_values(
+                    by=df.columns.tolist()[-1], ascending=False, inplace=True
+                )
 
             if show_limit_results == "true":
                 df = df.iloc[:200, :]
@@ -310,20 +343,22 @@ def get_ptable_comm(
     df_sales, df_sales_comm, df_target_comm, show_limit_results
 ):  # 社区表现
     if df_sales.empty is False:
-        mask_ytd = date_mask(df_sales, DATE,"ytd")[0]  # ytd时间段销售
+        mask_ytd = date_mask(df_sales, DATE, "ytd")[0]  # ytd时间段销售
         df_sales_ytd = df_sales.loc[mask_ytd, :].sum(axis=0)
-        mask_ytdya = date_mask(df_sales, DATE,"ytd")[1]  # ytd同比时间段销售
+        mask_ytdya = date_mask(df_sales, DATE, "ytd")[1]  # ytd同比时间段销售
         df_sales_ytdya = df_sales.loc[mask_ytdya, :].sum(axis=0)
 
         if df_sales_comm.empty is False:
             df_combined = calculate_sales_metric(df_sales_comm, df_target_comm)
             df_combined.columns = "社区" + df_combined.columns
 
-            mask_ytd = date_mask(df_sales_comm,DATE, "ytd")[0]  # ytd时间段销售
+            mask_ytd = date_mask(df_sales_comm, DATE, "ytd")[0]  # ytd时间段销售
             df_sales_comm_ytd = df_sales_comm.loc[mask_ytd, :].sum(axis=0)
-            df_sales_comm_contrib_ytd = df_sales_comm_ytd / df_sales_ytd  # ytd时间段自身社区占比
+            df_sales_comm_contrib_ytd = (
+                df_sales_comm_ytd / df_sales_ytd
+            )  # ytd时间段自身社区占比
 
-            mask_ytdya = date_mask(df_sales_comm, DATE,"ytd")[1]  # ytd同比时间段销售
+            mask_ytdya = date_mask(df_sales_comm, DATE, "ytd")[1]  # ytd同比时间段销售
             df_sales_comm_ytdya = df_sales_comm.loc[mask_ytdya, :].sum(axis=0)
             df_sales_comm_contrib_ytdya = (
                 df_sales_comm_ytdya / df_sales_ytdya
@@ -340,7 +375,9 @@ def get_ptable_comm(
                 ],
                 axis=1,
             )
-            df_combined.rename(columns={0: "自身社区占比", 1: "社区占比同比变化"}, inplace=True)
+            df_combined.rename(
+                columns={0: "自身社区占比", 1: "社区占比同比变化"}, inplace=True
+            )
             df_combined.fillna(
                 {
                     "社区销售": 0,
@@ -352,7 +389,9 @@ def get_ptable_comm(
                 },
                 inplace=True,
             )
-            df_combined.sort_values(by="社区销售", axis=0, ascending=False, inplace=True)
+            df_combined.sort_values(
+                by="社区销售", axis=0, ascending=False, inplace=True
+            )
 
             if show_limit_results == "true":
                 df_combined = df_combined.iloc[:200, :]
@@ -366,11 +405,11 @@ def get_ptable_comm(
 
 
 def calculate_sales_metric(df_sales, df_target):
-    mask_ytd = date_mask(df_sales,DATE, "ytd")[0]  # ytd时间段销售
+    mask_ytd = date_mask(df_sales, DATE, "ytd")[0]  # ytd时间段销售
     df_sales_ytd = df_sales.loc[mask_ytd, :].sum(axis=0)
     df_sales_share_ytd = df_sales_ytd.div(df_sales_ytd.sum())
 
-    mask_ytdya = date_mask(df_sales, DATE,"ytd")[1]  # ytd同比时间段销售
+    mask_ytdya = date_mask(df_sales, DATE, "ytd")[1]  # ytd同比时间段销售
     df_sales_ytdya = df_sales.loc[mask_ytdya, :].sum(axis=0)
     df_sales_share_ytdya = df_sales_ytdya.div(df_sales_ytdya.sum())
 
@@ -385,7 +424,7 @@ def calculate_sales_metric(df_sales, df_target):
     # df_sales_qtrqa = df_sales.loc[mask_qtrqa, :].mean(axis=0)  # 上季平均
     # df_sales_gr_qa = df_sales_qtr / df_sales_qtrqa - 1  # 季平均环比
 
-    mask_mqt = date_mask(df_sales, DATE,"mqt")[0]
+    mask_mqt = date_mask(df_sales, DATE, "mqt")[0]
     mask_mqtqa = (df_sales.index >= DATE + relativedelta(months=-5)) & (
         df_sales.index <= DATE + relativedelta(months=-3)
     )
@@ -396,7 +435,7 @@ def calculate_sales_metric(df_sales, df_target):
     df_sales_gr_qa = df_sales_mqt / df_sales_mqtqa - 1  # 滚动季环比增长率
 
     if df_target.empty is False:
-        mask_ytd = date_mask(df_target,DATE, "ytd")[0]
+        mask_ytd = date_mask(df_target, DATE, "ytd")[0]
         df_target_ytd = df_target.loc[mask_ytd, :].sum(axis=0)  # YTD指标
         df_ach_ytd = df_sales_ytd / df_target_ytd  # YTD达成
     else:
@@ -428,7 +467,8 @@ def calculate_sales_metric(df_sales, df_target):
         "同期达成",
     ]
     df_combined.fillna(
-        {"销售": 0, "销售贡献份额": 0, "同比净增长": 0, "销售贡献份额同比变化": 0}, inplace=True
+        {"销售": 0, "销售贡献份额": 0, "同比净增长": 0, "销售贡献份额同比变化": 0},
+        inplace=True,
     )
     df_combined.sort_values(by="销售", axis=0, ascending=False, inplace=True)
 
@@ -467,7 +507,7 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
             target = 0
         else:
             # YTD指标
-            target = target_total.loc[date_mask(df_target,DATE,  v)[0]].sum()
+            target = target_total.loc[date_mask(df_target, DATE, v)[0]].sum()
         try:
             # YTD达标率
             ach = sales_tpo / target
@@ -490,7 +530,6 @@ def get_kpi(df_sales, df_sales_tpo, df_target):
         )
 
     return kpi
-
 
 
 def get_df(form_dict, is_pivoted=True):
@@ -521,8 +560,12 @@ def get_df(form_dict, is_pivoted=True):
             #     # df=df[(df.TAG == "指标") & (df.IF_COMMUNITY == 1)],
             #     form_dict=form_dict,
             # ),
-            "开户医院数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"),
-            "代表数": pivot(df=df[df.TAG != "指标"], form_dict=form_dict, type="count_rsp"),
+            "开户医院数": pivot(
+                df=df[df.TAG != "指标"], form_dict=form_dict, type="count_hp"
+            ),
+            "代表数": pivot(
+                df=df[df.TAG != "指标"], form_dict=form_dict, type="count_rsp"
+            ),
         }
 
     else:
@@ -532,7 +575,6 @@ def get_df(form_dict, is_pivoted=True):
 def pivot(df, form_dict, type="sales"):
     column = form_dict["DIMENSION_select"]  # 分析维度
     unit_selected = form_dict["UNIT_select"]  # 单位（盒数、标准盒数、金额）
-
 
     if type == "sales":
         pivoted = pd.pivot_table(
@@ -572,7 +614,7 @@ def pivot(df, form_dict, type="sales"):
 
 def sqlparse(context):
     sql = "Select * from %s WHERE 1=1" % DB_TABLE  # 先处理单选部分
-    if context["customized_sql"]== "":
+    if context["customized_sql"] == "":
         # 如果前端没有输入自定义sql，直接循环处理多选部分进行sql拼接
         for k, v in context.items():
             if k not in [
@@ -588,9 +630,13 @@ def sqlparse(context):
                 else:
                     field_name = k[:-7]  # 如果键不以[]结尾，删除_select取原字段名
                 selected = v  # 选择项
-                sql = sql_extent(sql, field_name, selected)  # 未来可以通过进一步拼接字符串动态扩展sql语句
+                sql = sql_extent(
+                    sql, field_name, selected
+                )  # 未来可以通过进一步拼接字符串动态扩展sql语句
     else:
-        sql = context["customized_sql"]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
+        sql = context[
+            "customized_sql"
+        ]  # 如果前端输入了自定义sql，忽略前端其他参数直接处理
     return sql
 
 
@@ -602,9 +648,9 @@ def search(request, column, kw):
         # l = df.values.flatten().tolist()
         m = D_MODEL[column]
         results = m.objects.filter(name__contains=kw)
-        l = results.values_list("name")
+        list_name = results.values_list("name")
         results_list = []
-        for item in l:
+        for item in list_name:
             option_dict = {
                 "name": item,
                 "value": item,
@@ -633,7 +679,7 @@ def prepare_chart(
     chart_type,  # 图表类型字符串，人为设置，根据图表类型不同做不同的Pandas数据处理，及生成不同的Pyechart对象
     form_dict,  # 前端表单字典，用来获得一些变量作为图表的标签如单位
 ):
-    SERIES_LIMIT = 10  # 折线图等系列限制
+    # SERIES_LIMIT = 10  # 折线图等系列限制
     show_limit_results = form_dict["toggle_limit_show"]
     # 散点图等是否只显示前200条结果，显示过多结果会导致前端渲染性能不足
     # label = D_TRANS[form_dict["PERIOD_select"][0]] + D_TRANS[form_dict["UNIT_select"][0]]
@@ -662,7 +708,9 @@ def prepare_chart(
                 df=df_sales_by_product
             )  # 调用stackbar方法生成Pyecharts图表对象
 
-            return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
+            return json.loads(
+                chart.dump_options()
+            )  # 用json格式返回Pyecharts图表对象的全局设置
         elif chart_type == "pie_product":
             form_dict_by_product = form_dict.copy()
             form_dict_by_product["DIMENSION_select"] = [
@@ -677,7 +725,9 @@ def prepare_chart(
             # df_count = df_count.reindex(['心内科', '肾内科', '神内科', '内分泌科', '老干科', '其他科室'])
             chart = pie_radius(df_by_product_ytd)
 
-            return json.loads(chart.dump_options())  # 用json格式返回Pyecharts图表对象的全局设置
+            return json.loads(
+                chart.dump_options()
+            )  # 用json格式返回Pyecharts图表对象的全局设置
         elif chart_type == "scatter_sales_abs_diff":
             metrics = calculate_sales_metric(df_sales, df_target)
 

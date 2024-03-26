@@ -553,7 +553,7 @@ def update_kol(request, pk: int):
         obj.classification = request.POST.get("classification")
         obj.upload_date = timezone.now()
         # obj.pub_user = request.user
-
+        print(obj)
         try:
             obj.save()
         except IntegrityError:
