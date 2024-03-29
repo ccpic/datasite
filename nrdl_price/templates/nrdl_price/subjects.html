@@ -101,11 +101,11 @@
                                 </span>
                             </div>
                             <div class="extra content">
-                                {% if nego.year > 2020 %}
-                                    <i class="download icon"></i>
-                                    <span>
-                                        <a href="{% static nego.doc_url %}">申报材料下载</a>
-                                    </span>
+                                {% if nego.docs_url %}
+                                    {% for url in nego.docs_url %}
+                                        <i class="file icon"></i>
+                                        <a href="{{ url }}" target="_blank">材料{{ forloop.counter }}</a>
+                                    {% endfor %}
                                 {% else %}
                                     <span>无公示材料</span>
                                 {% endif %}

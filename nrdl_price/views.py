@@ -1,9 +1,9 @@
-from django.shortcuts import HttpResponse, redirect, render, reverse
+from django.shortcuts import HttpResponse, render
 from django.http import request
 from .models import Negotiation, Subject
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Case, When, Value, Count, CharField, F, Q, QuerySet
+from django.db.models import Count, F, Q, QuerySet
 from datetime import datetime
 import pandas as pd
 
@@ -18,6 +18,7 @@ def get_filters(qs: QuerySet, field: str):
         qs.values(field)
         .order_by(field)
         .annotate(count=Count(field))
+        .filter(count__gt=0)  # 过滤掉计数为零的项
         .order_by(F("count").desc())
     )
     return all_records
@@ -35,7 +36,7 @@ def get_param(params):
     highlights = {}
     try:
         kw_list = kw_param.split(" ")
-    except:
+    except Exception:
         kw_list = []
 
     for kw in kw_list:

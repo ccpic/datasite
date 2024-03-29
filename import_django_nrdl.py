@@ -15,7 +15,7 @@ D_BOOLEAN = {"是": True, "否": False}
 def import_nego():
     from nrdl_price.models import TC1, TC2, TC3, TC4, Subject, Negotiation
 
-    df = pd.read_excel("医保谈判品种价格汇总-2017-2022-V4.xlsx")
+    df = pd.read_excel("医保谈判品种价格汇总-2017-2023-V2.xlsx")
     print(df)
     Negotiation.objects.all().delete()
     for _, row in df.iterrows(): 
@@ -45,7 +45,7 @@ def import_nego():
             name_en=row["TC IV"].split("|")[0][6:],
             tc3=tc3,
         )
-        
+
         subject, _ = Subject.objects.get_or_create(
             name=row["药品名称"],
             tc4=tc4,
@@ -69,5 +69,12 @@ def import_nego():
 
 
 if __name__ == "__main__":
-    import_nego()
-    print("Done!", time.process_time())
+    # import_nego()
+    # print("Done!", time.process_time())
+
+    from nrdl_price.models import Negotiation
+    negos = Negotiation.objects.all()
+
+    for nego in negos:
+        if nego.year == 2023 and nego.docs_url is None:
+            print(nego)

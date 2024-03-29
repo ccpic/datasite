@@ -1,6 +1,9 @@
 from django.db import models
 import numpy as np
-from typing import Union, Optional
+from typing import Optional
+import os
+from django.conf import settings
+
 
 
 class TC1(models.Model):
@@ -137,13 +140,21 @@ class Negotiation(models.Model):
     def price_change(self) -> Optional[float]:
         try:
             change = self.price_new / self.price_old - 1
-        except:
+        except Exception:
             change = np.nan
         return change
 
     @property
-    def doc_url(self) -> str:
+    def docs_url(self) -> str:
         base_url = "/NRDL_pdf/"
         year = str(self.year)
-        if_in = "目录外" if self.nego_type == "新增分子" else "目录内"
-        return f"{base_url}{year}/{if_in}/{self.subject.name}/{self.subject.name}_申报材料.pdf"
+        sub_dir = f"{base_url}{year}/{self.subject.name}/"
+        dir = f"{settings.STATICFILES_DIRS[0]}{sub_dir}"
+
+        try:
+            docs = [f"{dir}{f}" for f in os.listdir(dir)]
+        except FileNotFoundError:
+            docs = None
+        return docs
+
+
