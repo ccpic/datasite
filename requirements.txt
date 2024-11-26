@@ -26,7 +26,7 @@ django-taggit-labels==0.7.0
 django-taggit-templatetags2==1.6.1
 django-templatetag-sugar==1.0
 django-uuslug==1.2.0
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 et-xmlfile==1.1.0
 idna==2.10
 importlib-metadata==4.8.2
