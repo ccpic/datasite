@@ -72,7 +72,7 @@ toml==0.10.1
 tqdm==4.62.3
 typed-ast==1.4.1
 uritemplate==3.0.1
-urllib3==1.25.9
+urllib3==1.26.5
 websockets==9.1
 xlrd==1.2.0
 XlsxWriter==1.2.9
