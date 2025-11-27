@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: datasite_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - docker/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=datasite.settings_docker
+    volumes:
+      # 挂载静态文件（可选，如果使用 collectstatic 则不需要）
+      - ../static:/app/static:ro
+      # 挂载媒体文件（上传的文件）
+      - ../upload:/app/upload
+      # 挂载缓存目录
+      - cache_data:/app/cache
+      # 挂载日志目录
+      - log_data:/app/logs
+    depends_on:
+      - mssql
+    networks:
+      - datasite_network
+
+  # 可选的 SQL Server 容器（如果使用外部数据库，可以注释掉）
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: datasite_mssql
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${MSSQL_SA_PASSWORD:-YourStrong@Passw0rd}
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - datasite_network
+    # 如果使用外部数据库，取消下面的注释以禁用此服务
+    # profiles:
+    #   - dontstart
+
+volumes:
+  cache_data:
+  log_data:
+  mssql_data:
+
+networks:
+  datasite_network:
+    driver: bridge
+

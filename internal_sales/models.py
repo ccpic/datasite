@@ -92,7 +92,7 @@ class HP_TYPE(models.Model):
 
 
 class City_tier(models.Model):
-    name = models.CharField(max_length=3)
+    name = models.CharField(max_length=5)
 
     def __str__(self):
         return self.name

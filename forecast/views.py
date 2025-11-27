@@ -2,7 +2,7 @@ from django.shortcuts import render
 import pandas as pd
 import openpyxl
 from itertools import islice, product
-import statsmodels.api as sm
+# import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
 def index(request):

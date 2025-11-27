@@ -82,8 +82,8 @@ class NHSA_Crawler(object):
         url: str,
         row_start: int,
         row_end: int,
-        if_in: Literal["目录内", "目录外"],
-        year: Literal["2022", "2023"],
+        if_in: Literal["基本目录-目录内", "基本目录-目录外", "商保创新目录"],
+        year: Literal["2022", "2023", "2024", "2025"],
     ) -> None:
         """获取该页面所有产品的名称和pdf
 
@@ -103,7 +103,7 @@ class NHSA_Crawler(object):
 
         for i in range(row_start, row_end):
             print(i)
-            if year == "2022":
+            if year in ["2022", "2024", "2025"]:
                 xpath = f"/html/body/div[2]/div/div[4]/div/div/div[2]/div[4]/p[{i}]"
             elif year == "2023":
                 xpath = f"/html/body/div[2]/div[4]/div/div/div[2]/div[4]/p[{i}]"
@@ -111,8 +111,12 @@ class NHSA_Crawler(object):
             p = self.wait_and_get(
                 "XPATH", xpath
             ).text  # p的值格式为YPSW202300010-戊酸二氟可龙乳膏：药品信息.pdf、信息摘要.ppt
-            product_name = p.split("：")[0].strip().split("-")[1].strip()  # 从p中提取产品名称
-            product_name = product_name.replace("/", "")  # 产品名称中有斜杠的要移除，否则会导致文件夹路径错误
+            product_name = (
+                p.split("：")[0].strip()  # 提取产品名称，格式为YPSW202300010-戊酸二氟可龙乳膏
+            )  # 从p中提取产品名称
+            product_name = product_name.replace(
+                "/", ""
+            )  # 产品名称中有斜杠的要移除，否则会导致文件夹路径错误
             save_folder = f"NRDL_pdf/{year}/{if_in}/{product_name}"
 
             # 检查并创建文件夹
@@ -180,21 +184,18 @@ def get_subdirectories(path: str) -> pd.DataFrame:
 if __name__ == "__main__":
     url_2022 = "http://www.nhsa.gov.cn/art/2022/9/6/art_152_8853.html"
     url_2023 = "http://www.nhsa.gov.cn/art/2023/8/18/art_152_11182.html"
+    url_2024 = "https://www.nhsa.gov.cn/art/2024/8/7/art_152_13497.html"
+    url_2025 = "https://www.nhsa.gov.cn/art/2025/8/12/art_152_17558.html"
     c = NHSA_Crawler()
-    # c.get_pdf(url_2022, 2, 233, "目录外", "2022")
-    # c.get_pdf(url_2022, 234, 389, "目录内", "2022")
-    # c.get_pdf(url_2023, 55, 269, "目录外", "2023")  # 目录外品种
-    # c.get_pdf(url_2023, 270, 440, "目录内", "2023")  # 目录内品种
+    # c.get_pdf(url_2022, 2, 233, "目录外", "2022") # 2022目录外品种
+    # c.get_pdf(url_2022, 234, 389, "目录内", "2022") # 2022目录内品种
+    # c.get_pdf(url_2023, 55, 269, "目录外", "2023")  # 2023目录外品种
+    # c.get_pdf(url_2023, 270, 440, "目录内", "2023")  # 2023目录内品种
+    # c.get_pdf(url_2024, 2, 280, "目录外", "2024")  # 2024目录外品种
+    # c.get_pdf(url_2024, 281, 477, "目录内", "2024")  # 2024目录内品种
 
-    path_list = [
-        "NRDL_pdf/2022/目录外",
-        "NRDL_pdf/2022/目录内",
-        "NRDL_pdf/2023/目录外",
-        "NRDL_pdf/2023/目录内",
-        "NRDL_pdf/2021/目录外/",
-    ]
-
-    df_combined = pd.DataFrame()
-    for path in path_list:
-        df = get_subdirectories(path)
-        df_combined = pd.concat([df_combined, df], axis=0)
+    # c.get_pdf(url_2025, 3, 384, "目录外", "2025")  # 2025目录外品种
+    # c.get_pdf(url_2025, 386, 615, "目录内", "2025")  # 2025目录内品种
+    c.get_pdf(
+        url_2025, 617, 737, "商保创新目录", "2025"
+    )  

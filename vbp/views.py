@@ -1,4 +1,3 @@
-from re import T
 from .models import Tender, Volume, Bid, Company, Doc
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
@@ -36,7 +35,7 @@ DISPLAY_LENGTH = 10
 
 HOT_KWS = [
     "扩围",
-    "第九轮",
+    "第十轮",
     "信立泰",
     "氯吡格雷",
     "奥美沙坦",
@@ -61,6 +60,7 @@ def get_gantt_json(tenders):  # 以下部分准备集采标的的甘特图json�
         "第七轮61品种": "ganttViolet",
         "第八轮40品种": "ganttPink",
         "第九轮42品种": "ganttOlivedrab",
+        "第十轮62品种": "ganttBrown",
     }
 
     gantt_source = []

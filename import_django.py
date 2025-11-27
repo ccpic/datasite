@@ -47,9 +47,10 @@ def import_tender(vol: str):
         "第七轮61品种": "01-11-2022",
         "第八轮40品种": "01-07-2023",
         "第九轮42品种": "01-03-2024",
+        "第十轮62品种": "01-04-2025",
         "第一轮25品种扩围联盟地区": "01-12-2019",
     }
-    df = pd.read_excel("vbp_summary_2023.11.29.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_2025.3.6.xlsx", sheet_name="汇总", header=0)
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     df = df.drop_duplicates("药品通用名")
@@ -74,7 +75,7 @@ def import_tender(vol: str):
 
 
 def import_volume(vol: str):
-    df = pd.read_excel("vbp_amount_2023.11.29.xlsx", sheet_name="汇总")
+    df = pd.read_excel("vbp_amount_2025.3.28.xlsx", sheet_name="汇总")
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     # df = df[df["品种"] != "碳酸氢钠口服常释剂型"]
@@ -279,7 +280,7 @@ def import_bid(vol: str):
         },
     }
 
-    df = pd.read_excel("vbp_summary_2023.11.29.xlsx", sheet_name="汇总", header=0)
+    df = pd.read_excel("vbp_summary_2025.3.6.xlsx", sheet_name="汇总", header=0)
     mask = df["批次"] == vol
     df = df.loc[mask, :]
     df.fillna("-", inplace=True)
@@ -494,9 +495,9 @@ def import_tc():
 
 if __name__ == "__main__":
     importModel(D_MODEL)
-    # import_tender("第九轮42品种")
-    # import_volume("第九批集采")
-    # import_bid("第九轮42品种")
+    # import_tender("第十轮62品种")
+    # import_volume("第十批集采")
+    # import_bid("第十轮62品种")
 
     # update_tender()
 

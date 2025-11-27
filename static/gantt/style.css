@@ -265,6 +265,13 @@
 .fn-gantt .ganttOlivedrab .fn-label {
     color: #FFFFFF !important;
 }
+
+.fn-gantt .ganttBrown {
+    background-color: #A0522D;
+}
+.fn-gantt .ganttBrown .fn-label {
+    color: #FFFFFF !important;
+}
 /* === BOTTOM NAVIGATION === */
 
 .fn-gantt .bottom {

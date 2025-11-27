@@ -147,3 +147,18 @@ import_sql*.py
 # Documents
 *.pptx
 *.pdf
+
+# Docker
+docker/.env
+docker/*.log
+docker/cache/
+docker/logs/
+docker/staticfiles/
+docker/upload/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

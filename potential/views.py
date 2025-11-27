@@ -40,7 +40,7 @@ D_MULTI_SELECT = {
     "省份": "PROVINCE",
     "城市": "CITY",
     "区县": "COUNTY",
-    "市区/县域": "COUNTY_AREA",
+    "是否社区": "IF_COMMUNITY",
     "潜力分位": "DECILE",
     "经营类型": "OUTSOURCE"
     # "医院": "HOSPITAL",
@@ -96,7 +96,10 @@ def query(request: request) -> HttpResponse:
     product_selected = form_dict["PRODUCT_select"]  # 产品
     print(product_selected)
     dimension_selected = form_dict["DIMENSION_select"]  # 分析维度
-
+    print(data.columns)
+    print  (data['BU'].unique(), data['STATUS'].unique())
+    mask = data["STATUS"].isin(["有销量目标医院", "无销量目标医院"])
+    data = data.loc[mask, :]
     # 透视过的数据
     df = get_pivot(data, product_selected, dimension_selected)
 
@@ -169,19 +172,26 @@ def query(request: request) -> HttpResponse:
     # 气泡图 - 潜力贡献（所有终端） versus {product_selected}销量贡献
     fmt = [".1%"]
     plot_data = df.loc[
-        :, ["潜力贡献(DOT %)", f"{product_selected}销量贡献(DOT %)", "潜力(DOT)"]
+        :, ["潜力贡献(DOT %)", 
+            f"{product_selected}销量贡献(DOT %)", 
+            # "潜力(DOT)"
+            ]
     ].fillna(0)
-    plot_data = plot_data.sort_values(by="潜力(DOT)", ascending=False).head(bubble_limit)
+    plot_data["销量"] = plot_data[f"{product_selected}销量贡献(DOT %)"]
+    plot_data = plot_data.sort_values(by="潜力贡献(DOT %)", ascending=False).head(
+        bubble_limit
+    )
 
     plot_bubble_contrib = plt.figure(
         FigureClass=PlotBubble,
-        width=12,
-        height=7,
+        width=13,
+        height=6,
         fmt=fmt,
         data=plot_data,
         fontsize=10,
         style={
-            "xlabel": "潜力贡献(DOT %)\n气泡大小: 潜力(DOT)",
+            # "xlabel": "潜力贡献(DOT %)\n气泡大小: 潜力(DOT)",
+            "xlabel": f"潜力贡献(DOT %)\n气泡大小: {product_selected}销量(DOT)",
             "ylabel": f"{product_selected}销量贡献(DOT %)",
         },
         save_to_str=True,
@@ -194,22 +204,24 @@ def query(request: request) -> HttpResponse:
         [
             f"{product_selected}有量终端潜力贡献(DOT %)",
             f"{product_selected}销量贡献(DOT %)",
-            "潜力(DOT)",
+            # "潜力(DOT)",
         ],
     ].fillna(0)
+    plot_data["销量"] = plot_data[f"{product_selected}销量贡献(DOT %)"]
     plot_data = plot_data.sort_values(
         by=f"{product_selected}有量终端潜力贡献(DOT %)", ascending=False
     ).head(bubble_limit)
 
     plot_bubble_contrib2 = plt.figure(
         FigureClass=PlotBubble,
-        width=12,
-        height=7,
+        width=13,
+        height=6,
         fmt=fmt,
         data=plot_data,
         fontsize=10,
         style={
-            "xlabel": f"{product_selected}有量终端潜力贡献(DOT %)\n气泡大小: 潜力(DOT)",
+            "xlabel": f"{product_selected}有量终端潜力贡献(DOT %)\n气泡大小: {product_selected}销量(DOT)",
+            # "xlabel": f"{product_selected}有量终端潜力贡献(DOT %)\n气泡大小: 潜力(DOT)",
             "ylabel": f"{product_selected}销量贡献(DOT %)",
         },
         save_to_str=True,
@@ -225,19 +237,21 @@ def query(request: request) -> HttpResponse:
             f"{product_selected}MAT销量(DOT)",
         ],
     ].fillna(0)
-    plot_data = plot_data.sort_values(
-        by=f"{product_selected}MAT销量(DOT)", ascending=False
-    ).head(bubble_limit)
+    sorter = df.loc[:,"潜力(DOT)"].sort_values(ascending=False).index
+    # plot_data = plot_data.sort_values(
+    #     by=f"{product_selected}MAT销量(DOT)", ascending=False
+    # ).head(bubble_limit)
+    plot_data = plot_data.loc[sorter].head(bubble_limit)
 
     plot_bubble_allocation = plt.figure(
         FigureClass=PlotBubble,
-        width=12,
-        height=7,
+        width=13,
+        height=6,
         fmt=fmt,
         data=plot_data,
         fontsize=10,
         style={
-            "xlabel": f"{product_selected}有量终端覆盖潜力(DOT %)\n气泡大小: f{product_selected}MAT销量(DOT)",
+            "xlabel": f"{product_selected}有量终端覆盖潜力(DOT %)\n气泡大小: {product_selected}销量(DOT)",
             "ylabel": f"{product_selected}有量终端份额(DOT %)",
         },
         save_to_str=True,
@@ -266,8 +280,8 @@ def query(request: request) -> HttpResponse:
 
     plot_bubble_allocation2 = plt.figure(
         FigureClass=PlotBubble,
-        width=12,
-        height=7,
+        width=13,
+        height=6,
         fmt=fmt,
         data=plot_data,
         fontsize=10,
